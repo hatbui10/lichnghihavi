@@ -156,7 +156,6 @@
         </div>
 
         <script>
-            // Dữ liệu nhân sự
             const staffData = [
                 { name: 'Mai Khánh Ly', phone: '0375874325', role: 'GV' },
                 { name: 'Nguyễn Hà An', phone: '0975710497', role: 'GV' },
@@ -187,7 +186,6 @@
             
             let trangThaiNhanSu = JSON.parse(localStorage.getItem('trangThaiNhanSu_V3')) || {};
             
-            // Cấu hình Firebase chuẩn (chỉ để 1 cấu hình duy nhất)
             const firebaseConfig = {
                 apiKey: "AIzaSyDbCF0pFsdXqD14Y-wjWLFoNCGfP1LBlD8",
                 authDomain: "tienganhhavi-12b54.firebaseapp.com",
@@ -197,16 +195,11 @@
                 appId: "1:208059039650:web:d272318418e01d0f50fcfb"
             };
             
-            // Khởi tạo Firebase
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
             
-            // Hàm đồng bộ lên Firebase
             function syncToFirebase(data) {
                 db.collection("data").doc("trangThaiNhanSuV3").set({ content: data })
-                .then(() => {
-                    console.log("✅ Đã đồng bộ thành công lên Firebase!");
-                })
                 .catch((error) => {
                     console.error("❌ Lỗi đồng bộ Firebase:", error);
                 });
@@ -216,7 +209,18 @@
                 if (!trangThaiNhanSu[id]) {
                     trangThaiNhanSu[id] = { isLeave: false, isLate: false };
                 }
+                
+                // Gán giá trị mới cho ô vừa chọn
                 trangThaiNhanSu[id][field] = value;
+                
+                // Nếu chọn ô này thì tự động tắt ô kia (Loại trừ lẫn nhau)
+                if (value === true) {
+                    if (field === 'isLeave') {
+                        trangThaiNhanSu[id]['isLate'] = false;
+                    } else if (field === 'isLate') {
+                        trangThaiNhanSu[id]['isLeave'] = false;
+                    }
+                }
                 
                 localStorage.setItem('trangThaiNhanSu_V3', JSON.stringify(trangThaiNhanSu));
                 syncToFirebase(trangThaiNhanSu);
