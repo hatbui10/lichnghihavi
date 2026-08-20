@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <!-- Thư viện Firebase -->
+        <!-- Thư viện Firebase v10 -->
         <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
         <title>Quản Lý Trạng Thái Nhân Sự</title>
@@ -17,121 +17,37 @@
                 padding: 10px;
                 color: #cbd5e1;
             }
-            h2 {
-                text-align: center;
-                color: #f8fafc;
-                margin: 10px 0 15px 0;
-                text-transform: uppercase;
-                font-size: 17px;
-            }
-            .container {
-                max-width: 100%;
-                margin: 0 auto;
-                padding-bottom: 30px;
-            }
+            h2 { text-align: center; color: #f8fafc; margin: 10px 0 15px 0; text-transform: uppercase; font-size: 17px; }
+            .container { max-width: 100%; margin: 0 auto; padding-bottom: 30px; }
             
-            /* Tiêu đề từng khu vực */
             .section-title {
-                font-size: 14px;
-                font-weight: bold;
-                color: #f8fafc;
-                margin: 20px 0 10px 0;
-                border-left: 3px solid #3b82f6;
-                padding-left: 6px;
-                text-transform: uppercase;
+                font-size: 14px; font-weight: bold; color: #f8fafc; margin: 20px 0 10px 0;
+                border-left: 3px solid #3b82f6; padding-left: 6px; text-transform: uppercase;
             }
             
-            /* Lưới tối ưu cho điện thoại */
-            .grid-container {
-                display: grid;
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-            @media (min-width: 480px) {
-                .grid-container {
-                    grid-template-columns: repeat(2, 1fr);
-                }
-            }
+            .grid-container { display: grid; grid-template-columns: 1fr; gap: 8px; }
+            @media (min-width: 480px) { .grid-container { grid-template-columns: repeat(2, 1fr); } }
             
-            /* Thẻ nhân sự */
             .staff-card {
-                background: #1e293b;
-                border: 1.5px solid #334155;
-                border-radius: 8px;
-                padding: 10px 12px;
-                position: relative;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                background: #1e293b; border: 1.5px solid #334155; border-radius: 8px;
+                padding: 10px 12px; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
                 transition: all 0.2s;
             }
+            .staff-card.leave { border-left: 4px solid #ef4444; background: #191c27; }
+            .staff-card.late { border-left: 4px solid #f59e0b; }
             
-            .staff-card.leave {
-                border-left: 4px solid #ef4444;
-                background: #191c27;
-            }
-            .staff-card.late {
-                border-left: 4px solid #f59e0b;
-            }
+            .staff-header { display: flex; justify-content: space-between; align-items: center; }
+            .staff-name { font-size: 15px; font-weight: bold; color: #fff; }
+            .staff-phone { font-size: 13px; color: #ffbd59; font-weight: 600; text-decoration: none; display: inline-block; margin: 2px 0 6px 0; }
             
-            .staff-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            .staff-name {
-                font-size: 15px;
-                font-weight: bold;
-                color: #fff;
-            }
-            .staff-phone {
-                font-size: 13px;
-                color: #ffbd59;
-                font-weight: 600;
-                text-decoration: none;
-                display: inline-block;
-                margin: 2px 0 6px 0;
-            }
-            
-            .card-actions {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-top: 6px;
-                padding-top: 6px;
-                border-top: 1px solid #334155;
-            }
-            .checkbox-group {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-            }
-            .checkbox-label {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 12px;
-                cursor: pointer;
-                color: #e2e8f0;
-                user-select: none;
-            }
-            .checkbox-label input[type="checkbox"] {
-                width: 17px;
-                height: 17px;
-                accent-color: #ef4444;
-                cursor: pointer;
-            }
+            .card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 6px; border-top: 1px solid #334155; }
+            .checkbox-group { display: flex; flex-direction: column; gap: 4px; }
+            .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; color: #e2e8f0; user-select: none; }
+            .checkbox-label input[type="checkbox"] { width: 17px; height: 17px; accent-color: #ef4444; cursor: pointer; }
             .btn-call {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 3px;
-                background-color: #059669;
-                color: white !important;
-                text-decoration: none;
-                font-weight: bold;
-                font-size: 12px;
-                padding: 8px 12px;
-                border-radius: 6px;
-                white-space: nowrap;
+                display: inline-flex; align-items: center; justify-content: center; gap: 3px;
+                background-color: #059669; color: white !important; text-decoration: none;
+                font-weight: bold; font-size: 12px; padding: 8px 12px; border-radius: 6px; white-space: nowrap;
             }
             .btn-call:active { background-color: #047857; transform: scale(0.96); }
         </style>
@@ -141,16 +57,12 @@
 
         <div class="container">
             <h2>Trạng Thái Nhân Sự</h2>
-
             <div class="section-title">👩‍🏫 Giáo Viên (GV)</div>
             <div class="grid-container" id="gv-grid"></div>
-
             <div class="section-title">🤝 Trợ Giảng (TG)</div>
             <div class="grid-container" id="tg-grid"></div>
-
             <div class="section-title">🧹 Nhân Viên Quét Dọn (NVQD)</div>
             <div class="grid-container" id="nvqd-grid"></div>
-
             <div class="section-title">🩺 Bác Sĩ (BS)</div>
             <div class="grid-container" id="bs-grid"></div>
         </div>
@@ -171,7 +83,6 @@
                 { name: 'Nguyễn Như Mai', phone: '0395729123', role: 'GV' },
                 { name: 'Hoàng Yến', phone: '0888281294', role: 'GV' },
                 { name: 'Lê Thắm', phone: '0945007495', role: 'GV' },
-                
                 { name: 'Nguyễn Văn A', phone: '0912345678', role: 'TG' },
                 { name: 'Ninh Trang', phone: '0338131698', role: 'TG' },
                 { name: 'Quang Tùng', phone: '0365164503', role: 'TG' },
@@ -179,12 +90,11 @@
                 { name: 'Khôi Nguyên', phone: '0813775208', role: 'TG' },
                 { name: 'Hoàng Long lớn', phone: '0386700121', role: 'TG' },
                 { name: 'Đàm Xuân Bắc', phone: '0916295600', role: 'TG' },
-                
                 { name: 'Bà Nguyễn Thị M', phone: '0987654321', role: 'NVQD' },
                 { name: 'Bác sĩ Trần Văn Z', phone: '0909090909', role: 'BS' }
             ];
             
-            let trangThaiNhanSu = JSON.parse(localStorage.getItem('trangThaiNhanSu_V3')) || {};
+            let trangThaiNhanSu = {};
             
             const firebaseConfig = {
                 apiKey: "AIzaSyDbCF0pFsdXqD14Y-wjWLFoNCGfP1LBlD8",
@@ -198,105 +108,51 @@
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
             
-            function syncToFirebase(data) {
-                db.collection("data").doc("trangThaiNhanSuV3").set({ content: data })
-                .catch((error) => {
-                    console.error("❌ Lỗi đồng bộ Firebase:", error);
-                });
-            }
+            // Dùng onSnapshot để đồng bộ thời gian thực
+            db.collection("data").doc("trangThaiNhanSuV3").onSnapshot((doc) => {
+                if (doc.exists && doc.data().content) {
+                    trangThaiNhanSu = doc.data().content;
+                    renderAllGrids();
+                }
+            });
             
             function updateStatus(id, field, value) {
                 if (!trangThaiNhanSu[id]) {
                     trangThaiNhanSu[id] = { isLeave: false, isLate: false };
                 }
-                
-                // Gán giá trị mới cho ô vừa chọn
                 trangThaiNhanSu[id][field] = value;
-                
-                // Nếu chọn ô này thì tự động tắt ô kia (Loại trừ lẫn nhau)
                 if (value === true) {
-                    if (field === 'isLeave') {
-                        trangThaiNhanSu[id]['isLate'] = false;
-                    } else if (field === 'isLate') {
-                        trangThaiNhanSu[id]['isLeave'] = false;
-                    }
+                    if (field === 'isLeave') trangThaiNhanSu[id]['isLate'] = false;
+                    else if (field === 'isLate') trangThaiNhanSu[id]['isLeave'] = false;
                 }
-                
-                localStorage.setItem('trangThaiNhanSu_V3', JSON.stringify(trangThaiNhanSu));
-                syncToFirebase(trangThaiNhanSu);
-                renderAllGrids();
-            }
-            
-            function createCardHTML(person, index) {
-                const uniqueId = person.role + "_" + index;
-                const status = trangThaiNhanSu[uniqueId] || { isLeave: false, isLate: false };
-                const phoneDisplay = person.phone ? person.phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1.$2.$3") : "";
-                
-                let cardClass = "staff-card";
-                if (status.isLeave) cardClass += " leave";
-                else if (status.isLate) cardClass += " late";
-            
-                return `
-                    <div class="${cardClass}">
-                        <div class="staff-header">
-                            <span class="staff-name">${person.name}</span>
-                        </div>
-                        <a href="tel:${person.phone}" class="staff-phone">📞 ${phoneDisplay}</a>
-                        
-                        <div class="card-actions">
-                            <div class="checkbox-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" ${status.isLeave ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLeave', this.checked)">
-                                    Xin nghỉ hôm nay
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" ${status.isLate ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLate', this.checked)">
-                                    Đi muộn
-                                </label>
-                            </div>
-                            <a href="tel:${person.phone}" class="btn-call">📞 Gọi</a>
-                        </div>
-                    </div>
-                `;
+                db.collection("data").doc("trangThaiNhanSuV3").set({ content: trangThaiNhanSu });
             }
             
             function renderAllGrids() {
-                const gvContainer = document.getElementById('gv-grid');
-                const tgContainer = document.getElementById('tg-grid');
-                const nvqdContainer = document.getElementById('nvqd-grid');
-                const bsContainer = document.getElementById('bs-grid');
-            
-                gvContainer.innerHTML = '';
-                tgContainer.innerHTML = '';
-                nvqdContainer.innerHTML = '';
-                bsContainer.innerHTML = '';
-            
+                const containers = { GV: 'gv-grid', TG: 'tg-grid', NVQD: 'nvqd-grid', BS: 'bs-grid' };
+                Object.values(containers).forEach(id => document.getElementById(id).innerHTML = '');
+                
                 staffData.forEach((person, index) => {
-                    const html = createCardHTML(person, index);
-                    if (person.role === 'GV') {
-                        gvContainer.innerHTML += html;
-                    } else if (person.role === 'TG') {
-                        tgContainer.innerHTML += html;
-                    } else if (person.role === 'NVQD') {
-                        nvqdContainer.innerHTML += html;
-                    } else if (person.role === 'BS') {
-                        bsContainer.innerHTML += html;
-                    }
+                    const uniqueId = person.role + "_" + index;
+                    const status = trangThaiNhanSu[uniqueId] || { isLeave: false, isLate: false };
+                    const phoneDisplay = person.phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1.$2.$3");
+                    let cardClass = "staff-card" + (status.isLeave ? " leave" : "") + (status.isLate ? " late" : "");
+                    
+                    const html = `
+                        <div class="${cardClass}">
+                            <div class="staff-header"><span class="staff-name">${person.name}</span></div>
+                            <a href="tel:${person.phone}" class="staff-phone">📞 ${phoneDisplay}</a>
+                            <div class="card-actions">
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label"><input type="checkbox" ${status.isLeave ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLeave', this.checked)"> Xin nghỉ</label>
+                                    <label class="checkbox-label"><input type="checkbox" ${status.isLate ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLate', this.checked)"> Đi muộn</label>
+                                </div>
+                                <a href="tel:${person.phone}" class="btn-call">📞 Gọi</a>
+                            </div>
+                        </div>`;
+                    document.getElementById(containers[person.role]).innerHTML += html;
                 });
             }
-            
-            window.onload = function() {
-                db.collection("data").doc("trangThaiNhanSuV3").get().then(doc => {
-                    if (doc.exists && doc.data().content) {
-                        trangThaiNhanSu = doc.data().content;
-                        localStorage.setItem('trangThaiNhanSu_V3', JSON.stringify(trangThaiNhanSu));
-                    }
-                    renderAllGrids();
-                }).catch(err => {
-                    console.error("Lỗi tải dữ liệu:", err);
-                    renderAllGrids();
-                });
-            };
         </script>
     </body>
 
