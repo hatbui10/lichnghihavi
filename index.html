@@ -17,21 +17,42 @@
                 padding: 10px;
                 color: #cbd5e1;
             }
-            h2 { text-align: center; color: #f8fafc; margin: 10px 0 15px 0; text-transform: uppercase; font-size: 17px; }
+            .header-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin: 10px 0 15px 0;
+            }
+            h2 { text-align: center; color: #f8fafc; margin: 0; text-transform: uppercase; font-size: 17px; flex-grow: 1; }
+            
+            /* Nút ẩn/hiện bảng nhập pass */
+            .btn-toggle-lock {
+                background: #334155;
+                color: #cbd5e1;
+                border: 1px solid #475569;
+                padding: 5px 10px;
+                border-radius: 6px;
+                font-size: 12px;
+                cursor: pointer;
+                font-weight: bold;
+            }
+            .btn-toggle-lock:active { background: #475569; }
+            
             .container { max-width: 100%; margin: 0 auto; padding-bottom: 30px; }
             
-            /* Thanh nhập mật khẩu mở khóa nút gọi */
+            /* Thanh nhập mật khẩu */
             .auth-bar {
                 background: #1e293b;
                 border: 1px solid #334155;
                 padding: 10px;
                 border-radius: 8px;
-                display: flex;
+                display: none; /* Mặc định ẩn */
                 justify-content: center;
                 align-items: center;
                 gap: 8px;
                 margin-bottom: 15px;
             }
+            .auth-bar.show { display: flex; }
             .auth-bar input {
                 background: #0f172a;
                 border: 1px solid #475569;
@@ -53,12 +74,6 @@
                 font-size: 13px;
             }
             .auth-bar button:active { background: #2563eb; }
-            .unlocked-badge {
-                color: #10b981;
-                font-size: 13px;
-                font-weight: bold;
-                display: none;
-            }
             
             .section-title {
                 font-size: 14px; font-weight: bold; color: #f8fafc; margin: 20px 0 10px 0;
@@ -79,10 +94,9 @@
             .staff-header { display: flex; justify-content: space-between; align-items: center; }
             .staff-name { font-size: 15px; font-weight: bold; color: #fff; }
             
-            /* Ẩn hoặc hiện số điện thoại dựa vào trạng thái mở khóa */
             .staff-phone {
                 font-size: 13px; color: #ffbd59; font-weight: 600; text-decoration: none; display: inline-block; margin: 2px 0 6px 0;
-                pointer-events: none; /* Khóa không cho bấm khi chưa nhập pass */
+                pointer-events: none;
             }
             .staff-phone.unlocked {
                 pointer-events: auto;
@@ -94,7 +108,6 @@
             .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; color: #e2e8f0; user-select: none; }
             .checkbox-label input[type="checkbox"] { width: 17px; height: 17px; accent-color: #ef4444; cursor: pointer; }
             
-            /* Mặc định ẩn nút gọi */
             .btn-call {
                 display: none; 
                 align-items: center; justify-content: center; gap: 3px;
@@ -109,14 +122,17 @@
     <body>
 
         <div class="container">
-            <h2>Trạng Thái Nhân Sự</h2>
-
-            <!-- Khung nhập mật khẩu mở khóa gọi điện -->
-            <div class="auth-bar" id="authBar">
-                <input type="password" id="passInput" placeholder="Nhập mật khẩu gọi...">
-                <button onclick="checkPassword()">Mở khóa gọi</button>
+            <div class="header-top">
+                <h2>Trạng Thái Nhân Sự</h2>
+                <!-- Nút khóa / mở khóa -->
+                <button class="btn-toggle-lock" id="toggleLockBtn" onclick="toggleLockPanel()">🔒 Mở khóa</button>
             </div>
-            <div id="unlockedStatus" class="unlocked-badge" style="text-align: center; margin-bottom: 15px;">🔓 Đã mở khóa quyền gọi điện trên thiết bị này</div>
+
+            <!-- Khung nhập mật khẩu -->
+            <div class="auth-bar" id="authBar">
+                <input type="password" id="passInput" placeholder="Mật khẩu...">
+                <button onclick="checkPassword()">Xác nhận</button>
+            </div>
 
             <div class="section-title">👩‍🏫 Giáo Viên (GV)</div>
             <div class="grid-container" id="gv-grid"></div>
@@ -129,9 +145,8 @@
         </div>
 
         <script>
-            // Mật khẩu mở khóa gọi điện (Bạn có thể đổi chữ '123456' thành mật khẩu bạn muốn)
-            const SECRET_PASSWORD = "123456"; 
-            let isPhoneUnlocked = localStorage.getItem('isPhoneUnlocked') === 'true';
+            const SECRET_PASSWORD = "123456"; // Bạn có thể thay đổi mật khẩu ở đây
+            let isPhoneUnlocked = false;
             
             const staffData = [
                 { name: 'Mai Khánh Ly', phone: '0375874325', role: 'GV' },
@@ -173,29 +188,37 @@
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
             
-            // Kiểm tra trạng thái mở khóa khi tải trang
-            window.onload = function() {
+            // Hàm xử lý ẩn/hiện ô nhập mật khẩu hoặc khóa lại nếu đang mở
+            function toggleLockPanel() {
                 if (isPhoneUnlocked) {
-                    document.getElementById('authBar').style.display = 'none';
-                    document.getElementById('unlockedStatus').style.display = 'block';
+                    // Nếu đang mở khóa -> Bấm vào thì khóa lại ngay lập tức
+                    isPhoneUnlocked = false;
+                    document.getElementById('toggleLockBtn').innerText = "🔒Mở khóa";
+                    document.getElementById('authBar').classList.remove('show');
+                    document.getElementById('passInput').value = "";
+                    renderAllGrids();
+                } else {
+                    // Nếu đang khóa -> Bấm vào thì hiện/ẩn khung nhập pass
+                    const authBar = document.getElementById('authBar');
+                    authBar.classList.toggle('show');
                 }
-            };
+            }
             
-            // Hàm kiểm tra mật khẩu
+            // Kiểm tra mật khẩu
             function checkPassword() {
                 const inputVal = document.getElementById('passInput').value;
                 if (inputVal === SECRET_PASSWORD) {
                     isPhoneUnlocked = true;
-                    localStorage.setItem('isPhoneUnlocked', 'true');
-                    document.getElementById('authBar').style.display = 'none';
-                    document.getElementById('unlockedStatus').style.display = 'block';
-                    renderAllGrids(); // Vẽ lại để hiện nút gọi
+                    document.getElementById('toggleLockBtn').innerText = "🔓 Khóa nút gọi";
+                    document.getElementById('authBar').classList.remove('show');
+                    document.getElementById('passInput').value = "";
+                    renderAllGrids();
                 } else {
                     alert("Mật khẩu không đúng!");
                 }
             }
             
-            // Dùng onSnapshot đồng bộ dữ liệu trạng thái nghỉ/muộn thời gian thực
+            // Đồng bộ thời gian thực trạng thái nghỉ/muộn
             db.collection("data").doc("trangThaiNhanSuV3").onSnapshot((doc) => {
                 if (doc.exists && doc.data().content) {
                     trangThaiNhanSu = doc.data().content;
@@ -229,11 +252,9 @@
                         maskedPhone = person.phone.slice(0, 4) + "***" + person.phone.slice(7);
                     }
             
-                    // Nếu đã mở khóa thì dùng link tel thật, chưa thì để dấu #
                     let phoneHref = isPhoneUnlocked ? `tel:${person.phone}` : "#";
                     let phoneClass = "staff-phone" + (isPhoneUnlocked ? " unlocked" : "");
                     let btnCallClass = "btn-call" + (isPhoneUnlocked ? " unlocked" : "");
-                    
                     let cardClass = "staff-card" + (status.isLeave ? " leave" : "") + (status.isLate ? " late" : "");
                     
                     const html = `
