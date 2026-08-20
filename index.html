@@ -1,880 +1,299 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Điểm Danh Phân Loại Theo Thứ và Khối</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #050508; color: #e0e0e6; padding: 30px 3px 20px 3px; max-width: 600px; margin: 0 auto; }
-        
-        h2 { text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); font-size: 1.3rem; }
-        h3 { color: #ff007f; text-shadow: 0 0 10px rgba(255, 0, 127, 0.5); font-size: 1.1rem; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
-        
-        /* 📂 KHU VỰC TẢI FILE */
-        .upload-card { background: #0a0a14; border: 1px solid #ffd700; border-radius: 6px; padding: 15px 10px; margin-bottom: 15px; box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
-        .btn-group-top { width: 100%; display: block; text-align: center; margin-bottom: 5px; }
-        
-        .custom-upload-btn { 
-            display: inline-block; width: 48%; background: transparent; border: 1px solid #00f0ff; color: #00f0ff; 
-            padding: 12px 5px; font-weight: bold; font-size: 0.85rem; border-radius: 25px; cursor: pointer; 
-            text-transform: uppercase; text-align: center; margin-right: 2%; box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
-        }
-        .custom-upload-btn:active { background: #00f0ff; color: #000; }
-        
-        .btn-danger-top { 
-            display: inline-block; width: 48%; background: transparent; border: 1px solid #ff007f; color: #ff007f; 
-            padding: 12px 5px; font-weight: bold; font-size: 0.85rem; border-radius: 20px; cursor: pointer; 
-            text-transform: uppercase; text-align: center; box-shadow: 0 0 8px rgba(255, 0, 127, 0.2);
-        }
-        .btn-danger-top:active { background: #ff007f; color: #fff; }
-        .file-status { font-size: 0.85rem; color: #ffd700; text-align: center; margin-top: 12px; font-weight: bold; line-height: 1.3; white-space: pre-line; }
-        
-        /* ⏳ PROGRESS BAR */
-        .progress-container { width: 100%; background-color: #050508; border: 1px solid #333; border-radius: 4px; margin: 10px 0; display: none; overflow: hidden; }
-        .progress-bar { width: 0%; height: 16px; background-color: #00ff66; text-align: center; line-height: 16px; color: #000; font-weight: bold; font-size: 0.75rem; transition: width 0.1s ease; box-shadow: 0 0 10px #00ff66; }
-
-        /* 🔍 KHU VỰC TÌM KIẾM HỌC VIÊN CHUNG */
-        .search-box { display: block; background: #0d0d1a; border: 1px solid #333; border-radius: 4px; padding: 10px; margin-bottom: 15px; text-align: center; }
-        .search-input { width: 73%; background: #050508; border: 1px solid #333; color: #fff; padding: 10px; font-size: 0.9rem; border-radius: 4px; outline: none; margin-right: 2%; display: inline-block; vertical-align: middle; }
-        .search-input:focus { border-color: #ffd700; }
-        .search-btn { width: 23%; background: #ffd700; color: #000; border: none; padding: 11px 0; font-weight: bold; font-size: 0.85rem; border-radius: 4px; cursor: pointer; text-transform: uppercase; display: inline-block; vertical-align: middle; }
-
-        /* 📊 KẾT QUẢ TÌM KIẾM TRÊN BẢNG */
-        .search-result-panel { background: #1a0813; border: 1px dashed #ff007f; border-radius: 4px; padding: 12px 8px; margin-bottom: 15px; display: none; }
-        .result-title { color: #ff007f; font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; display: flex; justify-content: space-between; }
-        .result-table { width: 100%; border-collapse: collapse; }
-        .result-table th, .result-table td { border: 1px solid rgba(255, 0, 127, 0.2); padding: 8px 5px; text-align: left; font-size: 0.8rem; }
-        .result-table th { background-color: #4a0025; color: #fff; text-transform: uppercase; font-size: 0.75rem; }
-
-        /* 📦 KHỐI NHÓM THỨ TRONG TUẦN */
-        .group-block-wrapper { margin-bottom: 15px; background: #04040a; border: 1px solid #00f0ff; border-radius: 6px; overflow: hidden; box-shadow: 0 0 10px rgba(0, 240, 255, 0.05); }
-        .group-accordion-header { padding: 14px 10px; background: #111122; cursor: pointer; user-select: none; border-bottom: 2px solid #00f0ff; display: flex; justify-content: space-between; align-items: center; }
-        .group-accordion-header::after { content: '▼'; color: #00f0ff; font-size: 0.85rem; transition: transform 0.3s; margin-left: 10px; }
-        .group-block-wrapper.active .group-accordion-header::after { content: '▲'; }
-        .group-main-title { color: #00f0ff; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; text-shadow: 0 0 8px rgba(0, 240, 255, 0.2); }
-        .group-stats { color: #aaa; font-size: 0.8rem; font-weight: bold; }
-        .group-panel { padding: 10px 5px; display: none; background: #06060c; }
-        .group-block-wrapper.active .group-panel { display: block; }
-
-        /* 🏫 KHỐI GIAO DIỆN LỚP CON */
-        .class-block-wrapper { margin-bottom: 10px; background: #0a0a14; border: 1px solid #333; border-radius: 4px; overflow: hidden; }
-        .class-accordion-header { padding: 12px 10px; background: #0d0d1f; cursor: pointer; position: relative; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        .class-accordion-header::after { content: '▼'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #ffd700; font-size: 0.75rem; }
-        .class-block-wrapper.active .class-accordion-header::after { content: '▲'; color: #00ff66; }
-        
-        .class-header-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-bottom: 4px; padding-right: 20px; }
-        .class-main-title { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); font-size: 1.05rem; text-transform: uppercase; font-weight: bold; }
-        .class-extra-inline { color: #00f0ff; text-shadow: 0 0 8px rgba(0, 240, 255, 0.3); font-size: 0.9rem; font-weight: 500; }
-        
-        .class-schedule { color: #fff; font-size: 0.85rem; opacity: 0.95; margin-bottom: 3px; line-height: 1.4; }
-        .class-stats { text-align: left; color: #00ff66; font-size: 0.75rem; font-weight: 500; }
-        
-        .class-panel { padding: 12px 6px; display: none; background: #0a0a14; }
-        .class-block-wrapper.active .class-panel { display: block; }
-        
-        .add-student-box { display: flex; flex-direction: column; gap: 6px; background: #0d0d1a; border: 1px solid #ffd700; border-radius: 4px; padding: 10px; margin-bottom: 12px; }
-        .add-student-box input { width: 100%; background: #050508; border: 1px solid #333; color: #fff; padding: 8px; font-size: 0.85rem; border-radius: 4px; outline: none; }
-        .btn-add { background: #ffd700; color: #000; border: none; padding: 9px; font-weight: bold; font-size: 0.85rem; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
-        
-        .absent-section { background: rgba(255, 0, 127, 0.05); border: 1px dashed #ff007f; border-radius: 4px; padding: 8px; margin-bottom: 15px; }
-        .absent-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-        .absent-title { color: #ff007f; font-weight: bold; font-size: 0.85rem; }
-        .copy-btn { background: #ff007f; color: #fff; border: none; padding: 4px 10px; font-size: 0.75rem; font-weight: bold; border-radius: 3px; cursor: pointer; }
-        .absent-list { list-style: none; font-size: 0.85rem; color: #ff55a5; line-height: 1.4; }
-        
-        .student-list { display: flex; flex-direction: column; gap: 8px; }
-        .student-card { background: #121224; border: 1px solid #333; border-left: 4px solid #00f0ff; border-radius: 4px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-        .student-card.status-absent { border-left-color: #ff007f; background: #1a0813; }
-        .student-card.status-present { border-left-color: #00ff66; background: #081a10; }
-        .student-card.highlight-search { border: 1px solid #ffd700 !important; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
-        
-        .student-info-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; border-bottom: 1px solid #222; padding-bottom: 4px; }
-        .student-meta { display: flex; flex-direction: column; flex: 1; }
-        .student-name { font-weight: bold; font-size: 0.9rem; color: #fff; }
-        .student-phone { font-size: 0.75rem; color: #888; }
-        
-        .student-actions-right { display: flex; gap: 5px; }
-        .btn-call { background: #ffd700; color: #000; padding: 6px 10px; font-size: 0.8rem; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-delete { background: #4a0000; color: #ff3333; border: 1px solid #ff3333; padding: 6px 8px; font-size: 0.8rem; border-radius: 4px; cursor: pointer; }
-        
-        .student-controls-row { display: flex; gap: 6px; align-items: center; }
-        .btn-action { flex: 1; padding: 8px 2px; font-size: 0.75rem; font-weight: bold; border: none; border-radius: 3px; cursor: pointer; text-align: center; color: #fff; background: #333; }
-        .btn-absent { background: #4a0025; color: #ff007f; border: 1px solid #ff007f; }
-        .btn-absent.active { background: #ff007f; color: #fff; box-shadow: 0 0 8px #ff007f; }
-        .btn-present { background: #003311; color: #00ff66; border: 1px solid #00ff66; }
-        .btn-present.active { background: #00ff66; color: #000; box-shadow: 0 0 8px #00ff66; }
-        .note-select { flex: 1.4; background: #1a1a3a; color: #00f0ff; border: 1px solid #00f0ff; padding: 7px 2px; font-size: 0.75rem; border-radius: 3px; outline: none; }
-        
-        .empty-alert { text-align: center; padding: 30px 10px; color: #555; font-style: italic; font-size: 0.9rem; }
-    </style>
-</head>
-<body>
-    <h2>HỆ THỐNG ĐIỂM DANH THEO LỊCH SHEET L (2 CỘT/THỨ)</h2>
-
-<div class="upload-card">
-    <div class="btn-group-top">
-        <label for="excelFileInput" class="custom-upload-btn">📂 Tải lên File Excel</label>
-        <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="startProcessingExcel(this)">
-        <button class="btn-danger-top" onclick="clearSystemCache()"> XÓA dữ liệu CŨ</button>
-    </div>
-    <div id="fileStatusMessage" class="file-status">Chưa có dữ liệu học viên. Vui lòng chọn tệp Excel.</div>
-</div>
-
-<div class="progress-container" id="progressContainer">
-    <div class="progress-bar" id="progressBar">0%</div>
-</div>
-
-<div class="search-box">
-    <input type="text" id="globalSearchInput" class="search-input" placeholder="Nhập tên hoặc số điện thoại để tìm học viên..." onkeypress="handleSearchKeyPress(event)">
-    <button class="search-btn" onclick="searchGlobalStudent()">Tìm</button>
-</div>
-
-<div id="searchResultBox" class="search-result-panel">
-    <div class="result-title">
-        <span>🔍 KẾT QUẢ TÌM KIẾM TOÀN HỆ THỐNG:</span>
-        <span id="resultCount" style="color: #ffd700;"></span>
-    </div>
-    <table class="result-table">
-        <thead>
-            <tr>
-                <th>Họ và Tên</th>
-                <th>SĐT</th>
-                <th>Lớp Học</th>
-                <th>Gọi</th>
-            </tr>
-        </thead>
-        <tbody id="resultTableBody"></tbody>
-    </table>
-</div>
-
-<div id="dynamicMainContainer">
-    <div class="empty-alert">Danh sách trống. Hệ thống đang đợi bạn nạp file Excel để phân chia lớp tự động theo cột!</div>
-</div>
-
-<script>
-window.masterStudentsDatabase = {}; 
-window.daySchedulesStructure = {
-    "THU_2": { name: "Thứ Hai", classes: [] },
-    "THU_3": { name: "Thứ Ba", classes: [] },
-    "THU_4": { name: "Thứ Tư", classes: [] },
-    "THU_5": { name: "Thứ Năm", classes: [] },
-    "THU_6": { name: "Thứ Sáu", classes: [] },
-    "THU_7": { name: "Thứ Bảy", classes: [] },
-    "CHU_NHAT": { name: "Chủ Nhật", classes: [] }
-};
-window.isUploadingExcel = false;
-window.tempBackupAttendanceMap = {};
-
-const targetDataSheets = ["SV", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "DH25", "DH26"];
-const hardcodedDayKeysOrder = ["THU_2", "THU_3", "THU_4", "THU_5", "THU_6", "THU_7", "CHU_NHAT"];
-
-function khongDauChuanHoa(str) {
-    if (!str) return "";
-    return str.toString().trim().toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .replace(/đ/g, "d")
-        .replace(/[^a-z0-9]/g, ""); 
-}
-
-function chuanHoaSoDienThoai(phone) {
-    if (!phone) return "";
-    let clean = phone.toString().replace(/[^0-9]/g, '');
-    if (clean.startsWith('0')) {
-        clean = clean.substring(1);
-    }
-    return clean;
-}
-
-function displayPhone(p) { 
-    if(!p || p === 'Chưa có' || p === 'undefined') return 'Chưa có';
-    let c = p.toString().replace(/\s+/g, ''); 
-    if(c.length === 10) return c.substring(0,4) + ' ' + c.substring(4,7) + ' ' + c.substring(7);
-    return p; 
-}
-
-function loadLocalCacheBackup() {
-    const cachedDb = localStorage.getItem("master_students_db");
-    const cachedStruct = localStorage.getItem("day_schedules_struct");
-    if (cachedDb && cachedStruct) {
-        window.masterStudentsDatabase = JSON.parse(cachedDb);
-        window.daySchedulesStructure = JSON.parse(cachedStruct);
-        window.renderSystemUIByDay();
-    }
-}
-
-function startProcessingExcel(input) {
-    const file = input.files[0];
-    if (!file) return;
-
-    window.isUploadingExcel = true;
-    document.getElementById('fileStatusMessage').innerText = "Đang trích xuất và bảo toàn lịch sử vắng mặt cũ...";
-    document.getElementById('progressContainer').style.display = 'block';
-    document.getElementById('progressBar').style.width = '10%';
-
-    window.tempBackupAttendanceMap = {};
-    const manualAddedStudentsList = [];
-
-    Object.keys(window.masterStudentsDatabase).forEach(classKey => {
-        if (window.masterStudentsDatabase[classKey] && window.masterStudentsDatabase[classKey].students) {
-            window.masterStudentsDatabase[classKey].students.forEach(std => {
-                let matchKey = khongDauChuanHoa(std.name) + "_" + chuanHoaSoDienThoai(std.phone);
-                window.tempBackupAttendanceMap[matchKey] = {
-                    status: std.status || "present",
-                    note: std.note || ""
-                };
-
-                if (window.masterStudentsDatabase[classKey].sheet === "Thêm thủ công") {
-                    manualAddedStudentsList.push({
-                        targetClass: classKey,
-                        studentObj: std
-                    });
-                }
-            });
-        }
-    });
-
-    window.masterStudentsDatabase = {};
-    Object.keys(window.daySchedulesStructure).forEach(k => window.daySchedulesStructure[k].classes = []);
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <!-- Thư viện Firebase -->
+        <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+        <title>Quản Lý Trạng Thái Nhân Sự</title>
+        <style>
+            * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                background-color: #0f172a;
+                margin: 0;
+                padding: 10px;
+                color: #cbd5e1;
+            }
+            h2 {
+                text-align: center;
+                color: #f8fafc;
+                margin: 10px 0 15px 0;
+                text-transform: uppercase;
+                font-size: 17px;
+            }
+            .container {
+                max-width: 100%;
+                margin: 0 auto;
+                padding-bottom: 30px;
+            }
             
-            const sheetL = workbook.Sheets["L"];
-            if (!sheetL) {
-                alert("Không tìm thấy Sheet 'L'!");
-                window.isUploadingExcel = false;
-                document.getElementById('progressContainer').style.display = 'none';
-                return;
+            /* Tiêu đề từng khu vực */
+            .section-title {
+                font-size: 14px;
+                font-weight: bold;
+                color: #f8fafc;
+                margin: 20px 0 10px 0;
+                border-left: 3px solid #3b82f6;
+                padding-left: 6px;
+                text-transform: uppercase;
             }
-
-            const range = XLSX.utils.decode_range(sheetL['!ref']);
-            let colToDayMap = {};
-            let foundDaysRow = false;
-
-            // BƯỚC 1: Quét tìm dòng tiêu đề Thứ (Thường ở dòng 0-3) để map cột sang Thứ tương ứng
-            for (let r = range.s.r; r <= Math.min(range.e.r, 5); r++) {
-                for (let c = range.s.c; c <= range.e.c; c++) {
-                    let cellRef = XLSX.utils.encode_cell({ r: r, c: c });
-                    let cell = sheetL[cellRef];
-                    if (!cell || !cell.v) continue;
-                    
-                    let cellVal = cell.v.toString().trim().toUpperCase();
-                    let currentKey = "";
-                    if (cellVal.includes("THỨ 2") || cellVal === "T2") currentKey = "THU_2";
-                    else if (cellVal.includes("THỨ 3") || cellVal === "T3") currentKey = "THU_3";
-                    else if (cellVal.includes("THỨ 4") || cellVal === "T4") currentKey = "THU_4";
-                    else if (cellVal.includes("THỨ 5") || cellVal === "T5") currentKey = "THU_5";
-                    else if (cellVal.includes("THỨ 6") || cellVal === "T6") currentKey = "THU_6";
-                    else if (cellVal.includes("THỨ 7") || cellVal === "T7") currentKey = "THU_7";
-                    else if (cellVal.includes("CN") || cellVal.includes("CHỦ NHẬT")) currentKey = "CHU_NHAT";
-
-                    if (currentKey) {
-                        colToDayMap[c] = currentKey; 
-                        foundDaysRow = true;
-                    }
-                }
-                if (foundDaysRow) break;
-            }
-
-            // BƯỚC 2: Quét tất cả các hàng để lấy Tên Lớp và Giờ Học từ cặp 2 cột kế tiếp
-            for (let r = range.s.r; r <= range.e.r; r++) {
-                // Cột Phòng/Tầng cố định nằm ở Cột B (index = 1) hoặc Cột C (index = 2). Hãy lấy cột B/C làm phòng
-                let roomCell1 = sheetL[XLSX.utils.encode_cell({ r: r, c: 1 })];
-                let roomCell2 = sheetL[XLSX.utils.encode_cell({ r: r, c: 2 })];
-                let roomLocation = "";
-                if (roomCell1 && roomCell1.v && roomCell1.v.toString().includes("Tầng")) roomLocation = roomCell1.v.toString().trim();
-                else if (roomCell2 && roomCell2.v && roomCell2.v.toString().includes("Tầng")) roomLocation = roomCell2.v.toString().trim();
-
-                for (let c = range.s.c; c <= range.e.c; c++) {
-                    let dayKey = colToDayMap[c];
-                    if (!dayKey) continue; // Nếu cột này không được map với thứ nào thì bỏ qua
-
-                    let cellRef = XLSX.utils.encode_cell({ r: r, c: c });
-                    let cell = sheetL[cellRef];
-                    if (!cell || !cell.v) continue;
-
-                    let text = cell.v.toString().trim();
-                    let textLower = text.toLowerCase();
-                    
-                    // Logic lọc các chuỗi là Tên lớp hợp lệ (E..., IELTS, KID, SUN, VIP, vv.)
-                    if (text.length > 2 && !textLower.includes("thứ") && !textLower.includes("chủ nhật") && !textLower.includes("sáng") && !textLower.includes("chiều") && !textLower.includes("tầng")) {
-                        let cleanClassName = text.split("\n")[0].trim();
-                        
-                        // Lấy cột ngay sát bên phải (c + 1) để lấy giờ học và tên giáo viên
-                        let extraRef = XLSX.utils.encode_cell({ r: r, c: c + 1 });
-                        let extraCell = sheetL[extraRef];
-                        let extraInfo = (extraCell && extraCell.v) ? extraCell.v.toString().trim() : "";
-
-                        let classPayload = {
-                            classNameKey: cleanClassName,
-                            room: roomLocation || "Chưa rõ phòng",
-                            scheduleAndTeacher: extraInfo,
-                            rowIndex: r
-                        };
-
-                        // Tránh trùng lặp lớp trên cùng một dòng của cùng một thứ
-                        let isExist = window.daySchedulesStructure[dayKey].classes.some(cls => cls.classNameKey === cleanClassName && cls.rowIndex === r);
-                        if (!isExist && cleanClassName.length > 1) {
-                            window.daySchedulesStructure[dayKey].classes.push(classPayload);
-                        }
-                    }
-                }
-            }
-
-            document.getElementById('progressBar').style.width = '40%';
-            document.getElementById('fileStatusMessage').innerText = "Đang kiểm tra và ánh xạ thông tin học sinh từ file khối...";
-
-            const sheetsToProcess = workbook.SheetNames.filter(name => targetDataSheets.includes(name.trim()));
-            let totalSheets = sheetsToProcess.length;
-            let currentSheetIdx = 0;
-
-            async function parseSheetStep() {
-                if (currentSheetIdx >= totalSheets) {
-                    document.getElementById('progressBar').style.width = '85%';
-                    
-                    manualAddedStudentsList.forEach(item => {
-                        let targetClassUpper = item.targetClass.toUpperCase();
-                        if (!window.masterStudentsDatabase[targetClassUpper]) {
-                            window.masterStudentsDatabase[targetClassUpper] = {
-                                sheet: "Thêm thủ công", schedule: "", students: []
-                            };
-                        }
-                        window.masterStudentsDatabase[targetClassUpper].students.push(item.studentObj);
-                    });
-
-                    await saveDatabaseState();
-                    window.renderSystemUIByDay();
-                    
-                    document.getElementById('progressBar').style.width = '100%';
-                    setTimeout(() => {
-                        document.getElementById('progressContainer').style.display = 'none';
-                        document.getElementById('fileStatusMessage').innerText = "⚡ ĐÃ ĐỒNG BỘ THÀNH CÔNG LỊCH TRÌNH SHEET L! ⚡";
-                        window.isUploadingExcel = false;
-                    }, 500);
-                    return;
-                }
-
-                let sheetName = sheetsToProcess[currentSheetIdx];
-                let worksheet = workbook.Sheets[sheetName];
-                if (worksheet) {
-                    let jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                    let pendingClassNameStr = "";
-
-                    jsonData.forEach((row) => {
-                        if (!row || row.length < 2) return;
-                        let cellA = row[0] ? row[0].toString().trim() : "";
-                        let cellB = row[1] ? row[1].toString().trim() : "";
-                        let cellC = row[2] ? row[2].toString().trim() : "";
-
-                        let cleanPhone = chuanHoaSoDienThoai(cellC);
-
-                        if (/^\d+$/.test(cellA) || (cellA === "" && cellB !== "" && cleanPhone.length >= 9)) {
-                            let classKeyUpper = pendingClassNameStr.toUpperCase().trim();
-                            if (!classKeyUpper) classKeyUpper = sheetName.toUpperCase().trim();
-
-                            if (!window.masterStudentsDatabase[classKeyUpper]) {
-                                window.masterStudentsDatabase[classKeyUpper] = {
-                                    sheet: sheetName,
-                                    schedule: "",
-                                    students: []
-                                };
-                            }
-
-                            let matchKey = khongDauChuanHoa(cellB) + "_" + chuanHoaSoDienThoai(cleanPhone);
-                            let restored = window.tempBackupAttendanceMap[matchKey] || { status: "present", note: "" };
-
-                            window.masterStudentsDatabase[classKeyUpper].students.push({
-                                id: window.masterStudentsDatabase[classKeyUpper].students.length + 1,
-                                name: cellB,
-                                phone: cleanPhone.length >= 9 ? "0" + cleanPhone : "Chưa có",
-                                status: restored.status,
-                                note: restored.note
-                            });
-                            return;
-                        }
-                        if (cellB && cleanPhone.length < 9 && !cellB.includes("Họ và tên") && cellB.length > 2) {
-                            pendingClassNameStr = cellB;
-                        }
-                    });
-                }
-
-                currentSheetIdx++;
-                let percent = Math.round((currentSheetIdx / totalSheets) * 40) + 40;
-                document.getElementById('progressBar').style.width = percent + '%';
-                setTimeout(parseSheetStep, 15);
-            }
-            parseSheetStep();
-
-        } catch (err) {
-            console.error(err);
-            window.isUploadingExcel = false;
-            document.getElementById('progressContainer').style.display = 'none';
-            alert("Lỗi cấu trúc tệp Excel!");
-        }
-    };
-    reader.readAsArrayBuffer(file);
-}
-    // ⚡ HÀM SO KHỚP THÔNG MINH ĐỂ LIÊN KẾT LỚP TRÊN LỊCH VỚI DANH SÁCH KHỐI
-function findStudentDataMatch(classNameKey) {
-    let keys = Object.keys(window.masterStudentsDatabase);
-    let targetUpper = classNameKey.toUpperCase().trim();
-    
-    if (window.masterStudentsDatabase[targetUpper]) {
-        return { fullKey: targetUpper, data: window.masterStudentsDatabase[targetUpper] };
-    }
-
-    if (targetUpper.includes("KID")) {
-        let cleanTarget = targetUpper.replace(/KID/g, " KID ").replace(/[^A-Z0-9]/g, " ");
-        let words = cleanTarget.split(/\s+/).filter(w => w.length > 0);
-        let firstWord = words[0] || ""; 
-
-        if (firstWord.includes("SKY") || firstWord.includes("SMART")) {
-            for (let k of keys) {
-                let currentUpper = k.toUpperCase().trim();
-                let cleanCurrent = currentUpper.replace(/KID/g, " KID ").replace(/[^A-Z0-9]/g, " ");
-                let currentWords = cleanCurrent.split(/\s+/).filter(w => w.length > 0);
-                
-                if (currentWords.includes(firstWord)) {
-                    return { fullKey: k, data: window.masterStudentsDatabase[k] };
-                }
-            }
-        }
-    }
-
-    let str1 = classNameKey.toUpperCase().replace(/[^A-Z0-9]/g, " ");
-    let words1 = str1.split(/\s+/).filter(w => w.length > 1 && w !== "LỚP" && w !== "KHỐI");
-
-    for (let k of keys) {
-        let str2 = k.toUpperCase().replace(/[^A-Z0-9]/g, " ");
-        let words2 = str2.split(/\s+/).filter(w => w.length > 1);
-        
-        let intersect = words1.filter(w => words2.includes(w));
-        if (intersect.some(w => !/^\d+$/.test(w) && w !== "SL" && w !== "GV")) {
-            return { fullKey: k, data: window.masterStudentsDatabase[k] };
-        }
-    }
-    return null;
-}
-
-window.renderSystemUIByDay = function() {
-    const mainContainer = document.getElementById("dynamicMainContainer");
-    
-    const openedDomIds = [];
-    document.querySelectorAll('.class-block-wrapper.active, .group-block-wrapper.active').forEach(el => {
-        if (el.id) openedDomIds.push(el.id);
-    });
-
-    mainContainer.innerHTML = "";
-
-    let hasData = hardcodedDayKeysOrder.some(k => window.daySchedulesStructure[k] && window.daySchedulesStructure[k].classes.length > 0);
-    if (!hasData) {
-        mainContainer.innerHTML = '<div class="empty-alert">Danh sách trống. Hệ thống đang đợi bạn nạp file Excel để phân chia lớp tự động theo cột!</div>';
-        return;
-    }
-
-    hardcodedDayKeysOrder.forEach(dayKey => {
-        const dayGroup = window.daySchedulesStructure[dayKey];
-        if (!dayGroup || dayGroup.classes.length === 0) return; 
-
-        dayGroup.classes.sort((a, b) => {
-            let rA = a.rowIndex !== undefined ? a.rowIndex : 9999;
-            let rB = b.rowIndex !== undefined ? b.rowIndex : 9999;
-            return rA - rB;
-        });
-
-        const daySection = document.createElement("div");
-        daySection.className = "group-block-wrapper";
-        daySection.id = `day-wrapper-${dayKey}`;
-        
-        daySection.innerHTML = `
-            <div class="group-accordion-header" onclick="toggleAccordion(this)">
-                <div class="group-panel-title-wrapper">
-                    <div class="group-main-title">${dayGroup.name}</div>
-                </div>
-                <div class="group-stats" id="stats-summary-${dayKey}">Số lớp: ${dayGroup.classes.length}</div>
-            </div>
-            <div class="group-panel"></div>
-        `;
-        mainContainer.appendChild(daySection);
-        const groupPanel = daySection.querySelector(".group-panel");
-
-        dayGroup.classes.forEach((clsObj, idx) => {
-            const studentMatch = findStudentDataMatch(clsObj.classNameKey);
-            let studentList = [];
-
-            let roomText = clsObj.room ? "📍 Vị trí: " + clsObj.room : "📍 Vị trí: Chưa rõ";
-
-            let fullReportTitle = clsObj.classNameKey;
-            if (clsObj.scheduleAndTeacher) fullReportTitle += " (" + clsObj.scheduleAndTeacher + ")";
-            fullReportTitle += " - " + roomText;
-
-            if (studentMatch) {
-                studentList = studentMatch.data.students;
-            }
-
-            const total = studentList.length;
-            const absent = studentList.filter(s => s.status === 'absent').length;
-            const present = total - absent;
-            const safeId = `${dayKey}-${idx}`;
-
-            const classSection = document.createElement("div");
-            classSection.className = "class-block-wrapper";
-            classSection.setAttribute("id", `class-wrapper-${safeId}`);
-            classSection.setAttribute("data-classname-box", studentMatch ? studentMatch.fullKey : clsObj.classNameKey);
-
-            classSection.innerHTML = `
-                <div class="class-accordion-header" onclick="toggleAccordion(this)">
-                    <div class="class-header-row">
-                        <span class="class-main-title">${clsObj.classNameKey}</span>
-                        ${clsObj.scheduleAndTeacher ? `<span class="class-extra-inline">(${clsObj.scheduleAndTeacher})</span>` : ''}
-                    </div>
-                    <div class="class-schedule" style="white-space: pre-line;">${roomText}</div>
-                    <div class="class-stats" id="stats-display-${safeId}">Sĩ số: ${total} | Có mặt: ${present} | Vắng: ${absent}</div>
-                </div>
-                
-                <div class="class-panel">
-                    <h3>Danh Sách Thành Viên Lớp</h3>
-                    <br>
-                    
-                    <div class="add-student-box">
-                        <input type="text" id="inputName-${safeId}" placeholder="Họ và tên học viên...">
-                        <input type="tel" id="inputPhone-${safeId}" placeholder="Số điện thoại...">
-                        <button class="btn-add" onclick="addNewStudentToUI('${studentMatch ? studentMatch.fullKey : clsObj.classNameKey}', '${safeId}')">+ Thêm học sinh</button>
-                    </div>
-                    
-                    <div class="absent-section">
-                        <div class="absent-header">
-                            <span class="absent-title">HỌC VIÊN VẮNG MẶT HÔM NAY</span>
-                            <button class="copy-btn" id="btnCopy-${safeId}">Copy nhanh</button>
-                        </div>
-                        <ul class="absent-list" id="absentList-${safeId}">
-                            ${renderAbsentRowsHtml(studentList)}
-                        </ul>
-                    </div>
-                    
-                    <div class="student-list" id="studentList-${safeId}">
-                        ${renderStudentCardsHtml(studentMatch ? studentMatch.fullKey : clsObj.classNameKey, safeId, studentList)}
-                    </div>
-                </div>
-            `;
             
-            classSection.querySelector(`#btnCopy-${safeId}`).onclick = function(e) {
-                e.stopPropagation();
-                copyAbsentReport(studentMatch ? studentMatch.fullKey : clsObj.classNameKey, fullReportTitle);
+            /* Lưới tối ưu cho điện thoại */
+            .grid-container {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            @media (min-width: 480px) {
+                .grid-container {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+            
+            /* Thẻ nhân sự */
+            .staff-card {
+                background: #1e293b;
+                border: 1.5px solid #334155;
+                border-radius: 8px;
+                padding: 10px 12px;
+                position: relative;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                transition: all 0.2s;
+            }
+            
+            .staff-card.leave {
+                border-left: 4px solid #ef4444;
+                background: #191c27;
+            }
+            .staff-card.late {
+                border-left: 4px solid #f59e0b;
+            }
+            
+            .staff-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .staff-name {
+                font-size: 15px;
+                font-weight: bold;
+                color: #fff;
+            }
+            .staff-phone {
+                font-size: 13px;
+                color: #ffbd59;
+                font-weight: 600;
+                text-decoration: none;
+                display: inline-block;
+                margin: 2px 0 6px 0;
+            }
+            
+            .card-actions {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 6px;
+                padding-top: 6px;
+                border-top: 1px solid #334155;
+            }
+            .checkbox-group {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .checkbox-label {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 12px;
+                cursor: pointer;
+                color: #e2e8f0;
+                user-select: none;
+            }
+            .checkbox-label input[type="checkbox"] {
+                width: 17px;
+                height: 17px;
+                accent-color: #ef4444;
+                cursor: pointer;
+            }
+            .btn-call {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 3px;
+                background-color: #059669;
+                color: white !important;
+                text-decoration: none;
+                font-weight: bold;
+                font-size: 12px;
+                padding: 8px 12px;
+                border-radius: 6px;
+                white-space: nowrap;
+            }
+            .btn-call:active { background-color: #047857; transform: scale(0.96); }
+        </style>
+    </head>
+
+    <body>
+
+        <div class="container">
+            <h2>Trạng Thái Nhân Sự</h2>
+
+            <div class="section-title">👩‍🏫 Giáo Viên (GV)</div>
+            <div class="grid-container" id="gv-grid"></div>
+
+            <div class="section-title">🤝 Trợ Giảng (TG)</div>
+            <div class="grid-container" id="tg-grid"></div>
+
+            <div class="section-title">🧹 Nhân Viên Quét Dọn (NVQD)</div>
+            <div class="grid-container" id="nvqd-grid"></div>
+
+            <div class="section-title">🩺 Bác Sĩ (BS)</div>
+            <div class="grid-container" id="bs-grid"></div>
+        </div>
+
+        <script>
+            // Dữ liệu nhân sự
+            const staffData = [
+                { name: 'Mai Khánh Ly', phone: '0375874325', role: 'GV' },
+                { name: 'Nguyễn Hà An', phone: '0975710497', role: 'GV' },
+                { name: 'Phạm Thị Thanh Tân', phone: '0389919237', role: 'GV' },
+                { name: 'Nguyễn Thị Phương', phone: '0363565410', role: 'GV' },
+                { name: 'Lê Hồng Nhung', phone: '0367701993', role: 'GV' },
+                { name: 'Đỗ Trà My', phone: '0328468602', role: 'GV' },
+                { name: 'Nguyễn Thanh Thảo', phone: '0388357632', role: 'GV' },
+                { name: 'Nguyễn Thu Hà B', phone: '0359788582', role: 'GV' },
+                { name: 'Nguyễn Thu Phương', phone: '0964382095', role: 'GV' },
+                { name: 'Ngô Thị Thu Hằng', phone: '0968125259', role: 'GV' },
+                { name: 'Lê Minh Phương', phone: '0332323361', role: 'GV' },
+                { name: 'Nguyễn Như Mai', phone: '0395729123', role: 'GV' },
+                { name: 'Hoàng Yến', phone: '0888281294', role: 'GV' },
+                { name: 'Lê Thắm', phone: '0945007495', role: 'GV' },
+                
+                { name: 'Nguyễn Văn A', phone: '0912345678', role: 'TG' },
+                { name: 'Ninh Trang', phone: '0338131698', role: 'TG' },
+                { name: 'Quang Tùng', phone: '0365164503', role: 'TG' },
+                { name: 'Đức Nguyên', phone: '0347034672', role: 'TG' },
+                { name: 'Khôi Nguyên', phone: '0813775208', role: 'TG' },
+                { name: 'Hoàng Long lớn', phone: '0386700121', role: 'TG' },
+                { name: 'Đàm Xuân Bắc', phone: '0916295600', role: 'TG' },
+                
+                { name: 'Bà Nguyễn Thị M', phone: '0987654321', role: 'NVQD' },
+                { name: 'Bác sĩ Trần Văn Z', phone: '0909090909', role: 'BS' }
+            ];
+            
+            let trangThaiNhanSu = JSON.parse(localStorage.getItem('trangThaiNhanSu_V3')) || {};
+            
+            // Cấu hình Firebase chuẩn (chỉ để 1 cấu hình duy nhất)
+            const firebaseConfig = {
+                apiKey: "AIzaSyDbCF0pFsdXqD14Y-wjWLFoNCGfP1LBlD8",
+                authDomain: "tienganhhavi-12b54.firebaseapp.com",
+                projectId: "tienganhhavi-12b54",
+                storageBucket: "tienganhhavi-12b54.firebasestorage.app",
+                messagingSenderId: "208059039650",
+                appId: "1:208059039650:web:d272318418e01d0f50fcfb"
             };
-
-            classSection.querySelector('.class-panel').onclick = (e) => e.stopPropagation();
-            groupPanel.appendChild(classSection);
-        });
-    });
-
-    openedDomIds.forEach(id => {
-        let target = document.getElementById(id);
-        if (target) target.classList.add('active');
-    });
-}
-
-function renderAbsentRowsHtml(students) {
-    const absentStudents = students.filter(s => s.status === 'absent');
-    if (absentStudents.length === 0) return '<li><em>Chưa ghi nhận học sinh vắng</em></li>';
-    return absentStudents.map(s => `<li>• ${s.name} ${s.note ? '(' + s.note + ')' : '(Chưa rõ lý do)'}</li>`).join('');
-}
-
-function renderStudentCardsHtml(classNameKey, safeId, students) {
-    if (students.length === 0) return '<div class="empty-alert">Không tìm thấy dữ liệu danh sách lớp từ các sheet khối. Bạn có thể thêm học sinh thủ công ở trên!</div>';
-    
-    return students.map((student, idx) => {
-        const absentActive = student.status === 'absent' ? 'active' : '';
-        const presentActive = student.status === 'present' ? 'active' : '';
-        const cardId = `card-${safeId}-${student.id}`;
-
-        return `
-            <div class="student-card status-${student.status}" id="${cardId}">
-                <div class="student-info-row">
-                    <div class="student-meta">
-                        <span class="student-name">${idx + 1}. ${student.name}</span>
-                        <span class="student-phone">SĐT: ${student.phone && student.phone !== 'Chưa có' ? student.phone.substring(0, 4) + ' *** ' + student.phone.substring(7) : 'Chưa có'}</span>
-                    </div>
-                    <div class="student-actions-right">
-                        <button class="btn-call" onclick="callPhoneAction('${student.phone}')">📞</button>
-                        <button class="btn-delete" onclick="deleteStudent('${classNameKey}', ${student.id}, '${safeId}')">Xoá</button>
-                    </div>
-                </div>
-                <div class="student-controls-row">
-                    <button class="btn-action btn-absent ${absentActive}" onclick="updateStudentStatus('${classNameKey}', ${student.id}, 'absent', '${safeId}')">Vắng</button>
-                    <button class="btn-action btn-present ${presentActive}" onclick="updateStudentStatus('${classNameKey}', ${student.id}, 'present', '${safeId}')">Đi Học</button>
-                    <select class="note-select" onchange="updateStudentNote('${classNameKey}', ${student.id}, this.value, '${safeId}')">
-                        <option value="" ${student.note===''?'selected':''}>-- Ghi chú --</option>
-                        <option value="***" ${student.note==='***'?'selected':''}>***</option>
-                        <option value="Đi muộn" ${student.note==='Đi muộn'?'selected':''}>Đi muộn</option>
-                        <option value="Không nghe máy" ${student.note==='Không nghe máy'?'selected':''}>Không nghe máy</option>
-                        <option value="Nghỉ hôm nay" ${student.note==='Nghỉ hôm nay'?'selected':''}>Nghỉ hôm nay</option>
-                        <option value="Ốm" ${student.note==='Ốm'?'selected':''}>Ốm đau</option>
-                    </select>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function toggleAccordion(element) {
-    element.parentElement.classList.toggle('active');
-}
-
-function updateStudentStatus(classNameKey, studentId, status, safeId) {
-    let match = findStudentDataMatch(classNameKey);
-    if (match) {
-        let student = match.data.students.find(s => s.id === studentId);
-        if (student) {
-            student.status = status;
             
-            // Cập nhật UI nhanh tại chỗ
-            const card = document.getElementById(`card-${safeId}-${studentId}`);
-            if(card) {
-                card.className = `student-card status-${status}`;
-                card.querySelector('.btn-absent').classList.toggle('active', status === 'absent');
-                card.querySelector('.btn-present').classList.toggle('active', status === 'present');
+            // Khởi tạo Firebase
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+            
+            // Hàm đồng bộ lên Firebase
+            function syncToFirebase(data) {
+                db.collection("data").doc("trangThaiNhanSuV3").set({ content: data })
+                .then(() => {
+                    console.log("✅ Đã đồng bộ thành công lên Firebase!");
+                })
+                .catch((error) => {
+                    console.error("❌ Lỗi đồng bộ Firebase:", error);
+                });
             }
             
-            // Re-render danh sách vắng
-            const absList = document.getElementById(`absentList-${safeId}`);
-            if(absList) absList.innerHTML = renderAbsentRowsHtml(match.data.students);
-            
-            // Cập nhật thống kê sĩ số lớp
-            const total = match.data.students.length;
-            const absent = match.data.students.filter(s => s.status === 'absent').length;
-            const present = total - absent;
-            const statsDisp = document.getElementById(`stats-display-${safeId}`);
-            if(statsDisp) statsDisp.innerText = `Sĩ số: ${total} | Có mặt: ${present} | Vắng: ${absent}`;
-            
-            saveDatabaseState();
-        }
-    }
-}
-
-function updateStudentNote(classNameKey, studentId, value, safeId) {
-    let match = findStudentDataMatch(classNameKey);
-    if (match) {
-        let student = match.data.students.find(s => s.id === studentId);
-        if (student) {
-            student.note = value;
-            const absList = document.getElementById(`absentList-${safeId}`);
-            if(absList) absList.innerHTML = renderAbsentRowsHtml(match.data.students);
-            saveDatabaseState();
-        }
-    }
-}
-
-function addNewStudentToUI(classNameKey, safeId) {
-    const nameInput = document.getElementById(`inputName-${safeId}`);
-    const phoneInput = document.getElementById(`inputPhone-${safeId}`);
-    const name = nameInput.value.trim();
-    const phone = phoneInput.value.trim().replace(/\s+/g, '') || 'Chưa có';
-    if (name === '') { alert('Vui lòng điền tên học sinh!'); return; }
-
-    let match = findStudentDataMatch(classNameKey);
-    let targetKey = classNameKey.toUpperCase();
-    if (match) {
-        targetKey = match.fullKey;
-    } else {
-        window.masterStudentsDatabase[targetKey] = { sheet: "Thêm thủ công", schedule: "", students: [] };
-    }
-
-    const studentsList = window.masterStudentsDatabase[targetKey].students;
-    const nextId = studentsList.length > 0 ? Math.max(...studentsList.map(s => s.id)) + 1 : 1;
-    studentsList.push({ id: nextId, name: name, phone: phone, status: 'present', note: '' });
-    
-    nameInput.value = "";
-    phoneInput.value = "";
-    
-    saveDatabaseState();
-    window.renderSystemUIByDay();
-}
-
-function deleteStudent(classNameKey, studentId, safeId) {
-    let match = findStudentDataMatch(classNameKey);
-    if (match && confirm("Bạn có chắc chắn muốn xóa học sinh này khỏi danh sách lớp học?")) {
-        match.data.students = match.data.students.filter(s => s.id !== studentId);
-        match.data.students.forEach((s, idx) => s.id = idx + 1);
-        saveDatabaseState();
-        window.renderSystemUIByDay();
-    }
-}
-
-function copyAbsentReport(classNameKey, titleText) {
-    let match = findStudentDataMatch(classNameKey);
-    const students = match ? match.data.students : [];
-    const absentStudents = students.filter(s => s.status === 'absent');
-    
-    let report = `LỚP HỌC: ${titleText}\n`;
-    report += `Sĩ số: ${students.length} (Vắng: ${absentStudents.length})\n`;
-    report += `-------------------------\nDanh sách học sinh vắng:\n`;
-    
-    if (absentStudents.length === 0) {
-        report += `- Lớp đi học đầy đủ.`;
-    } else {
-        absentStudents.forEach((s, i) => {
-            report += `${i + 1}. ${s.name}${s.note ? ' (' + s.note + ')' : ' (Chưa rõ lý do)'}\n`;
-        });
-    }
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(report).then(() => {
-            alert('✅ Đã sao chép báo cáo vắng lớp ' + classNameKey);
-        }).catch(err => {
-            fallbackCopyText(report, classNameKey);
-        });
-    } else {
-        fallbackCopyText(report, classNameKey);
-    }
-}
-
-function fallbackCopyText(text, classNameKey) {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    textArea.style.position = "fixed";
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    try {
-        document.execCommand('copy');
-        alert('✅ Đã sao chép báo cáo vắng lớp ' + classNameKey);
-    } catch (err) {
-        alert('Không thể sao chép dữ liệu, vui lòng cấp quyền cho trình duyệt.');
-    }
-    document.body.removeChild(textArea);
-}
-
-async function saveDatabaseState() {
-    localStorage.setItem('master_students_db', JSON.stringify(window.masterStudentsDatabase));
-    localStorage.setItem('day_schedules_struct', JSON.stringify(window.daySchedulesStructure));
-    if (typeof window.saveToFirebase === "function") {
-        await window.saveToFirebase();
-    }
-}
-
-function callPhoneAction(phone) {
-    if (!phone || phone === 'Chưa có') { alert('Chưa cập nhật SĐT!'); return; }
-    window.location.href = 'tel:' + phone;
-}
-
-function searchGlobalStudent() {
-    const keyword = document.getElementById('globalSearchInput').value.trim().toLowerCase();
-    const resultBox = document.getElementById('searchResultBox');
-    const resultBody = document.getElementById('resultTableBody');
-    const resultCount = document.getElementById('resultCount');
-    
-    resultBody.innerHTML = "";
-    resultBox.style.display = 'none';
-    if (keyword === "") return;
-
-    let matchCount = 0;
-    let matchedKeys = new Set(); 
-
-    Object.keys(window.masterStudentsDatabase).forEach(classKey => {
-        window.masterStudentsDatabase[classKey].students.forEach(student => {
-            if (student.name.toLowerCase().includes(keyword) || student.phone.toString().includes(keyword)) {
-                matchCount++;
-                matchedKeys.add(classKey); 
+            function updateStatus(id, field, value) {
+                if (!trangThaiNhanSu[id]) {
+                    trangThaiNhanSu[id] = { isLeave: false, isLate: false };
+                }
+                trangThaiNhanSu[id][field] = value;
                 
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="font-weight: bold; color: #fff;">${student.name}</td>
-                    <td style="color: #00ff66; font-family: monospace;">${displayPhone(student.phone)}</td>
-                    <td style="color: #00f0ff; font-weight: bold; font-size:0.75rem;">${classKey}</td>
-                    <td style="text-align:center;"><button class="btn-call" style="padding:4px 8px; font-size:0.8rem;" onclick="callPhoneAction('${student.phone}')">📞</button></td>
-                `;
-                resultBody.appendChild(tr);
+                localStorage.setItem('trangThaiNhanSu_V3', JSON.stringify(trangThaiNhanSu));
+                syncToFirebase(trangThaiNhanSu);
+                renderAllGrids();
             }
-        });
-    });
+            
+            function createCardHTML(person, index) {
+                const uniqueId = person.role + "_" + index;
+                const status = trangThaiNhanSu[uniqueId] || { isLeave: false, isLate: false };
+                const phoneDisplay = person.phone ? person.phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1.$2.$3") : "";
+                
+                let cardClass = "staff-card";
+                if (status.isLeave) cardClass += " leave";
+                else if (status.isLate) cardClass += " late";
+            
+                return `
+                    <div class="${cardClass}">
+                        <div class="staff-header">
+                            <span class="staff-name">${person.name}</span>
+                        </div>
+                        <a href="tel:${person.phone}" class="staff-phone">📞 ${phoneDisplay}</a>
+                        
+                        <div class="card-actions">
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" ${status.isLeave ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLeave', this.checked)">
+                                    Xin nghỉ hôm nay
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" ${status.isLate ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLate', this.checked)">
+                                    Đi muộn
+                                </label>
+                            </div>
+                            <a href="tel:${person.phone}" class="btn-call">📞 Gọi</a>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function renderAllGrids() {
+                const gvContainer = document.getElementById('gv-grid');
+                const tgContainer = document.getElementById('tg-grid');
+                const nvqdContainer = document.getElementById('nvqd-grid');
+                const bsContainer = document.getElementById('bs-grid');
+            
+                gvContainer.innerHTML = '';
+                tgContainer.innerHTML = '';
+                nvqdContainer.innerHTML = '';
+                bsContainer.innerHTML = '';
+            
+                staffData.forEach((person, index) => {
+                    const html = createCardHTML(person, index);
+                    if (person.role === 'GV') {
+                        gvContainer.innerHTML += html;
+                    } else if (person.role === 'TG') {
+                        tgContainer.innerHTML += html;
+                    } else if (person.role === 'NVQD') {
+                        nvqdContainer.innerHTML += html;
+                    } else if (person.role === 'BS') {
+                        bsContainer.innerHTML += html;
+                    }
+                });
+            }
+            
+            window.onload = function() {
+                db.collection("data").doc("trangThaiNhanSuV3").get().then(doc => {
+                    if (doc.exists && doc.data().content) {
+                        trangThaiNhanSu = doc.data().content;
+                        localStorage.setItem('trangThaiNhanSu_V3', JSON.stringify(trangThaiNhanSu));
+                    }
+                    renderAllGrids();
+                }).catch(err => {
+                    console.error("Lỗi tải dữ liệu:", err);
+                    renderAllGrids();
+                });
+            };
+        </script>
+    </body>
 
-    if (matchCount > 0) {
-        resultCount.innerText = `Tìm thấy ${matchCount} kết quả`;
-        resultBox.style.display = 'block';
-        
-        matchedKeys.forEach(classKey => {
-            document.querySelectorAll(`[data-classname-box="${classKey}"]`).forEach(cw => {
-                cw.classList.add('active');
-                cw.parentElement.parentElement.classList.add('active'); 
-            });
-        });
-    } else {
-        alert("Không tìm thấy kết quả phù hợp.");
-    }
-}
-
-function handleSearchKeyPress(event) {
-    if (event.key === 'Enter') searchGlobalStudent();
-}
-
-function clearSystemCache() {
-    if (confirm("Xóa toàn bộ dữ liệu lưu trữ trên hệ thống đám mây?")) {
-        localStorage.clear();
-        window.isUploadingExcel = false;
-        window.tempBackupAttendanceMap = {};
-        window.masterStudentsDatabase = {};
-        Object.keys(window.daySchedulesStructure).forEach(k => window.daySchedulesStructure[k].classes = []);
-        window.renderSystemUIByDay();
-        document.getElementById('progressContainer').style.display = 'none';
-        document.getElementById('progressBar').style.width = '0%';
-        document.getElementById('excelFileInput').value = ""; 
-        if (typeof window.saveToFirebase === "function") {
-            window.saveToFirebase();
-        }
-        document.getElementById('fileStatusMessage').innerText = "Chưa có dữ liệu học viên. Vui lòng chọn tệp Excel.";
-    }
-}
-</script>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDbCF0pFsdXqD14Y-wjWLFoNCGfP1LBlD8",
-  authDomain: "tienganhhavi-12b54.firebaseapp.com",
-  projectId: "tienganhhavi-12b54",
-  storageBucket: "tienganhhavi-12b54.firebasestorage.app",
-  messagingSenderId: "208059039650",
-  appId: "1:208059039650:web:d272318418e01d0f50fcfb"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-window.saveToFirebase = async function () {
-    try {
-        await setDoc(doc(db, "system", "database_v3_by_column"), {
-            database: window.masterStudentsDatabase,
-            structure: window.daySchedulesStructure
-        });
-    } catch (e) {
-        console.error("Lỗi đồng bộ Firebase: ", e);
-    }
-};
-
-document.addEventListener("DOMContentLoaded", () => {
-    onSnapshot(doc(db, "system", "database_v3_by_column"), (snapshot) => {
-        if (snapshot.exists() && !window.isUploadingExcel) {
-            const data = snapshot.data();
-            window.masterStudentsDatabase = data.database || {};
-            window.daySchedulesStructure = data.structure || window.daySchedulesStructure;
-            window.renderSystemUIByDay();
-            document.getElementById('fileStatusMessage').innerText = "⚡ DỮ LIỆU ĐỒNG BỘ CLOUD MỚI NHẤT ⚡";
-        } else if (!window.isUploadingExcel) {
-            loadLocalCacheBackup();
-        }
-    });
-});
-</script>
-
-</body>
 </html>
