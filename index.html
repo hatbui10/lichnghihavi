@@ -89,7 +89,8 @@
                 transition: all 0.2s;
             }
             .staff-card.leave { border-left: 4px solid #ef4444; background: #191c27; }
-            .staff-card.late { border-left: 4px solid #f59e0b; }
+            .staff-card.late-under { border-left: 4px solid #f59e0b; }
+            .staff-card.late-over { border-left: 4px solid #3b82f6; }
             
             .staff-header { display: flex; justify-content: space-between; align-items: center; }
             .staff-name { font-size: 15px; font-weight: bold; color: #fff; }
@@ -193,7 +194,7 @@
                 if (isPhoneUnlocked) {
                     // Nếu đang mở khóa -> Bấm vào thì khóa lại ngay lập tức
                     isPhoneUnlocked = false;
-                    document.getElementById('toggleLockBtn').innerText = "🔒Mở khóa";
+                    document.getElementById('toggleLockBtn').innerText = "🔒 Mở khóa";
                     document.getElementById('authBar').classList.remove('show');
                     document.getElementById('passInput').value = "";
                     renderAllGrids();
@@ -228,13 +229,21 @@
             
             function updateStatus(id, field, value) {
                 if (!trangThaiNhanSu[id]) {
-                    trangThaiNhanSu[id] = { isLeave: false, isLate: false };
+                    trangThaiNhanSu[id] = { isLeave: false, isLateUnder: false, isLateOver: false };
                 }
-                trangThaiNhanSu[id][field] = value;
+                
                 if (value === true) {
-                    if (field === 'isLeave') trangThaiNhanSu[id]['isLate'] = false;
-                    else if (field === 'isLate') trangThaiNhanSu[id]['isLeave'] = false;
+                    // Nếu chọn 1 ô bất kỳ, tắt 2 ô còn lại để chỉ chọn được 1 trong 3
+                    trangThaiNhanSu[id] = {
+                        isLeave: (field === 'isLeave'),
+                        isLateUnder: (field === 'isLateUnder'),
+                        isLateOver: (field === 'isLateOver')
+                    };
+                } else {
+                    // Nếu bỏ chọn ô hiện tại thì đưa về false
+                    trangThaiNhanSu[id][field] = false;
                 }
+                
                 db.collection("data").doc("trangThaiNhanSuV3").set({ content: trangThaiNhanSu });
             }
             
@@ -244,18 +253,22 @@
                 
                 staffData.forEach((person, index) => {
                     const uniqueId = person.role + "_" + index;
-                    const status = trangThaiNhanSu[uniqueId] || { isLeave: false, isLate: false };
+                    const status = trangThaiNhanSu[uniqueId] || { isLeave: false, isLateUnder: false, isLateOver: false };
                     
                     // Ẩn 3 số ở giữa (Ví dụ: 0375874325 -> 0375***325)
                     let maskedPhone = person.phone;
                     if (person.phone && person.phone.length >= 10) {
                         maskedPhone = person.phone.slice(0, 4) + "***" + person.phone.slice(7);
                     }
-            
+                
                     let phoneHref = isPhoneUnlocked ? `tel:${person.phone}` : "#";
                     let phoneClass = "staff-phone" + (isPhoneUnlocked ? " unlocked" : "");
                     let btnCallClass = "btn-call" + (isPhoneUnlocked ? " unlocked" : "");
-                    let cardClass = "staff-card" + (status.isLeave ? " leave" : "") + (status.isLate ? " late" : "");
+                    
+                    let cardClass = "staff-card";
+                    if (status.isLeave) cardClass += " leave";
+                    else if (status.isLateUnder) cardClass += " late-under";
+                    else if (status.isLateOver) cardClass += " late-over";
                     
                     const html = `
                         <div class="${cardClass}">
@@ -264,7 +277,8 @@
                             <div class="card-actions">
                                 <div class="checkbox-group">
                                     <label class="checkbox-label"><input type="checkbox" ${status.isLeave ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLeave', this.checked)"> Xin nghỉ hôm nay</label>
-                                    <label class="checkbox-label"><input type="checkbox" ${status.isLate ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLate', this.checked)"> Đi muộn</label>
+                                    <label class="checkbox-label"><input type="checkbox" ${status.isLateUnder ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLateUnder', this.checked)"> Đi muộn dưới 15 phút</label>
+                                    <label class="checkbox-label"><input type="checkbox" ${status.isLateOver ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLateOver', this.checked)"> Đi muộn sau 15 phút</label>
                                 </div>
                                 <a href="${phoneHref}" class="${btnCallClass}">📞 Gọi</a>
                             </div>
