@@ -20,6 +20,46 @@
             h2 { text-align: center; color: #f8fafc; margin: 10px 0 15px 0; text-transform: uppercase; font-size: 17px; }
             .container { max-width: 100%; margin: 0 auto; padding-bottom: 30px; }
             
+            /* Thanh nhập mật khẩu mở khóa nút gọi */
+            .auth-bar {
+                background: #1e293b;
+                border: 1px solid #334155;
+                padding: 10px;
+                border-radius: 8px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 15px;
+            }
+            .auth-bar input {
+                background: #0f172a;
+                border: 1px solid #475569;
+                color: white;
+                padding: 6px 10px;
+                border-radius: 4px;
+                font-size: 14px;
+                outline: none;
+                width: 140px;
+            }
+            .auth-bar button {
+                background: #3b82f6;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 4px;
+                font-weight: bold;
+                cursor: pointer;
+                font-size: 13px;
+            }
+            .auth-bar button:active { background: #2563eb; }
+            .unlocked-badge {
+                color: #10b981;
+                font-size: 13px;
+                font-weight: bold;
+                display: none;
+            }
+            
             .section-title {
                 font-size: 14px; font-weight: bold; color: #f8fafc; margin: 20px 0 10px 0;
                 border-left: 3px solid #3b82f6; padding-left: 6px; text-transform: uppercase;
@@ -38,17 +78,30 @@
             
             .staff-header { display: flex; justify-content: space-between; align-items: center; }
             .staff-name { font-size: 15px; font-weight: bold; color: #fff; }
-            .staff-phone { font-size: 13px; color: #ffbd59; font-weight: 600; text-decoration: none; display: inline-block; margin: 2px 0 6px 0; }
+            
+            /* Ẩn hoặc hiện số điện thoại dựa vào trạng thái mở khóa */
+            .staff-phone {
+                font-size: 13px; color: #ffbd59; font-weight: 600; text-decoration: none; display: inline-block; margin: 2px 0 6px 0;
+                pointer-events: none; /* Khóa không cho bấm khi chưa nhập pass */
+            }
+            .staff-phone.unlocked {
+                pointer-events: auto;
+                text-decoration: underline;
+            }
             
             .card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 6px; border-top: 1px solid #334155; }
             .checkbox-group { display: flex; flex-direction: column; gap: 4px; }
             .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; color: #e2e8f0; user-select: none; }
             .checkbox-label input[type="checkbox"] { width: 17px; height: 17px; accent-color: #ef4444; cursor: pointer; }
+            
+            /* Mặc định ẩn nút gọi */
             .btn-call {
-                display: inline-flex; align-items: center; justify-content: center; gap: 3px;
+                display: none; 
+                align-items: center; justify-content: center; gap: 3px;
                 background-color: #059669; color: white !important; text-decoration: none;
                 font-weight: bold; font-size: 12px; padding: 8px 12px; border-radius: 6px; white-space: nowrap;
             }
+            .btn-call.unlocked { display: inline-flex; }
             .btn-call:active { background-color: #047857; transform: scale(0.96); }
         </style>
     </head>
@@ -57,6 +110,14 @@
 
         <div class="container">
             <h2>Trạng Thái Nhân Sự</h2>
+
+            <!-- Khung nhập mật khẩu mở khóa gọi điện -->
+            <div class="auth-bar" id="authBar">
+                <input type="password" id="passInput" placeholder="Nhập mật khẩu gọi...">
+                <button onclick="checkPassword()">Mở khóa gọi</button>
+            </div>
+            <div id="unlockedStatus" class="unlocked-badge" style="text-align: center; margin-bottom: 15px;">🔓 Đã mở khóa quyền gọi điện trên thiết bị này</div>
+
             <div class="section-title">👩‍🏫 Giáo Viên (GV)</div>
             <div class="grid-container" id="gv-grid"></div>
             <div class="section-title">🤝 Trợ Giảng (TG)</div>
@@ -68,6 +129,10 @@
         </div>
 
         <script>
+            // Mật khẩu mở khóa gọi điện (Bạn có thể đổi chữ '123456' thành mật khẩu bạn muốn)
+            const SECRET_PASSWORD = "123456"; 
+            let isPhoneUnlocked = localStorage.getItem('isPhoneUnlocked') === 'true';
+            
             const staffData = [
                 { name: 'Mai Khánh Ly', phone: '0375874325', role: 'GV' },
                 { name: 'Nguyễn Hà An', phone: '0975710497', role: 'GV' },
@@ -108,7 +173,29 @@
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
             
-            // Dùng onSnapshot để đồng bộ thời gian thực
+            // Kiểm tra trạng thái mở khóa khi tải trang
+            window.onload = function() {
+                if (isPhoneUnlocked) {
+                    document.getElementById('authBar').style.display = 'none';
+                    document.getElementById('unlockedStatus').style.display = 'block';
+                }
+            };
+            
+            // Hàm kiểm tra mật khẩu
+            function checkPassword() {
+                const inputVal = document.getElementById('passInput').value;
+                if (inputVal === SECRET_PASSWORD) {
+                    isPhoneUnlocked = true;
+                    localStorage.setItem('isPhoneUnlocked', 'true');
+                    document.getElementById('authBar').style.display = 'none';
+                    document.getElementById('unlockedStatus').style.display = 'block';
+                    renderAllGrids(); // Vẽ lại để hiện nút gọi
+                } else {
+                    alert("Mật khẩu không đúng!");
+                }
+            }
+            
+            // Dùng onSnapshot đồng bộ dữ liệu trạng thái nghỉ/muộn thời gian thực
             db.collection("data").doc("trangThaiNhanSuV3").onSnapshot((doc) => {
                 if (doc.exists && doc.data().content) {
                     trangThaiNhanSu = doc.data().content;
@@ -135,19 +222,30 @@
                 staffData.forEach((person, index) => {
                     const uniqueId = person.role + "_" + index;
                     const status = trangThaiNhanSu[uniqueId] || { isLeave: false, isLate: false };
-                    const phoneDisplay = person.phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1.$2.$3");
+                    
+                    // Ẩn 3 số ở giữa (Ví dụ: 0375874325 -> 0375***325)
+                    let maskedPhone = person.phone;
+                    if (person.phone && person.phone.length >= 10) {
+                        maskedPhone = person.phone.slice(0, 4) + "***" + person.phone.slice(7);
+                    }
+            
+                    // Nếu đã mở khóa thì dùng link tel thật, chưa thì để dấu #
+                    let phoneHref = isPhoneUnlocked ? `tel:${person.phone}` : "#";
+                    let phoneClass = "staff-phone" + (isPhoneUnlocked ? " unlocked" : "");
+                    let btnCallClass = "btn-call" + (isPhoneUnlocked ? " unlocked" : "");
+                    
                     let cardClass = "staff-card" + (status.isLeave ? " leave" : "") + (status.isLate ? " late" : "");
                     
                     const html = `
                         <div class="${cardClass}">
                             <div class="staff-header"><span class="staff-name">${person.name}</span></div>
-                            <a href="tel:${person.phone}" class="staff-phone">📞 ${phoneDisplay}</a>
+                            <a href="${phoneHref}" class="${phoneClass}">📞 ${maskedPhone}</a>
                             <div class="card-actions">
                                 <div class="checkbox-group">
                                     <label class="checkbox-label"><input type="checkbox" ${status.isLeave ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLeave', this.checked)"> Xin nghỉ</label>
                                     <label class="checkbox-label"><input type="checkbox" ${status.isLate ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLate', this.checked)"> Đi muộn</label>
                                 </div>
-                                <a href="tel:${person.phone}" class="btn-call">📞 Gọi</a>
+                                <a href="${phoneHref}" class="${btnCallClass}">📞 Gọi</a>
                             </div>
                         </div>`;
                     document.getElementById(containers[person.role]).innerHTML += html;
