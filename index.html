@@ -3,290 +3,269 @@
 
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <!-- Thư viện Firebase v10 -->
-        <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-        <title>Quản Lý Trạng Thái Nhân Sự</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Quản Lý Đăng Ký Nghỉ / Đi Muộn</title>
         <style>
-            * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-            body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-                background-color: #0f172a;
-                margin: 0;
-                padding: 10px;
-                color: #cbd5e1;
-            }
-            .header-top {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin: 10px 0 15px 0;
-            }
-            h2 { text-align: center; color: #f8fafc; margin: 0; text-transform: uppercase; font-size: 17px; flex-grow: 1; }
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f0f2f5; color: #333; }
+            header { background: #2c3e50; color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; }
+            .container { padding: 15px; max-width: 600px; margin: auto; }
             
-            /* Nút ẩn/hiện bảng nhập pass */
-            .btn-toggle-lock {
-                background: #334155;
-                color: #cbd5e1;
-                border: 1px solid #475569;
-                padding: 5px 10px;
-                border-radius: 6px;
-                font-size: 12px;
-                cursor: pointer;
-                font-weight: bold;
-            }
-            .btn-toggle-lock:active { background: #475569; }
+            .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
+            label { font-weight: bold; font-size: 14px; display: block; margin-bottom: 5px; color: #555; }
+            select, input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
             
-            .container { max-width: 100%; margin: 0 auto; padding-bottom: 30px; }
-            
-            /* Thanh nhập mật khẩu */
-            .auth-bar {
-                background: #1e293b;
-                border: 1px solid #334155;
-                padding: 10px;
-                border-radius: 8px;
-                display: none; /* Mặc định ẩn */
-                justify-content: center;
-                align-items: center;
+            /* Giao diện lưới ngày */
+            .calendar-grid {
+                display: grid;
+                grid-template-columns: repeat(6, 1fr);
                 gap: 8px;
-                margin-bottom: 15px;
+                margin-bottom: 5px;
             }
-            .auth-bar.show { display: flex; }
-            .auth-bar input {
-                background: #0f172a;
-                border: 1px solid #475569;
-                color: white;
-                padding: 6px 10px;
-                border-radius: 4px;
-                font-size: 14px;
-                outline: none;
-                width: 140px;
-            }
-            .auth-bar button {
-                background: #3b82f6;
-                color: white;
-                border: none;
-                padding: 6px 12px;
-                border-radius: 4px;
+            .day-btn {
+                padding: 14px 0;
+                background: #fff;
+                border: 1px solid #cbd5e1;
+                text-align: center;
+                border-radius: 8px;
+                font-size: 16px;
                 font-weight: bold;
                 cursor: pointer;
-                font-size: 13px;
-            }
-            .auth-bar button:active { background: #2563eb; }
-            
-            .section-title {
-                font-size: 14px; font-weight: bold; color: #f8fafc; margin: 20px 0 10px 0;
-                border-left: 3px solid #3b82f6; padding-left: 6px; text-transform: uppercase;
-            }
-            
-            .grid-container { display: grid; grid-template-columns: 1fr; gap: 8px; }
-            @media (min-width: 480px) { .grid-container { grid-template-columns: repeat(2, 1fr); } }
-            
-            .staff-card {
-                background: #1e293b; border: 1.5px solid #334155; border-radius: 8px;
-                padding: 10px 12px; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                color: #1e293b;
                 transition: all 0.2s;
             }
-            .staff-card.leave { border-left: 4px solid #ef4444; background: #191c27; }
-            .staff-card.late-under { border-left: 4px solid #f59e0b; }
-            .staff-card.late-over { border-left: 4px solid #3b82f6; }
+            .day-btn:active { background: #e2e8f0; }
             
-            .staff-header { display: flex; justify-content: space-between; align-items: center; }
-            .staff-name { font-size: 15px; font-weight: bold; color: #fff; }
+            /* Màu sắc trạng thái khi đã chọn */
+            .day-btn.status-nghi { background: #fee2e2; border-color: #f87171; color: #991b1b; }
+            .day-btn.status-muon-duoi { background: #fef9c3; border-color: #facc15; color: #854d0e; }
+            .day-btn.status-muon-tren { background: #ffedd5; border-color: #fb923c; color: #9a3412; }
             
-            .staff-phone {
-                font-size: 13px; color: #ffbd59; font-weight: 600; text-decoration: none; display: inline-block; margin: 2px 0 6px 0;
-                pointer-events: none;
-            }
-            .staff-phone.unlocked {
-                pointer-events: auto;
-                text-decoration: underline;
-            }
+            .btn-submit { background: #27ae60; color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
             
-            .card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 6px; border-top: 1px solid #334155; }
-            .checkbox-group { display: flex; flex-direction: column; gap: 4px; }
-            .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; color: #e2e8f0; user-select: none; }
-            .checkbox-label input[type="checkbox"] { width: 17px; height: 17px; accent-color: #ef4444; cursor: pointer; }
+            /* Bảng thống kê bên dưới */
+            h3 { border-bottom: 2px solid #3498db; padding-bottom: 5px; color: #2c3e50; margin-top: 25px; }
+            .log-item { background: white; padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid #ccc; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+            .log-nghi { border-left-color: #e74c3c; } 
+            .log-muon { border-left-color: #f39c12; } 
             
-            .btn-call {
-                display: none; 
-                align-items: center; justify-content: center; gap: 3px;
-                background-color: #059669; color: white !important; text-decoration: none;
-                font-weight: bold; font-size: 12px; padding: 8px 12px; border-radius: 6px; white-space: nowrap;
-            }
-            .btn-call.unlocked { display: inline-flex; }
-            .btn-call:active { background-color: #047857; transform: scale(0.96); }
+            /* Popup Modal */
+            .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+            .modal { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); padding: 20px; box-sizing: border-box; z-index: 1000; }
+            .modal h3 { margin-top: 0; color: #2c3e50; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+            
+            .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+            .btn-save { background: #27ae60; color: white; border: none; padding: 12px; flex: 1; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+            .btn-cancel { background: #e74c3c; color: white; border: none; padding: 12px; flex: 1; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
         </style>
     </head>
 
     <body>
 
+        <header>Quản Lý Đăng Ký Nghỉ / Đi Muộn</header>
+
         <div class="container">
-            <div class="header-top">
-                <h2>Trạng Thái Nhân Sự</h2>
-                <!-- Nút khóa / mở khóa -->
-                <button class="btn-toggle-lock" id="toggleLockBtn" onclick="toggleLockPanel()">🔒 Mở khóa</button>
+            <div class="card">
+                <label>1. Chọn tên Giáo Viên:</label>
+                <select id="teacherName">
+                    <option value="">-- Chọn giáo viên --</option>
+                    <option>Nguyễn Văn A</option>
+                    <option>Trần Thị B</option>
+                    <option>Lê Văn C</option>
+                    <option>Phạm Thị D</option>
+                    <option>Hoàng Văn E</option>
+                    <option>Vũ Thị F</option>
+                    <option>Đỗ Văn G</option>
+                    <option>Bùi Thị H</option>
+                    <option>Hồ Văn I</option>
+                    <option>Ngô Thị K</option>
+                </select>
+
+                <label>2. Chọn Ngày (Bấm vào số ngày để cài đặt):</label>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- JS tạo các ô ngày -->
+                </div>
+                <small style="color: #666; display: block; margin-top: 5px;">* Ô được tô màu là các ngày đã được cấu hình.</small>
+
+                <button class="btn-submit" onclick="submitRegistration()">Gửi Lịch Đăng Ký</button>
             </div>
 
-            <!-- Khung nhập mật khẩu -->
-            <div class="auth-bar" id="authBar">
-                <input type="password" id="passInput" placeholder="Mật khẩu...">
-                <button onclick="checkPassword()">Xác nhận</button>
+            <!-- Bảng tổng hợp ai nghỉ, ai đi muộn -->
+            <div>
+                <h3>Danh Sách Tổng Hợp Đã Đăng Ký</h3>
+                <div id="logList">
+                    <p style="color: #777; text-align: center;">Chưa có dữ liệu đăng ký nào được gửi.</p>
+                </div>
             </div>
+        </div>
 
-            <div class="section-title">👩‍🏫 Giáo Viên (GV)</div>
-            <div class="grid-container" id="gv-grid"></div>
-            <div class="section-title">🤝 Trợ Giảng (TG)</div>
-            <div class="grid-container" id="tg-grid"></div>
-            <div class="section-title">🧹 Nhân Viên Quét Dọn (NVQD)</div>
-            <div class="grid-container" id="nvqd-grid"></div>
-            <div class="section-title">🩺 Bác Sĩ (BS)</div>
-            <div class="grid-container" id="bs-grid"></div>
+        <!-- Mờ nền popup -->
+        <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+
+        <!-- Popup Modal -->
+        <div class="modal" id="dayModal">
+            <h3 id="modalTitle">Cài đặt ngày</h3>
+
+            <label>Trạng thái:</label>
+            <select id="popupStatus">
+                <option value="">Đi làm bình thường (Xóa trạng thái)</option>
+                <option value="nghi">Nghỉ cả ngày</option>
+                <option value="muon-duoi">Đi muộn dưới 10 phút</option>
+                <option value="muon-tren">Đi muộn trên 10 phút</option>
+            </select>
+
+            <label>Người dạy thay (Nếu có):</label>
+            <input type="text" id="popupSubName" placeholder="Họ tên GV thay thế">
+
+            <label>SĐT người dạy thay:</label>
+            <input type="tel" id="popupSubPhone" placeholder="Số điện thoại GV thay thế">
+
+            <div class="btn-group">
+                <button class="btn-cancel" onclick="closeModal()">Hủy</button>
+                <button class="btn-save" onclick="saveDayConfig()">Xác nhận</button>
+            </div>
         </div>
 
         <script>
-            const SECRET_PASSWORD = "123456"; // Bạn có thể thay đổi mật khẩu ở đây
-            let isPhoneUnlocked = false;
+            let tempDb = {}; // Dữ liệu tạm thời đang chọn trên form: { "Ngày": {status, subName, subPhone} }
+            let confirmedLogs = []; // Danh sách các bản ghi đã được bấm "Gửi"
+            let activeDay = null;
             
-            const staffData = [
-                { name: 'Mai Khánh Ly', phone: '0375874325', role: 'GV' },
-                { name: 'Nguyễn Hà An', phone: '0975710497', role: 'GV' },
-                { name: 'Phạm Thị Thanh Tân', phone: '0389919237', role: 'GV' },
-                { name: 'Nguyễn Thị Phương', phone: '0363565410', role: 'GV' },
-                { name: 'Lê Hồng Nhung', phone: '0367701993', role: 'GV' },
-                { name: 'Đỗ Trà My', phone: '0328468602', role: 'GV' },
-                { name: 'Nguyễn Thanh Thảo', phone: '0388357632', role: 'GV' },
-                { name: 'Nguyễn Thu Hà B', phone: '0359788582', role: 'GV' },
-                { name: 'Nguyễn Thu Phương', phone: '0964382095', role: 'GV' },
-                { name: 'Ngô Thị Thu Hằng', phone: '0968125259', role: 'GV' },
-                { name: 'Lê Minh Phương', phone: '0332323361', role: 'GV' },
-                { name: 'Nguyễn Như Mai', phone: '0395729123', role: 'GV' },
-                { name: 'Hoàng Yến', phone: '0888281294', role: 'GV' },
-                { name: 'Lê Thắm', phone: '0945007495', role: 'GV' },
-                { name: 'Nguyễn Văn A', phone: '0912345678', role: 'TG' },
-                { name: 'Ninh Trang', phone: '0338131698', role: 'TG' },
-                { name: 'Quang Tùng', phone: '0365164503', role: 'TG' },
-                { name: 'Đức Nguyên', phone: '0347034672', role: 'TG' },
-                { name: 'Khôi Nguyên', phone: '0813775208', role: 'TG' },
-                { name: 'Hoàng Long lớn', phone: '0386700121', role: 'TG' },
-                { name: 'Đàm Xuân Bắc', phone: '0916295600', role: 'TG' },
-                { name: 'Bà Nguyễn Thị M', phone: '0987654321', role: 'NVQD' },
-                { name: 'Bác sĩ Trần Văn Z', phone: '0909090909', role: 'BS' }
-            ];
-            
-            let trangThaiNhanSu = {};
-            
-            const firebaseConfig = {
-                apiKey: "AIzaSyDbCF0pFsdXqD14Y-wjWLFoNCGfP1LBlD8",
-                authDomain: "tienganhhavi-12b54.firebaseapp.com",
-                projectId: "tienganhhavi-12b54",
-                storageBucket: "tienganhhavi-12b54.firebasestorage.app",
-                messagingSenderId: "208059039650",
-                appId: "1:208059039650:web:d272318418e01d0f50fcfb"
-            };
-            
-            firebase.initializeApp(firebaseConfig);
-            const db = firebase.firestore();
-            
-            // Hàm xử lý ẩn/hiện ô nhập mật khẩu hoặc khóa lại nếu đang mở
-            function toggleLockPanel() {
-                if (isPhoneUnlocked) {
-                    // Nếu đang mở khóa -> Bấm vào thì khóa lại ngay lập tức
-                    isPhoneUnlocked = false;
-                    document.getElementById('toggleLockBtn').innerText = "🔒 Mở khóa";
-                    document.getElementById('authBar').classList.remove('show');
-                    document.getElementById('passInput').value = "";
-                    renderAllGrids();
-                } else {
-                    // Nếu đang khóa -> Bấm vào thì hiện/ẩn khung nhập pass
-                    const authBar = document.getElementById('authBar');
-                    authBar.classList.toggle('show');
-                }
-            }
-            
-            // Kiểm tra mật khẩu
-            function checkPassword() {
-                const inputVal = document.getElementById('passInput').value;
-                if (inputVal === SECRET_PASSWORD) {
-                    isPhoneUnlocked = true;
-                    document.getElementById('toggleLockBtn').innerText = "🔓 Khóa nút gọi";
-                    document.getElementById('authBar').classList.remove('show');
-                    document.getElementById('passInput').value = "";
-                    renderAllGrids();
-                } else {
-                    alert("Mật khẩu không đúng!");
-                }
-            }
-            
-            // Đồng bộ thời gian thực trạng thái nghỉ/muộn
-            db.collection("data").doc("trangThaiNhanSuV3").onSnapshot((doc) => {
-                if (doc.exists && doc.data().content) {
-                    trangThaiNhanSu = doc.data().content;
-                    renderAllGrids();
-                }
-            });
-            
-            function updateStatus(id, field, value) {
-                if (!trangThaiNhanSu[id]) {
-                    trangThaiNhanSu[id] = { isLeave: false, isLateUnder: false, isLateOver: false };
-                }
+            // Tạo các nút ngày từ 1 đến 30
+            const grid = document.getElementById('calendarGrid');
+            for (let i = 1; i <= 30; i++) {
+                let btn = document.createElement('div');
+                btn.className = 'day-btn';
+                btn.id = `day-btn-${i}`;
+                btn.innerText = i;
                 
-                if (value === true) {
-                    // Nếu chọn 1 ô bất kỳ, tắt 2 ô còn lại để chỉ chọn được 1 trong 3
-                    trangThaiNhanSu[id] = {
-                        isLeave: (field === 'isLeave'),
-                        isLateUnder: (field === 'isLateUnder'),
-                        isLateOver: (field === 'isLateOver')
-                    };
-                } else {
-                    // Nếu bỏ chọn ô hiện tại thì đưa về false
-                    trangThaiNhanSu[id][field] = false;
-                }
-                
-                db.collection("data").doc("trangThaiNhanSuV3").set({ content: trangThaiNhanSu });
-            }
-            
-            function renderAllGrids() {
-                const containers = { GV: 'gv-grid', TG: 'tg-grid', NVQD: 'nvqd-grid', BS: 'bs-grid' };
-                Object.values(containers).forEach(id => document.getElementById(id).innerHTML = '');
-                
-                staffData.forEach((person, index) => {
-                    const uniqueId = person.role + "_" + index;
-                    const status = trangThaiNhanSu[uniqueId] || { isLeave: false, isLateUnder: false, isLateOver: false };
-                    
-                    // Ẩn 3 số ở giữa (Ví dụ: 0375874325 -> 0375***325)
-                    let maskedPhone = person.phone;
-                    if (person.phone && person.phone.length >= 10) {
-                        maskedPhone = person.phone.slice(0, 4) + "***" + person.phone.slice(7);
+                btn.onclick = function() {
+                    let teacher = document.getElementById('teacherName').value;
+                    if (!teacher) {
+                        alert("Vui lòng chọn tên giáo viên ở trên trước khi chọn ngày!");
+                        return;
                     }
+                    openModal(i);
+                };
+                grid.appendChild(btn);
+            }
+            
+            function openModal(day) {
+                activeDay = day;
+                let data = tempDb[day] || { status: "", subName: "", subPhone: "" };
+            
+                document.getElementById('modalTitle').innerText = `Cấu hình Ngày ${day}`;
+                document.getElementById('popupStatus').value = data.status;
+                document.getElementById('popupSubName').value = data.subName;
+                document.getElementById('popupSubPhone').value = data.subPhone;
+            
+                document.getElementById('dayModal').style.display = 'block';
+                document.getElementById('modalOverlay').style.display = 'block';
+            }
+            
+            function closeModal() {
+                document.getElementById('dayModal').style.display = 'none';
+                document.getElementById('modalOverlay').style.display = 'none';
+                activeDay = null;
+            }
+            
+            function saveDayConfig() {
+                if (!activeDay) return;
+                let status = document.getElementById('popupStatus').value;
+                let subName = document.getElementById('popupSubName').value;
+                let subPhone = document.getElementById('popupSubPhone').value;
+            
+                if (status === "") {
+                    delete tempDb[activeDay];
+                } else {
+                    tempDb[activeDay] = { status, subName, subPhone };
+                }
+            
+                updateDayUI(activeDay);
+                closeModal();
+            }
+            
+            function updateDayUI(day) {
+                let btn = document.getElementById(`day-btn-${day}`);
+                let data = tempDb[day];
+                btn.className = "day-btn";
+            
+                if (data) {
+                    if (data.status === "nghi") btn.classList.add("status-nghi");
+                    else if (data.status === "muon-duoi") btn.classList.add("status-muon-duoi");
+                    else if (data.status === "muon-tren") btn.classList.add("status-muon-tren");
+                }
+            }
+            
+            // Khi bấm nút Gửi đăng ký
+            function submitRegistration() {
+                let teacher = document.getElementById('teacherName').value;
+                if (!teacher) {
+                    alert("Vui lòng chọn tên giáo viên!");
+                    return;
+                }
                 
-                    let phoneHref = isPhoneUnlocked ? `tel:${person.phone}` : "#";
-                    let phoneClass = "staff-phone" + (isPhoneUnlocked ? " unlocked" : "");
-                    let btnCallClass = "btn-call" + (isPhoneUnlocked ? " unlocked" : "");
+                let daysKeys = Object.keys(tempDb);
+                if (daysKeys.length === 0) {
+                    alert("Bạn chưa chọn cấu hình nghỉ hoặc đi muộn ngày nào cả!");
+                    return;
+                }
+            
+                // Đẩy từng ngày đã chọn vào danh sách tổng hợp
+                daysKeys.forEach(day => {
+                    let item = tempDb[day];
+                    confirmedLogs.push({
+                        teacher: teacher,
+                        day: day,
+                        statusText: item.status === 'nghi' ? 'Nghỉ cả ngày' : (item.status === 'muon-duoi' ? 'Đi muộn dưới 10p' : 'Đi muộn trên 10p'),
+                        isNghi: item.status === 'nghi',
+                        subName: item.subName,
+                        subPhone: item.subPhone
+                    });
+                });
+            
+                // Reset lại form
+                tempDb = {};
+                for (let i = 1; i <= 30; i++) {
+                    document.getElementById(`day-btn-${i}`).className = "day-btn";
+                }
+                document.getElementById('teacherName').value = "";
+            
+                // Cập nhật lại bảng thống kê
+                renderLogs();
+                alert("Gửi đăng ký thành công!");
+            }
+            
+            // Hiển thị bảng tổng hợp ai nghỉ, ai đi muộn
+            function renderLogs() {
+                let logList = document.getElementById('logList');
+                if (confirmedLogs.length === 0) {
+                    logList.innerHTML = `<p style="color: #777; text-align: center;">Chưa có dữ liệu đăng ký nào được gửi.</p>`;
+                    return;
+                }
+            
+                logList.innerHTML = "";
+                confirmedLogs.forEach(item => {
+                    let div = document.createElement('div');
+                    div.className = `log-item ${item.isNghi ? 'log-nghi' : 'log-muon'}`;
                     
-                    let cardClass = "staff-card";
-                    if (status.isLeave) cardClass += " leave";
-                    else if (status.isLateUnder) cardClass += " late-under";
-                    else if (status.isLateOver) cardClass += " late-over";
-                    
-                    const html = `
-                        <div class="${cardClass}">
-                            <div class="staff-header"><span class="staff-name">${person.name}</span></div>
-                            <a href="${phoneHref}" class="${phoneClass}">📞 ${maskedPhone}</a>
-                            <div class="card-actions">
-                                <div class="checkbox-group">
-                                    <label class="checkbox-label"><input type="checkbox" ${status.isLeave ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLeave', this.checked)"> Xin nghỉ hôm nay</label>
-                                    <label class="checkbox-label"><input type="checkbox" ${status.isLateUnder ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLateUnder', this.checked)"> Đi muộn dưới 15 phút</label>
-                                    <label class="checkbox-label"><input type="checkbox" ${status.isLateOver ? 'checked' : ''} onchange="updateStatus('${uniqueId}', 'isLateOver', this.checked)"> Đi muộn sau 15 phút</label>
-                                </div>
-                                <a href="${phoneHref}" class="${btnCallClass}">📞 Gọi</a>
-                            </div>
-                        </div>`;
-                    document.getElementById(containers[person.role]).innerHTML += html;
+                    div.innerHTML = `
+                        <strong>👤 ${item.teacher}</strong> - <span style="color: #d35400;">Ngày ${item.day}</span><br>
+                        <b>Trạng thái:</b> <span style="color: ${item.isNghi ? '#c0392b' : '#d68910'};">${item.statusText}</span><br>
+                        ${item.subName ? `🔄 <b>Dạy thay:</b> ${item.subName} (${item.subPhone || 'Không có SĐT'})` : '🔄 <i>Không có GV thay thế</i>'}
+                    `;
+                    logList.appendChild(div);
                 });
             }
+            
+            // Khi đổi tên giáo viên, làm sạch bảng tạm để chọn mới
+            document.getElementById('teacherName').onchange = function() {
+                tempDb = {};
+                for (let i = 1; i <= 30; i++) {
+                    document.getElementById(`day-btn-${i}`).className = "day-btn";
+                }
+            };
         </script>
+
     </body>
 
 </html>
