@@ -4,317 +4,2359 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Đăng Ký Nghỉ / Đi Muộn</title>
+        <title>Hệ Thống Đăng Ký Lịch Trợ Giảng - Fixed</title>
         <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f0f2f5; color: #333; }
-            header { background: #2c3e50; color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; }
-            .container { padding: 15px; max-width: 600px; margin: auto; }
-            
-            /* Nút chuyển đổi giao diện */
-            .role-switch { display: flex; gap: 10px; margin-bottom: 15px; }
-            .role-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; background: #cbd5e1; color: #334155; transition: 0.2s; }
-            .role-btn.active { background: #2980b9; color: white; }
-            
-            .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
-            label { font-weight: bold; font-size: 14px; display: block; margin-bottom: 5px; color: #555; }
-            select, input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
-            
-            /* Giao diện lưới ngày */
-            .calendar-grid {
-                display: grid;
-                grid-template-columns: repeat(6, 1fr);
-                gap: 8px;
-                margin-bottom: 5px;
+            :root {
+                --primary: #4f46e5;
+                --primary-light: #6366f1;
+                --secondary: #7c3aed;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+                --info: #06b6d4;
+                --dark: #1f2937;
+                --light: #f9fafb;
+                --border: #e5e7eb;
+                --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             }
-            .day-btn {
-                padding: 14px 0;
-                background: #fff;
-                border: 1px solid #cbd5e1;
+            
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: #f3f4f6;
+                color: var(--dark);
+                min-height: 100vh;
+            }
+            
+            .header {
+                background: linear-gradient(135deg, var(--primary), var(--secondary));
+                color: white;
+                padding: 20px;
                 text-align: center;
-                border-radius: 8px;
-                font-size: 16px;
-                font-weight: bold;
+                box-shadow: var(--shadow);
+            }
+            
+            .header h1 {
+                font-size: 24px;
+                margin-bottom: 8px;
+                font-weight: 700;
+            }
+            
+            .header p {
+                opacity: 0.95;
+                font-size: 14px;
+            }
+            
+            .container {
+                max-width: 1000px;
+                margin: 20px auto;
+                padding: 0 20px;
+            }
+            
+            .tabs {
+                display: flex;
+                background: white;
+                border-radius: 12px;
+                box-shadow: var(--shadow);
+                margin-bottom: 20px;
+                overflow: hidden;
+            }
+            
+            .tab {
+                flex: 1;
+                padding: 14px 20px;
+                text-align: center;
                 cursor: pointer;
-                color: #1e293b;
+                font-weight: 600;
+                color: var(--dark);
+                transition: all 0.3s;
+                border-bottom: 3px solid transparent;
+            }
+            
+            .tab:hover {
+                background: var(--light);
+            }
+            
+            .tab.active {
+                background: white;
+                color: var(--primary);
+                border-bottom-color: var(--primary);
+            }
+            
+            .tab-content {
+                display: none;
+                background: white;
+                border-radius: 12px;
+                box-shadow: var(--shadow);
+                padding: 25px;
+            }
+            
+            .tab-content.active {
+                display: block;
+            }
+            
+            /* Calendar Section */
+            .calendar-section {
+                margin-bottom: 25px;
+            }
+            
+            .calendar-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            
+            .calendar-title {
+                font-size: 20px;
+                font-weight: 700;
+                color: var(--dark);
+            }
+            
+            .calendar-nav {
+                display: flex;
+                gap: 8px;
+            }
+            
+            .nav-btn {
+                padding: 8px 16px;
+                background: var(--primary);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 14px;
+                transition: all 0.2s;
+                min-width: 100px;
+            }
+            
+            .nav-btn:hover {
+                background: var(--primary-light);
+                transform: translateY(-2px);
+                box-shadow: var(--shadow);
+            }
+            
+            .calendar-weekdays {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 4px;
+                margin-bottom: 10px;
+            }
+            
+            .weekday {
+                text-align: center;
+                padding: 10px 5px;
+                font-weight: 700;
+                color: white;
+                background: var(--primary);
+                border-radius: 6px;
+                font-size: 13px;
+            }
+            
+            .calendar-days {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 4px;
+            }
+            
+            .day {
+                aspect-ratio: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid var(--border);
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.2s;
+                background: white;
+                position: relative;
+                overflow: hidden;
+                min-height: 50px;
+            }
+            
+            .day:hover {
+                background: var(--light);
+                border-color: var(--primary);
+                transform: scale(1.05);
+                box-shadow: var(--shadow);
+            }
+            
+            .day.empty {
+                background: transparent;
+                cursor: default;
+                border: none;
+            }
+            
+            .day-number {
+                font-weight: 700;
+                color: var(--dark);
+                font-size: 14px;
+            }
+            
+            .day.today {
+                background: rgba(79, 70, 229, 0.15);
+                border-color: var(--primary);
+            }
+            
+            .day.has-note::after {
+                content: '';
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                width: 8px;
+                height: 8px;
+                background: var(--danger);
+                border-radius: 50%;
+            }
+            
+            /* Registration Table */
+            .registration-table-section {
+                margin-top: 25px;
+                border-top: 1px solid var(--border);
+                padding-top: 20px;
+            }
+            
+            .section-title {
+                font-size: 16px;
+                font-weight: 700;
+                color: var(--dark);
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .registration-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 14px;
+            }
+            
+            .registration-table th,
+            .registration-table td {
+                padding: 12px 10px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+            }
+            
+            .registration-table th {
+                background: var(--light);
+                font-weight: 700;
+                color: var(--dark);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-size: 12px;
+            }
+            
+            .registration-table tbody tr:hover {
+                background: var(--light);
+            }
+            
+            .status-badge {
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+            
+            .status-full-day-off { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+            .status-late-over { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+            .status-late-under { background: rgba(6, 182, 212, 0.15); color: var(--info); }
+            
+            /* Modal */
+            .modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.6);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s;
+            }
+            
+            .modal-overlay.active {
+                opacity: 1;
+                visibility: visible;
+            }
+            
+            .modal {
+                background: white;
+                border-radius: 16px;
+                padding: 30px;
+                width: 90%;
+                max-width: 450px;
+                box-shadow: var(--shadow-lg);
+                transform: scale(0.9);
+                transition: all 0.3s;
+            }
+            
+            .modal-overlay.active .modal {
+                transform: scale(1);
+            }
+            
+            .modal h2 {
+                margin-bottom: 20px;
+                color: var(--dark);
+                text-align: center;
+                font-size: 18px;
+                font-weight: 700;
+            }
+            
+            .form-group {
+                margin-bottom: 18px;
+            }
+            
+            .form-label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 600;
+                color: var(--dark);
+                font-size: 14px;
+            }
+            
+            .select-box {
+                width: 100%;
+                padding: 12px 16px;
+                border: 2px solid var(--border);
+                border-radius: 8px;
+                font-size: 14px;
+                background: white;
+                cursor: pointer;
                 transition: all 0.2s;
             }
-            .day-btn:active { background: #e2e8f0; }
             
-            /* Màu sắc trạng thái */
-            .day-btn.status-nghi { background: #fee2e2; border-color: #f87171; color: #991b1b; }
-            .day-btn.status-muon-duoi { background: #fef9c3; border-color: #facc15; color: #854d0e; }
-            .day-btn.status-muon-tren { background: #ffedd5; border-color: #fb923c; color: #9a3412; }
+            .select-box:focus {
+                outline: none;
+                border-color: var(--primary);
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            }
             
-            .btn-submit { background: #27ae60; color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+            .modal-options {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                margin: 15px 0;
+            }
             
-            /* Bảng tổng hợp */
-            h3 { border-bottom: 2px solid #3498db; padding-bottom: 5px; color: #2c3e50; margin-top: 25px; }
-            .log-item { background: white; padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid #ccc; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-            .log-nghi { border-left-color: #e74c3c; } 
-            .log-muon { border-left-color: #f39c12; } 
+            .option-btn {
+                padding: 16px;
+                background: var(--light);
+                border: 2px solid var(--border);
+                border-radius: 10px;
+                cursor: pointer;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
             
-            /* Popup Modal */
-            .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
-            .modal { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); padding: 20px; box-sizing: border-box; z-index: 1000; }
-            .modal h3 { margin-top: 0; color: #2c3e50; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+            .option-btn:hover {
+                border-color: var(--primary);
+                background: rgba(79, 70, 229, 0.1);
+            }
             
-            .btn-group { display: flex; gap: 10px; margin-top: 10px; }
-            .btn-save { background: #27ae60; color: white; border: none; padding: 12px; flex: 1; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
-            .btn-cancel { background: #e74c3c; color: white; border: none; padding: 12px; flex: 1; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+            .option-btn.selected {
+                border-color: var(--primary);
+                background: rgba(79, 70, 229, 0.2);
+            }
+            
+            .option-icon {
+                font-size: 20px;
+            }
+            
+            .option-text {
+                font-weight: 600;
+                font-size: 14px;
+            }
+            
+            .submit-btn {
+                width: 100%;
+                padding: 16px;
+                background: var(--primary);
+                color: white;
+                border: none;
+                border-radius: 10px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.2s;
+                font-size: 16px;
+            }
+            
+            .submit-btn:hover {
+                background: var(--primary-light);
+                transform: translateY(-2px);
+                box-shadow: var(--shadow);
+            }
+            
+            .close-btn {
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: #9ca3af;
+                transition: color 0.2s;
+            }
+            
+            .close-btn:hover {
+                color: var(--danger);
+            }
+            
+            /* Toast Notification */
+            .toast-container {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .toast {
+                background: white;
+                border-radius: 12px;
+                padding: 16px 20px;
+                box-shadow: var(--shadow-lg);
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                transform: translateX(100px);
+                opacity: 0;
+                transition: all 0.3s ease;
+            }
+            
+            .toast.show {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            
+            .toast-icon {
+                font-size: 20px;
+            }
+            
+            .toast-message {
+                flex: 1;
+                font-size: 14px;
+                font-weight: 600;
+            }
+            
+            .toast.success { border-left: 4px solid var(--success); }
+            .toast.error { border-left: 4px solid var(--danger); }
+            
+            /* Admin Section */
+            .admin-controls {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+            
+            .search-box {
+                flex: 1;
+                min-width: 250px;
+                position: relative;
+            }
+            
+            .search-box input {
+                width: 100%;
+                padding: 12px 16px 12px 45px;
+                border: 2px solid var(--border);
+                border-radius: 8px;
+                font-size: 14px;
+                outline: none;
+                transition: all 0.2s;
+            }
+            
+            .search-box input:focus {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            }
+            
+            .search-box::before {
+                content: '🔍';
+                position: absolute;
+                left: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #9ca3af;
+            }
+            
+            .filter-buttons {
+                display: flex;
+                gap: 8px;
+            }
+            
+            .filter-btn {
+                padding: 10px 16px;
+                background: var(--light);
+                border: 2px solid var(--border);
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+                transition: all 0.2s;
+            }
+            
+            .filter-btn:hover {
+                background: #e5e7eb;
+            }
+            
+            .filter-btn.active {
+                background: var(--primary);
+                color: white;
+                border-color: var(--primary);
+            }
+            
+            .data-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 15px;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 14px 12px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+                font-size: 14px;
+            }
+            
+            .data-table th {
+                background: var(--light);
+                font-weight: 700;
+                color: var(--dark);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-size: 12px;
+            }
+            
+            .data-table tbody tr:hover {
+                background: var(--light);
+            }
+            
+            .phone-cell {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .phone-number {
+                color: var(--primary);
+                font-weight: 600;
+            }
+            
+            .call-btn {
+                padding: 6px 12px;
+                background: var(--success);
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: 600;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+            
+            .call-btn:hover {
+                background: #059669;
+                transform: scale(1.05);
+            }
+            
+            .status-cell {
+                font-size: 14px;
+            }
+            
+            .status-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 6px;
+            }
+            
+            .status-number {
+                font-weight: 700;
+                color: #6b7280;
+                min-width: 20px;
+            }
+            
+            .status-label {
+                font-weight: 600;
+                min-width: 120px;
+                font-size: 14px;
+            }
+            
+            .days-list {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            
+            .day-tag {
+                padding: 3px 8px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+            
+            .day-tag.late-under { background: rgba(6, 182, 212, 0.15); color: var(--info); }
+            .day-tag.late-over { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+            .day-tag.full-day-off { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+            
+            .no-data {
+                text-align: center;
+                padding: 40px;
+                color: #6b7280;
+                font-size: 14px;
+            }
+            
+            /* Responsive */
+            @media (max-width: 768px) {
+                .container {
+                    padding: 0 15px;
+                }
+            
+                .calendar-weekdays {
+                    gap: 3px;
+                }
+            
+                .weekday {
+                    padding: 8px 3px;
+                    font-size: 12px;
+                }
+            
+                .day {
+                    min-height: 45px;
+                }
+            
+                .day-number {
+                    font-size: 13px;
+                }
+            
+                .admin-controls {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+            
+                .search-box {
+                    min-width: 100%;
+                }
+            
+                .filter-buttons {
+                    justify-content: center;
+                }
+            
+                .data-table {
+                    font-size: 13px;
+                }
+            
+                .data-table th,
+                .data-table td {
+                    padding: 10px 8px;
+                }
+            
+                .modal {
+                    width: 95%;
+                    max-width: 400px;
+                    padding: 20px;
+                }
+            
+                .nav-btn {
+                    min-width: 80px;
+                    padding: 6px 12px;
+                    font-size: 12px;
+                }
+            }
+            
+            /* Scrollbar */
+            ::-webkit-scrollbar { width: 8px; }
+            ::-webkit-scrollbar-track { background: #f3f4f6; }
+            ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+            ::-webkit-scrollbar-thumb:hover { background: #a1a1a1; }
         </style>
     </head>
 
     <body>
+        <div class="header">
+            <h1>📅 Hệ Thống Đăng Ký Lịch Trợ Giảng</h1>
+            <p>Quản lý lịch làm việc và trạng thái trợ giảng</p>
+        </div>
 
-        <header>Hệ Thống Đăng Ký Lịch</header>
+        <!-- Toast Notification Container -->
+        <div class="toast-container" id="toast-container"></div>
 
         <div class="container">
-            <!-- Nút chọn giao diện -->
-            <div class="role-switch">
-                <button id="btnTeacher" class="role-btn active" onclick="switchRole('teacher')">Giao Diện Giáo Viên</button>
-                <button id="btnAssistant" class="role-btn" onclick="switchRole('assistant')">Giao Diện Trợ Giảng</button>
+            <div class="tabs">
+                <div class="tab active" data-tab="tro-giang">Trợ Giảng</div>
+                <div class="tab" data-tab="admin">Admin</div>
             </div>
 
-            <div class="card">
-                <label id="labelName">1. Chọn tên Giáo Viên:</label>
-                <select id="personName">
-                    <option value="">-- Chọn tên --</option>
-                    <!-- Dữ liệu tên sẽ đổi tùy theo giao diện -->
-                </select>
+            <!-- Giao diện Trợ Giảng -->
+            <div class="tab-content active" id="tro-giang">
+                <div class="calendar-section">
+                    <div class="calendar-header">
+                        <h2 class="calendar-title" id="month-year">Tháng 8, 2026</h2>
+                        <div class="calendar-nav">
+                            <button class="nav-btn" id="prev-month">← Tháng trước</button>
+                            <button class="nav-btn" id="today-btn">Hôm nay</button>
+                            <button class="nav-btn" id="next-month">Tháng sau →</button>
+                        </div>
+                    </div>
 
-                <label>2. Chọn Ngày (Bấm vào số ngày để cài đặt):</label>
-                <div class="calendar-grid" id="calendarGrid">
-                    <!-- JS tạo ô ngày -->
+                    <div class="calendar-weekdays">
+                        <div class="weekday">CN</div>
+                        <div class="weekday">T2</div>
+                        <div class="weekday">T3</div>
+                        <div class="weekday">T4</div>
+                        <div class="weekday">T5</div>
+                        <div class="weekday">T6</div>
+                        <div class="weekday">T7</div>
+                    </div>
+
+                    <div class="calendar-days" id="calendar-days"></div>
                 </div>
-                <small style="color: #666; display: block; margin-top: 5px;">* Ô được tô màu là các ngày đã được cấu hình.</small>
 
-                <button class="btn-submit" onclick="submitRegistration()">Gửi Lịch Đăng Ký</button>
+                <!-- Bảng đăng ký dưới lịch -->
+                <div class="registration-table-section">
+                    <h3 class="section-title">📋 Danh Sách Đăng Ký Hôm Nay</h3>
+                    <table class="registration-table" id="registration-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên Trợ Giảng</th>
+                                <th>Ngày</th>
+                                <th>Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registration-table-body">
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <!-- Bảng tổng hợp -->
-            <div>
-                <h3>Danh Sách Tổng Hợp Đã Đăng Ký</h3>
-                <div id="logList">
-                    <p style="color: #777; text-align: center;">Chưa có dữ liệu đăng ký nào được gửi.</p>
+            <!-- Giao diện Admin -->
+            <div class="tab-content" id="admin">
+                <div class="admin-controls">
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="Tìm kiếm trợ giảng...">
+                    </div>
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">Tất cả</button>
+                        <button class="filter-btn" data-filter="full-day-off">Nghỉ</button>
+                        <button class="filter-btn" data-filter="late-over">Đến muộn >15p</button>
+                        <button class="filter-btn" data-filter="late-under">Đến muộn <15p< /button>
+                                <button class="filter-btn" data-filter="normal">Bình thường</button>
+                    </div>
                 </div>
+
+                <table class="data-table" id="admin-table">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên Trợ Giảng</th>
+                            <th>SĐT</th>
+                            <th>Chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body">
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Mờ nền popup -->
-        <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+        <!-- Modal -->
+        <div class="modal-overlay" id="modal">
+            <div class="modal">
+                <button class="close-btn" id="close-modal">&times;</button>
+                <h2 id="modal-date">Ngày 22 Tháng 8, 2026</h2>
 
-        <!-- Popup Modal -->
-        <div class="modal" id="dayModal">
-            <h3 id="modalTitle">Cài đặt ngày</h3>
+                <div class="form-group">
+                    <label class="form-label" for="tro-giang-select">Chọn Trợ Giảng:</label>
+                    <select id="tro-giang-select" class="select-box">
+                        <option value="">-- Chọn trợ giảng --</option>
+                        <option value="1">Nguyễn Văn A</option>
+                        <option value="2">Trần Thị B</option>
+                        <option value="3">Lê Văn C</option>
+                        <option value="4">Phạm Thị D</option>
+                        <option value="5">Đặng Văn E</option>
+                    </select>
+                </div>
 
-            <label>Trạng thái:</label>
-            <select id="popupStatus">
-                <option value="">Đi làm bình thường (Xóa trạng thái)</option>
-                <option value="nghi">Nghỉ cả ngày</option>
-                <option value="muon-duoi">Đi muộn dưới 10 phút</option>
-                <option value="muon-tren">Đi muộn trên 10 phút</option>
-            </select>
-
-            <!-- Khung thông tin giáo viên thay thế (Chỉ hiện ở giao diện Giáo Viên) -->
-            <div id="substituteContainer">
-                <label>Người dạy thay (Nếu có):</label>
-                <input type="text" id="popupSubName" placeholder="Họ tên GV thay thế">
-
-                <label>SĐT người dạy thay:</label>
-                <input type="tel" id="popupSubPhone" placeholder="Số điện thoại GV thay thế">
-            </div>
-
-            <div class="btn-group">
-                <button class="btn-cancel" onclick="closeModal()">Hủy</button>
-                <button class="btn-save" onclick="saveDayConfig()">Xác nhận</button>
+                <div class="modal-options">
+                    <button class="option-btn" data-status="full-day-off">
+                        <span class="option-icon">🚫</span>
+                        <span class="option-text">Nghỉ cả ngày</span>
+                    </button>
+                    <button class="option-btn" data-status="late-over">
+                        <span class="option-icon">⏰</span>
+                        <span class="option-text">Đến muộn quá 15 phút</span>
+                    </button>
+                    <button class="option-btn" data-status="late-under">
+                        <span class="option-icon">⏱️</span>
+                        <span class="option-text">Đến muộn dưới 15 phút</span>
+                    </button>
+                </div>
+                <button class="submit-btn" id="submit-status">Gửi Đăng Ký</button>
             </div>
         </div>
 
-        <script>
-            let currentRole = 'teacher'; // 'teacher' hoặc 'assistant'
-            let tempDb = {}; 
-            let confirmedLogs = []; 
-            let activeDay = null;
+        <script type="module">
+            // ============================================================
+            // FIREBASE
+            // ============================================================
             
-            const teachersList = [
-                "Nguyễn Văn A", "Trần Thị B", "Lê Văn C", "Phạm Thị D", "Hoàng Văn E",
-                "Vũ Thị F", "Đỗ Văn G", "Bùi Thị H", "Hồ Văn I", "Ngô Thị K"
-            ];
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+            import {
+                getFirestore,
+                collection,
+                doc,
+                setDoc,
+                deleteDoc,
+                onSnapshot,
+                query,
+                orderBy
+            } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
             
-            const assistantsList = [
-                "Trợ giảng 1", "Trợ giảng 2", "Trợ giảng 3", "Trợ giảng 4", "Trợ giảng 5"
-            ];
-            
-            function switchRole(role) {
-                currentRole = role;
-                tempDb = {}; // Xóa tạm khi đổi chế độ
-                
-                document.getElementById('btnTeacher').className = role === 'teacher' ? 'role-btn active' : 'role-btn';
-                document.getElementById('btnAssistant').className = role === 'assistant' ? 'role-btn active' : 'role-btn';
-            
-                let select = document.getElementById('personName');
-                select.innerHTML = '<option value="">-- Chọn tên --</option>';
-            
-                let list = role === 'teacher' ? teachersList : assistantsList;
-                list.forEach(name => {
-                    let opt = document.createElement('option');
-                    opt.value = name;
-                    opt.innerText = name;
-                    select.appendChild(opt);
-                });
-            
-                document.getElementById('labelName').innerText = role === 'teacher' ? "1. Chọn tên Giáo Viên:" : "1. Chọn tên Trợ Giảng:";
-                
-                // Ẩn/hiện mục giáo viên thay thế trong popup
-                document.getElementById('substituteContainer').style.display = role === 'teacher' ? 'block' : 'none';
-            
-                // Reset màu ô ngày
-                for (let i = 1; i <= 30; i++) {
-                    document.getElementById(`day-btn-${i}`).className = "day-btn";
-                }
-            }
-            
-            // Khởi tạo 30 ngày
-            const grid = document.getElementById('calendarGrid');
-            for (let i = 1; i <= 30; i++) {
-                let btn = document.createElement('div');
-                btn.className = 'day-btn';
-                btn.id = `day-btn-${i}`;
-                btn.innerText = i;
-                
-                btn.onclick = function() {
-                    let person = document.getElementById('personName').value;
-                    if (!person) {
-                        alert("Vui lòng chọn tên ở mục 1 trước khi chọn ngày!");
-                        return;
-                    }
-                    openModal(i);
-                };
-                grid.appendChild(btn);
-            }
-            
-            function openModal(day) {
-                activeDay = day;
-                let data = tempDb[day] || { status: "", subName: "", subPhone: "" };
-            
-                document.getElementById('modalTitle').innerText = `Cấu hình Ngày ${day}`;
-                document.getElementById('popupStatus').value = data.status;
-                if (currentRole === 'teacher') {
-                    document.getElementById('popupSubName').value = data.subName;
-                    document.getElementById('popupSubPhone').value = data.subPhone;
-                }
-            
-                document.getElementById('dayModal').style.display = 'block';
-                document.getElementById('modalOverlay').style.display = 'block';
-            }
-            
-            function closeModal() {
-                document.getElementById('dayModal').style.display = 'none';
-                document.getElementById('modalOverlay').style.display = 'none';
-                activeDay = null;
-            }
-            
-            function saveDayConfig() {
-                if (!activeDay) return;
-                let status = document.getElementById('popupStatus').value;
-                let subName = currentRole === 'teacher' ? document.getElementById('popupSubName').value : "";
-                let subPhone = currentRole === 'teacher' ? document.getElementById('popupSubPhone').value : "";
-            
-                if (status === "") {
-                    delete tempDb[activeDay];
-                } else {
-                    tempDb[activeDay] = { status, subName, subPhone };
-                }
-            
-                updateDayUI(activeDay);
-                closeModal();
-            }
-            
-            function updateDayUI(day) {
-                let btn = document.getElementById(`day-btn-${day}`);
-                let data = tempDb[day];
-                btn.className = "day-btn";
-            
-                if (data) {
-                    if (data.status === "nghi") btn.classList.add("status-nghi");
-                    else if (data.status === "muon-duoi") btn.classList.add("status-muon-duoi");
-                    else if (data.status === "muon-tren") btn.classList.add("status-muon-tren");
-                }
-            }
-            
-            function submitRegistration() {
-                let person = document.getElementById('personName').value;
-                if (!person) {
-                    alert("Vui lòng chọn tên!");
-                    return;
-                }
-                
-                let daysKeys = Object.keys(tempDb);
-                if (daysKeys.length === 0) {
-                    alert("Bạn chưa chọn cấu hình ngày nào cả!");
-                    return;
-                }
-            
-                daysKeys.forEach(day => {
-                    let item = tempDb[day];
-                    confirmedLogs.push({
-                        roleType: currentRole === 'teacher' ? 'Giáo viên' : 'Trợ giảng',
-                        person: person,
-                        day: day,
-                        statusText: item.status === 'nghi' ? 'Nghỉ cả ngày' : (item.status === 'muon-duoi' ? 'Đi muộn dưới 10p' : 'Đi muộn trên 10p'),
-                        isNghi: item.status === 'nghi',
-                        subName: item.subName,
-                        subPhone: item.subPhone
-                    });
-                });
-            
-                tempDb = {};
-                for (let i = 1; i <= 30; i++) {
-                    document.getElementById(`day-btn-${i}`).className = "day-btn";
-                }
-                document.getElementById('personName').value = "";
-            
-                renderLogs();
-                alert("Gửi đăng ký thành công!");
-            }
-            
-            function renderLogs() {
-                let logList = document.getElementById('logList');
-                if (confirmedLogs.length === 0) {
-                    logList.innerHTML = `<p style="color: #777; text-align: center;">Chưa có dữ liệu đăng ký nào được gửi.</p>`;
-                    return;
-                }
-            
-                logList.innerHTML = "";
-                confirmedLogs.forEach(item => {
-                    let div = document.createElement('div');
-                    div.className = `log-item ${item.isNghi ? 'log-nghi' : 'log-muon'}`;
-                    
-                    let subInfo = "";
-                    if (item.roleType === 'Giáo viên' && item.subName) {
-                        subInfo = `<br>🔄 <b>Dạy thay:</b> ${item.subName} (${item.subPhone || 'Không có SĐT'})`;
-                    }
-            
-                    div.innerHTML = `
-                        <strong>👤 [${item.roleType}] ${item.person}</strong> - <span style="color: #d35400;">Ngày ${item.day}</span><br>
-                        <b>Trạng thái:</b> <span style="color: ${item.isNghi ? '#c0392b' : '#d68910'};">${item.statusText}</span>
-                        ${subInfo}
-                    `;
-                    logList.appendChild(div);
-                });
-            }
-            
-            document.getElementById('personName').onchange = function() {
-                tempDb = {};
-                for (let i = 1; i <= 30; i++) {
-                    document.getElementById(`day-btn-${i}`).className = "day-btn";
-                }
+            const firebaseConfig = {
+                apiKey: "AIzaSyAdIOQ8k4x06kS0Gd62SNNO2Df2NsKIyQ4",
+                authDomain: "xinnghi-52d51.firebaseapp.com",
+                projectId: "xinnghi-52d51",
+                storageBucket: "xinnghi-52d51.firebasestorage.app",
+                messagingSenderId: "955715191572",
+                appId: "1:955715191572:web:6355b97bc917cbf6133801",
+                measurementId: "G-BSES6988MB"
             };
             
-            // Chạy mặc định giao diện Giáo viên lúc đầu
-            switchRole('teacher');
+            // Khởi tạo Firebase
+            const app = initializeApp(firebaseConfig);
+            
+            // Khởi tạo Firestore
+            const db = getFirestore(app);
+            
+            // Collection lưu đăng ký
+            const recordsCollection = collection(db, "troGiangRecords");
+            
+            
+            // ============================================================
+            // DỮ LIỆU
+            // ============================================================
+            
+            let currentDate = new Date();
+            let currentMonth = currentDate.getMonth();
+            let currentYear = currentDate.getFullYear();
+            
+            let selectedDay = null;
+            let selectedStatus = null;
+            let selectedTroGiangId = null;
+            
+            // Danh sách trợ giảng
+            const troGiangData = [
+                { id: 1, name: 'Nguyễn Văn A', phone: '0987654321' },
+                { id: 2, name: 'Trần Thị B', phone: '0912345678' },
+                { id: 3, name: 'Lê Văn C', phone: '0945678912' },
+                { id: 4, name: 'Phạm Thị D', phone: '0978912345' },
+                { id: 5, name: 'Đặng Văn E', phone: '0934567890' },
+            ];
+            
+            // Dữ liệu đăng ký lấy từ Firebase
+            let records = [];
+            
+            
+            // ============================================================
+            // DOM ELEMENTS
+            // ============================================================
+            
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            const calendarDays = document.getElementById('calendar-days');
+            const monthYear = document.getElementById('month-year');
+            
+            const prevMonthBtn = document.getElementById('prev-month');
+            const nextMonthBtn = document.getElementById('next-month');
+            const todayBtn = document.getElementById('today-btn');
+            
+            const modal = document.getElementById('modal');
+            const closeModal = document.getElementById('close-modal');
+            const modalDate = document.getElementById('modal-date');
+            
+            const submitBtn = document.getElementById('submit-status');
+            
+            const adminTableBody = document.getElementById('admin-table-body');
+            const registrationTableBody =
+                document.getElementById('registration-table-body');
+            
+            const searchInput = document.getElementById('search-input');
+            
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const optionBtns = document.querySelectorAll('.option-btn');
+            
+            const troGiangSelect =
+                document.getElementById('tro-giang-select');
+            
+            const toastContainer =
+                document.getElementById('toast-container');
+            
+            
+            // ============================================================
+            // TOAST
+            // ============================================================
+            
+            function showToast(message, type = 'success') {
+            
+                const toast = document.createElement('div');
+            
+                toast.className = `toast ${type}`;
+            
+                const icon = document.createElement('span');
+                icon.className = 'toast-icon';
+                icon.textContent =
+                    type === 'success' ? '✅' : '❌';
+            
+                toast.appendChild(icon);
+            
+                const messageSpan = document.createElement('span');
+                messageSpan.className = 'toast-message';
+                messageSpan.textContent = message;
+            
+                toast.appendChild(messageSpan);
+            
+                toastContainer.appendChild(toast);
+            
+                setTimeout(() => {
+                    toast.classList.add('show');
+                }, 10);
+            
+                setTimeout(() => {
+            
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(100px)';
+            
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 300);
+            
+                }, 3000);
+            }
+            
+            
+            // ============================================================
+            // FORMAT DATE
+            // ============================================================
+            
+            function formatDate(dateStr) {
+            
+                const [year, month, day] =
+                    dateStr.split('-');
+            
+                return `${day}/${month}`;
+            }
+            
+            
+            function formatDateForComparison(date) {
+            
+                const year = date.getFullYear();
+            
+                const month =
+                    String(date.getMonth() + 1)
+                        .padStart(2, '0');
+            
+                const day =
+                    String(date.getDate())
+                        .padStart(2, '0');
+            
+                return `${year}-${month}-${day}`;
+            }
+            
+            
+            function getStatusText(status) {
+            
+                const statusMap = {
+            
+                    'full-day-off':
+                        'Nghỉ cả ngày',
+            
+                    'late-over':
+                        'Đến muộn >15p',
+            
+                    'late-under':
+                        'Đến muộn <15p'
+                };
+            
+                return statusMap[status] ||
+                    'Không xác định';
+            }
+            
+            
+            // ============================================================
+            // FIREBASE REALTIME
+            // ============================================================
+            
+            function listenToFirebase() {
+            
+                console.log(
+                    '🔥 Đang kết nối Firestore...'
+                );
+            
+                const q = query(
+                    recordsCollection,
+                    orderBy('timestamp', 'desc')
+                );
+            
+                onSnapshot(
+                    q,
+            
+                    snapshot => {
+            
+                        records = [];
+            
+                       snapshot.forEach(firebaseDoc => {
+            
+                const data = firebaseDoc.data();
+            
+                console.log("📥 Nhận từ Firebase:", {
+                    id: firebaseDoc.id,
+                    data: data
+                });
+            
+                records.push({
+                    id: firebaseDoc.id,
+                    troGiangId: Number(data.troGiangId),
+                    date: String(data.date),
+                    status: String(data.status),
+                    timestamp: Number(data.timestamp || 0)
+                });
+            });
+            
+                        console.log(
+                            `🔥 Firebase: ${records.length} bản ghi`
+                        );
+            
+                        // Cập nhật toàn bộ giao diện
+                        renderCalendar();
+            
+                        updateRegistrationTable();
+            
+                        const activeFilter =
+                            document
+                                .querySelector('.filter-btn.active')
+                                ?.dataset.filter || 'all';
+            
+                        renderAdminTable(
+                            activeFilter,
+                            searchInput.value
+                        );
+                    },
+            
+                    error => {
+            
+                        console.error(
+                            '❌ Lỗi onSnapshot:',
+                            error
+                        );
+            
+                        showToast(
+                            'Không thể kết nối Firebase!',
+                            'error'
+                        );
+                    }
+                );
+            }
+            
+            
+            // ============================================================
+            // LƯU ĐĂNG KÝ LÊN FIREBASE
+            // ============================================================
+            
+                       async function saveRecordToFirebase(record) {
+                try {
+                    console.log("🔥 Bắt đầu lưu Firebase:", record);
+            
+                    const documentId =
+            `tg_${record.troGiangId}_${record.date}`;
+            
+                    const recordRef = doc(
+            db,
+            "troGiangRecords",
+            documentId
+                    );
+            
+                    console.log("📄 Document:", documentId);
+            
+                    await setDoc(recordRef, {
+            troGiangId: Number(record.troGiangId),
+            date: record.date,
+            status: record.status,
+            timestamp: Date.now()
+                    });
+            
+                    console.log("✅ Firebase đã lưu thành công!");
+            
+                    return true;
+            
+                } catch (error) {
+            
+                    console.error("❌ FIREBASE ERROR:", error);
+            
+                    showToast(
+            `Lỗi Firebase: ${error.code || error.message}`,
+            "error"
+                    );
+            
+                    return false;
+                }
+            }
+            
+            // ============================================================
+            // CALENDAR
+            // ============================================================
+            
+            function renderCalendar() {
+            
+                const firstDay =
+                    new Date(
+                        currentYear,
+                        currentMonth,
+                        1
+                    ).getDay();
+            
+                const daysInMonth =
+                    new Date(
+                        currentYear,
+                        currentMonth + 1,
+                        0
+                    ).getDate();
+            
+                const monthNames = [
+                    'Tháng 1',
+                    'Tháng 2',
+                    'Tháng 3',
+                    'Tháng 4',
+                    'Tháng 5',
+                    'Tháng 6',
+                    'Tháng 7',
+                    'Tháng 8',
+                    'Tháng 9',
+                    'Tháng 10',
+                    'Tháng 11',
+                    'Tháng 12'
+                ];
+            
+                monthYear.textContent =
+                    `${monthNames[currentMonth]}, ${currentYear}`;
+            
+                calendarDays.innerHTML = '';
+            
+            
+                // Ô trống đầu tháng
+                for (let i = 0; i < firstDay; i++) {
+            
+                    const dayElement =
+                        document.createElement('div');
+            
+                    dayElement.className =
+                        'day empty';
+            
+                    calendarDays.appendChild(
+                        dayElement
+                    );
+                }
+            
+            
+                const today = new Date();
+            
+            
+                // Các ngày
+                for (
+                    let day = 1;
+                    day <= daysInMonth;
+                    day++
+                ) {
+            
+                    const dayElement =
+                        document.createElement('div');
+            
+                    dayElement.className =
+                        'day';
+            
+                    const dayStr =
+                        String(day).padStart(2, '0');
+            
+                    const monthStr =
+                        String(currentMonth + 1)
+                            .padStart(2, '0');
+            
+                    const dateStr =
+                        `${currentYear}-${monthStr}-${dayStr}`;
+            
+                    dayElement.dataset.date =
+                        dateStr;
+            
+            
+                    // Hôm nay
+                    if (
+                        day === today.getDate() &&
+                        currentMonth === today.getMonth() &&
+                        currentYear === today.getFullYear()
+                    ) {
+            
+                        dayElement.classList.add(
+                            'today'
+                        );
+                    }
+            
+            
+                    // Kiểm tra có đăng ký
+                    const hasRecord =
+                        records.some(
+                            r => r.date === dateStr
+                        );
+            
+                    if (hasRecord) {
+            
+                        dayElement.classList.add(
+                            'has-note'
+                        );
+                    }
+            
+            
+                    const dayNumber =
+                        document.createElement('span');
+            
+                    dayNumber.className =
+                        'day-number';
+            
+                    dayNumber.textContent =
+                        day;
+            
+                    dayElement.appendChild(
+                        dayNumber
+                    );
+            
+            
+                    dayElement.addEventListener(
+                        'click',
+                        () => {
+            
+                            const monthName =
+                                monthNames[currentMonth];
+            
+                            openModal(
+                                day,
+                                `${monthName} ${day}, ${currentYear}`
+                            );
+                        }
+                    );
+            
+                    calendarDays.appendChild(
+                        dayElement
+                    );
+                }
+            
+            
+                // Ô trống cuối tháng
+                const totalCells =
+                    firstDay + daysInMonth;
+            
+                const remainingCells =
+                    42 - totalCells;
+            
+                for (
+                    let i = 0;
+                    i < remainingCells;
+                    i++
+                ) {
+            
+                    const dayElement =
+                        document.createElement('div');
+            
+                    dayElement.className =
+                        'day empty';
+            
+                    calendarDays.appendChild(
+                        dayElement
+                    );
+                }
+            }
+            
+            
+            // ============================================================
+            // MODAL
+            // ============================================================
+            
+            function openModal(day, dateStr) {
+            
+                const dayStr =
+                    String(day).padStart(2, '0');
+            
+                const monthStr =
+                    String(currentMonth + 1)
+                        .padStart(2, '0');
+            
+                selectedDay =
+                    `${currentYear}-${monthStr}-${dayStr}`;
+            
+                modalDate.textContent =
+                    dateStr;
+            
+            
+                optionBtns.forEach(btn => {
+            
+                    btn.classList.remove(
+                        'selected'
+                    );
+            
+                });
+            
+                selectedStatus = null;
+            
+            
+                if (troGiangData.length > 0) {
+            
+                    selectedTroGiangId =
+                        troGiangData[0].id;
+            
+                    troGiangSelect.value =
+                        selectedTroGiangId;
+                }
+            
+            
+                modal.classList.add(
+                    'active'
+                );
+            }
+            
+            
+            function closeModalHandler() {
+            
+                modal.classList.remove(
+                    'active'
+                );
+            
+                selectedDay = null;
+                selectedStatus = null;
+                selectedTroGiangId = null;
+            }
+            
+            
+            // ============================================================
+            // BẢNG ĐĂNG KÝ HÔM NAY
+            // ============================================================
+            
+            function updateRegistrationTable() {
+            
+                const todayStr =
+                    formatDateForComparison(
+                        new Date()
+                    );
+            
+                const todayRecords =
+                    records.filter(
+                        r => r.date === todayStr
+                    );
+            
+                registrationTableBody.innerHTML =
+                    '';
+            
+            
+                if (todayRecords.length === 0) {
+            
+                    const row =
+                        document.createElement('tr');
+            
+                    const cell =
+                        document.createElement('td');
+            
+                    cell.colSpan = 4;
+            
+                    cell.style.textAlign =
+                        'center';
+            
+                    cell.style.padding =
+                        '16px';
+            
+                    cell.style.color =
+                        '#6b7280';
+            
+                    cell.textContent =
+                        'Không có đăng ký nào cho hôm nay';
+            
+                    row.appendChild(cell);
+            
+                    registrationTableBody.appendChild(
+                        row
+                    );
+            
+                    return;
+                }
+            
+            
+                todayRecords.sort(
+                    (a, b) =>
+                        b.timestamp - a.timestamp
+                );
+            
+            
+                todayRecords.forEach(
+                    (record, index) => {
+            
+                        const troGiang =
+                            troGiangData.find(
+                                tg =>
+                                    tg.id == record.troGiangId
+                            );
+            
+                        if (!troGiang) return;
+            
+            
+                        const row =
+                            document.createElement('tr');
+            
+            
+                        const sttCell =
+                            document.createElement('td');
+            
+                        sttCell.textContent =
+                            index + 1;
+            
+                        row.appendChild(
+                            sttCell
+                        );
+            
+            
+                        const nameCell =
+                            document.createElement('td');
+            
+                        nameCell.textContent =
+                            troGiang.name;
+            
+                        row.appendChild(
+                            nameCell
+                        );
+            
+            
+                        const dateCell =
+                            document.createElement('td');
+            
+                        dateCell.textContent =
+                            formatDate(record.date);
+            
+                        row.appendChild(
+                            dateCell
+                        );
+            
+            
+                        const statusCell =
+                            document.createElement('td');
+            
+                        const statusClass =
+                            `status-badge status-${record.status}`;
+            
+                        const statusText =
+                            getStatusText(
+                                record.status
+                            );
+            
+                        statusCell.innerHTML =
+                            `<span class="${statusClass}">${statusText}</span>`;
+            
+                        row.appendChild(
+                            statusCell
+                        );
+            
+            
+                        registrationTableBody.appendChild(
+                            row
+                        );
+                    }
+                );
+            }
+            
+            
+            // ============================================================
+            // ADMIN TABLE
+            // ============================================================
+            
+            function renderAdminTable(
+                filter = 'all',
+                searchTerm = ''
+            ) {
+            
+                const troGiangWithRecords =
+                    troGiangData.map(tg => {
+            
+                        const tgRecords =
+                            records.filter(
+                                r =>
+                                    r.troGiangId == tg.id
+                            );
+            
+                        return {
+                            ...tg,
+                            records: tgRecords
+                        };
+                    });
+            
+            
+                let filteredData =
+                    troGiangWithRecords.filter(tg => {
+            
+                        const search =
+                            searchTerm.toLowerCase();
+            
+                        const matchesSearch =
+                            tg.name
+                                .toLowerCase()
+                                .includes(search) ||
+                            tg.phone.includes(search);
+            
+            
+                        if (filter === 'all') {
+                            return matchesSearch;
+                        }
+            
+            
+                        const hasStatus =
+                            tg.records.some(r => {
+            
+                                if (
+                                    filter ===
+                                    'full-day-off'
+                                ) {
+                                    return r.status ===
+                                        'full-day-off';
+                                }
+            
+                                if (
+                                    filter ===
+                                    'late-over'
+                                ) {
+                                    return r.status ===
+                                        'late-over';
+                                }
+            
+                                if (
+                                    filter ===
+                                    'late-under'
+                                ) {
+                                    return r.status ===
+                                        'late-under';
+                                }
+            
+                                return false;
+                            });
+            
+            
+                        if (filter === 'normal') {
+            
+                            return (
+                                tg.records.length === 0 &&
+                                matchesSearch
+                            );
+                        }
+            
+            
+                        return (
+                            hasStatus &&
+                            matchesSearch
+                        );
+                    });
+            
+            
+                adminTableBody.innerHTML =
+                    '';
+            
+            
+                if (filteredData.length === 0) {
+            
+                    const row =
+                        document.createElement('tr');
+            
+                    const cell =
+                        document.createElement('td');
+            
+                    cell.colSpan = 4;
+            
+                    cell.className =
+                        'no-data';
+            
+                    cell.textContent =
+                        'Không có dữ liệu phù hợp';
+            
+                    row.appendChild(cell);
+            
+                    adminTableBody.appendChild(
+                        row
+                    );
+            
+                    return;
+                }
+            
+            
+                filteredData.forEach(
+                    (tg, index) => {
+            
+                        const row =
+                            document.createElement('tr');
+            
+            
+                        // STT
+                        const sttCell =
+                            document.createElement('td');
+            
+                        sttCell.textContent =
+                            index + 1;
+            
+                        row.appendChild(
+                            sttCell
+                        );
+            
+            
+                        // Tên
+                        const nameCell =
+                            document.createElement('td');
+            
+                        nameCell.textContent =
+                            tg.name;
+            
+                        row.appendChild(
+                            nameCell
+                        );
+            
+            
+                        // SĐT
+                        const phoneCell =
+                            document.createElement('td');
+            
+                        const phoneDiv =
+                            document.createElement('div');
+            
+                        phoneDiv.className =
+                            'phone-cell';
+            
+            
+                        const phoneSpan =
+                            document.createElement('span');
+            
+                        phoneSpan.className =
+                            'phone-number';
+            
+                        phoneSpan.textContent =
+                            tg.phone;
+            
+                        phoneDiv.appendChild(
+                            phoneSpan
+                        );
+            
+            
+                        const callBtn =
+                            document.createElement('button');
+            
+                        callBtn.className =
+                            'call-btn';
+            
+                        callBtn.innerHTML =
+                            '📞';
+            
+                        callBtn.title =
+                            'Gọi điện';
+            
+                        callBtn.onclick = () => {
+            
+                            window.open(
+                                `tel:${tg.phone}`,
+                                '_blank'
+                            );
+                        };
+            
+            
+                        phoneDiv.appendChild(
+                            callBtn
+                        );
+            
+                        phoneCell.appendChild(
+                            phoneDiv
+                        );
+            
+                        row.appendChild(
+                            phoneCell
+                        );
+            
+            
+                        // Chi tiết
+                        const detailCell =
+                            document.createElement('td');
+            
+                        detailCell.className =
+                            'status-cell';
+            
+            
+                        if (tg.records.length === 0) {
+            
+                            const statusRow =
+                                document.createElement('div');
+            
+                            statusRow.className =
+                                'status-row';
+            
+            
+                            const statusNumber =
+                                document.createElement('span');
+            
+                            statusNumber.className =
+                                'status-number';
+            
+                            statusNumber.textContent =
+                                '1.';
+            
+                            statusRow.appendChild(
+                                statusNumber
+                            );
+            
+            
+                            const statusLabel =
+                                document.createElement('span');
+            
+                            statusLabel.className =
+                                'status-label';
+            
+                            statusLabel.textContent =
+                                'Trạng thái:';
+            
+                            statusRow.appendChild(
+                                statusLabel
+                            );
+            
+            
+                            const statusValue =
+                                document.createElement('span');
+            
+                            statusValue.textContent =
+                                'Bình thường';
+            
+                            statusValue.style.color =
+                                'var(--success)';
+            
+                            statusRow.appendChild(
+                                statusValue
+                            );
+            
+            
+                            detailCell.appendChild(
+                                statusRow
+                            );
+            
+                        } else {
+            
+                            let counter = 1;
+            
+            
+                            // Muộn dưới 15 phút
+                            const lateUnderRecords =
+                                tg.records.filter(
+                                    r =>
+                                        r.status ===
+                                        'late-under'
+                                );
+            
+                            if (
+                                lateUnderRecords.length > 0
+                            ) {
+            
+                                const statusRow =
+                                    document.createElement('div');
+            
+                                statusRow.className =
+                                    'status-row';
+            
+            
+                                const statusNumber =
+                                    document.createElement('span');
+            
+                                statusNumber.className =
+                                    'status-number';
+            
+                                statusNumber.textContent =
+                                    `${counter}.`;
+            
+                                statusRow.appendChild(
+                                    statusNumber
+                                );
+            
+            
+                                const statusLabel =
+                                    document.createElement('span');
+            
+                                statusLabel.className =
+                                    'status-label';
+            
+                                statusLabel.textContent =
+                                    'Đến muộn <15p:';
+            
+                                statusRow.appendChild(
+                                    statusLabel
+                                );
+            
+            
+                                const daysList =
+                                    document.createElement('div');
+            
+                                daysList.className =
+                                    'days-list';
+            
+            
+                                lateUnderRecords.forEach(
+                                    r => {
+            
+                                        const dayTag =
+                                            document.createElement('span');
+            
+                                        dayTag.className =
+                                            'day-tag late-under';
+            
+                                        dayTag.textContent =
+                                            formatDate(
+                                                r.date
+                                            );
+            
+                                        daysList.appendChild(
+                                            dayTag
+                                        );
+                                    }
+                                );
+            
+            
+                                statusRow.appendChild(
+                                    daysList
+                                );
+            
+                                detailCell.appendChild(
+                                    statusRow
+                                );
+            
+                                counter++;
+                            }
+            
+            
+                            // Muộn trên 15 phút
+                            const lateOverRecords =
+                                tg.records.filter(
+                                    r =>
+                                        r.status ===
+                                        'late-over'
+                                );
+            
+                            if (
+                                lateOverRecords.length > 0
+                            ) {
+            
+                                const statusRow =
+                                    document.createElement('div');
+            
+                                statusRow.className =
+                                    'status-row';
+            
+            
+                                const statusNumber =
+                                    document.createElement('span');
+            
+                                statusNumber.className =
+                                    'status-number';
+            
+                                statusNumber.textContent =
+                                    `${counter}.`;
+            
+                                statusRow.appendChild(
+                                    statusNumber
+                                );
+            
+            
+                                const statusLabel =
+                                    document.createElement('span');
+            
+                                statusLabel.className =
+                                    'status-label';
+            
+                                statusLabel.textContent =
+                                    'Đến muộn >15p:';
+            
+                                statusRow.appendChild(
+                                    statusLabel
+                                );
+            
+            
+                                const daysList =
+                                    document.createElement('div');
+            
+                                daysList.className =
+                                    'days-list';
+            
+            
+                                lateOverRecords.forEach(
+                                    r => {
+            
+                                        const dayTag =
+                                            document.createElement('span');
+            
+                                        dayTag.className =
+                                            'day-tag late-over';
+            
+                                        dayTag.textContent =
+                                            formatDate(
+                                                r.date
+                                            );
+            
+                                        daysList.appendChild(
+                                            dayTag
+                                        );
+                                    }
+                                );
+            
+            
+                                statusRow.appendChild(
+                                    daysList
+                                );
+            
+                                detailCell.appendChild(
+                                    statusRow
+                                );
+            
+                                counter++;
+                            }
+            
+            
+                            // Nghỉ
+                            const fullDayOffRecords =
+                                tg.records.filter(
+                                    r =>
+                                        r.status ===
+                                        'full-day-off'
+                                );
+            
+                            if (
+                                fullDayOffRecords.length > 0
+                            ) {
+            
+                                const statusRow =
+                                    document.createElement('div');
+            
+                                statusRow.className =
+                                    'status-row';
+            
+            
+                                const statusNumber =
+                                    document.createElement('span');
+            
+                                statusNumber.className =
+                                    'status-number';
+            
+                                statusNumber.textContent =
+                                    `${counter}.`;
+            
+                                statusRow.appendChild(
+                                    statusNumber
+                                );
+            
+            
+                                const statusLabel =
+                                    document.createElement('span');
+            
+                                statusLabel.className =
+                                    'status-label';
+            
+                                statusLabel.textContent =
+                                    'Nghỉ:';
+            
+                                statusRow.appendChild(
+                                    statusLabel
+                                );
+            
+            
+                                const daysList =
+                                    document.createElement('div');
+            
+                                daysList.className =
+                                    'days-list';
+            
+            
+                                fullDayOffRecords.forEach(
+                                    r => {
+            
+                                        const dayTag =
+                                            document.createElement('span');
+            
+                                        dayTag.className =
+                                            'day-tag full-day-off';
+            
+                                        dayTag.textContent =
+                                            formatDate(
+                                                r.date
+                                            );
+            
+                                        daysList.appendChild(
+                                            dayTag
+                                        );
+                                    }
+                                );
+            
+            
+                                statusRow.appendChild(
+                                    daysList
+                                );
+            
+                                detailCell.appendChild(
+                                    statusRow
+                                );
+                            }
+                        }
+            
+            
+                        row.appendChild(
+                            detailCell
+                        );
+            
+                        adminTableBody.appendChild(
+                            row
+                        );
+                    }
+                );
+            }
+            
+            
+            // ============================================================
+            // ĐĂNG KÝ SỰ KIỆN
+            // ============================================================
+            
+            prevMonthBtn.addEventListener(
+                'click',
+                () => {
+            
+                    currentMonth--;
+            
+                    if (currentMonth < 0) {
+            
+                        currentMonth = 11;
+                        currentYear--;
+                    }
+            
+                    renderCalendar();
+                }
+            );
+            
+            
+            nextMonthBtn.addEventListener(
+                'click',
+                () => {
+            
+                    currentMonth++;
+            
+                    if (currentMonth > 11) {
+            
+                        currentMonth = 0;
+                        currentYear++;
+                    }
+            
+                    renderCalendar();
+                }
+            );
+            
+            
+            todayBtn.addEventListener(
+                'click',
+                () => {
+            
+                    currentDate = new Date();
+            
+                    currentMonth =
+                        currentDate.getMonth();
+            
+                    currentYear =
+                        currentDate.getFullYear();
+            
+                    renderCalendar();
+                }
+            );
+            
+            
+            closeModal.addEventListener(
+                'click',
+                closeModalHandler
+            );
+            
+            
+            modal.addEventListener(
+                'click',
+                e => {
+            
+                    if (e.target === modal) {
+                        closeModalHandler();
+                    }
+                }
+            );
+            
+            
+            troGiangSelect.addEventListener(
+                'change',
+                () => {
+            
+                    selectedTroGiangId =
+                        parseInt(
+                            troGiangSelect.value
+                        );
+                }
+            );
+            
+            
+            optionBtns.forEach(btn => {
+            
+                btn.addEventListener(
+                    'click',
+                    () => {
+            
+                        optionBtns.forEach(
+                            b =>
+                                b.classList.remove(
+                                    'selected'
+                                )
+                        );
+            
+                        btn.classList.add(
+                            'selected'
+                        );
+            
+                        selectedStatus =
+                            btn.dataset.status;
+                    }
+                );
+            });
+            
+            
+            // ============================================================
+            // GỬI ĐĂNG KÝ
+            // ============================================================
+            
+            submitBtn.addEventListener(
+                'click',
+                async () => {
+            
+                    if (
+                        !selectedDay ||
+                        !selectedStatus ||
+                        !selectedTroGiangId
+                    ) {
+            
+                        showToast(
+                            'Vui lòng chọn trợ giảng và trạng thái!',
+                            'error'
+                        );
+            
+                        return;
+                    }
+            
+            
+                    // Khóa nút tránh bấm liên tục
+                    submitBtn.disabled = true;
+            
+                    submitBtn.textContent =
+                        'Đang lưu...';
+            
+            
+                    const newRecord = {
+            
+                        troGiangId:
+                            Number(selectedTroGiangId),
+            
+                        date:
+                            selectedDay,
+            
+                        status:
+                            selectedStatus,
+            
+                        timestamp:
+                            Date.now()
+                    };
+            
+            
+                    const success =
+                        await saveRecordToFirebase(
+                            newRecord
+                        );
+            
+            
+                    if (success) {
+            
+                        showToast(
+                            'Đăng ký thành công! 🔥',
+                            'success'
+                        );
+            
+                        closeModalHandler();
+            
+                        /*
+                         * KHÔNG cần:
+                         *
+                         * renderCalendar()
+                         * updateRegistrationTable()
+                         * renderAdminTable()
+                         *
+                         * vì onSnapshot() sẽ tự gọi
+                         * các hàm này khi Firebase
+                         * xác nhận thay đổi.
+                         */
+                    }
+            
+            
+                    submitBtn.disabled = false;
+            
+                    submitBtn.textContent =
+                        'Gửi Đăng Ký';
+                }
+            );
+            
+            
+            // ============================================================
+            // SEARCH
+            // ============================================================
+            
+            searchInput.addEventListener(
+                'input',
+                () => {
+            
+                    const activeFilter =
+                        document
+                            .querySelector(
+                                '.filter-btn.active'
+                            )
+                            .dataset.filter;
+            
+                    renderAdminTable(
+                        activeFilter,
+                        searchInput.value
+                    );
+                }
+            );
+            
+            
+            // ============================================================
+            // FILTER
+            // ============================================================
+            
+            filterBtns.forEach(btn => {
+            
+                btn.addEventListener(
+                    'click',
+                    () => {
+            
+                        filterBtns.forEach(
+                            b =>
+                                b.classList.remove(
+                                    'active'
+                                )
+                        );
+            
+                        btn.classList.add(
+                            'active'
+                        );
+            
+            
+                        renderAdminTable(
+                            btn.dataset.filter,
+                            searchInput.value
+                        );
+                    }
+                );
+            });
+            
+            
+            // ============================================================
+            // TAB
+            // ============================================================
+            
+            tabs.forEach(tab => {
+            
+                tab.addEventListener(
+                    'click',
+                    () => {
+            
+                        tabs.forEach(
+                            t =>
+                                t.classList.remove(
+                                    'active'
+                                )
+                        );
+            
+                        tabContents.forEach(
+                            c =>
+                                c.classList.remove(
+                                    'active'
+                                )
+                        );
+            
+            
+                        tab.classList.add(
+                            'active'
+                        );
+            
+            
+                        document
+                            .getElementById(
+                                tab.dataset.tab
+                            )
+                            .classList.add(
+                                'active'
+                            );
+            
+            
+                        if (
+                            tab.dataset.tab ===
+                            'admin'
+                        ) {
+            
+                            renderAdminTable();
+                        }
+                    }
+                );
+            });
+            
+            
+            // ============================================================
+            // KHỞI ĐỘNG
+            // ============================================================
+            
+            renderCalendar();
+            
+            updateRegistrationTable();
+            
+            renderAdminTable();
+            
+            // Bắt đầu lắng nghe Firebase
+            listenToFirebase();
+            
         </script>
-
     </body>
 
 </html>
