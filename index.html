@@ -1050,7 +1050,7 @@
             import {
                 getFirestore,
                 collection,
-                getDocs,
+                onSnapshot,
                 addDoc,
                 updateDoc,
                 deleteDoc,
@@ -1078,6 +1078,8 @@
             const db = getFirestore(app);
             
             const recordsCollection = collection(db, "troGiangRecords");
+            const recordsQuery = query(recordsCollection, orderBy("timestamp", "desc"));
+            let unsubscribeRecords = null;
             
                        
             
@@ -1195,28 +1197,33 @@
             
             
             
-            async function loadRecordsFromFirebase() {
-                try {
-                    const snapshot = await getDocs(recordsCollection);
-            
-                    records = snapshot.docs.map(item => ({
-            firebaseId: item.id,
-            troGiangId: Number(item.data().troGiangId),
-            date: item.data().date,
-            status: item.data().status,
-            timestamp: Number(item.data().timestamp) || Date.now()
-                    }));
-            
-                    recordsLoaded = true;
-            
-                    renderAllData();
-            
-                    console.log("Đã tải dữ liệu Firebase:", records);
-            
-                } catch (error) {
-                    console.error("Lỗi tải Firebase:", error);
-                    showToast("Không thể tải dữ liệu từ Firebase.", "error");
+            function subscribeToRecordsFromFirebase() {
+                // Hủy listener cũ trước khi tạo listener mới để tránh đăng ký trùng.
+                if (typeof unsubscribeRecords === 'function') {
+                    unsubscribeRecords();
                 }
+
+                unsubscribeRecords = onSnapshot(
+                    recordsQuery,
+                    snapshot => {
+                        records = snapshot.docs.map(item => ({
+                            firebaseId: item.id,
+                            troGiangId: Number(item.data().troGiangId),
+                            date: item.data().date,
+                            status: item.data().status,
+                            timestamp: Number(item.data().timestamp) || Date.now()
+                        }));
+
+                        recordsLoaded = true;
+                        renderAllData();
+                        console.log("Đã đồng bộ dữ liệu Firebase theo thời gian thực:", records);
+                    },
+                    error => {
+                        recordsLoaded = false;
+                        console.error("Lỗi đồng bộ Firebase:", error);
+                        showToast("Không thể đồng bộ dữ liệu từ Firebase.", "error");
+                    }
+                );
             }
             
             
@@ -1555,10 +1562,22 @@
                 newRecord
             );
             
-            records.push({
-                ...newRecord,
-                firebaseId: docRef.id
-            });
+            // Cập nhật tức thời nhưng không tạo bản ghi trùng nếu onSnapshot đã chạy trước.
+            const realtimeIndex = records.findIndex(
+                record => record.firebaseId === docRef.id
+            );
+
+            if (realtimeIndex === -1) {
+                records.push({
+                    ...newRecord,
+                    firebaseId: docRef.id
+                });
+            } else {
+                records[realtimeIndex] = {
+                    ...newRecord,
+                    firebaseId: docRef.id
+                };
+            }
             
             showToast('Đăng ký thành công.');
                     }
@@ -1672,19 +1691,26 @@
             
             
             
-                       async function init() {
+                       function init() {
                 elements.headerToday.textContent =
                     `Hôm nay · ${formatShortDate(toDateKey(new Date()))}`;
             
                 populateAssistantSelect();
                 bindEvents();
             
-                // Hiển thị giao diện trước
+                // Hiển thị giao diện trước.
                 renderAllData();
             
-                // Sau đó tải dữ liệu từ Firebase
-                await loadRecordsFromFirebase();
+                // Theo dõi Firestore liên tục; mọi thay đổi từ thiết bị khác sẽ tự cập nhật.
+                subscribeToRecordsFromFirebase();
             }
+
+            // Giải phóng listener khi đóng hoặc tải lại trang.
+            window.addEventListener('beforeunload', () => {
+                if (typeof unsubscribeRecords === 'function') {
+                    unsubscribeRecords();
+                }
+            });
             
             init();
             
@@ -1693,6 +1719,6 @@
             
         </script>
 
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f710bfde7708b8',t:'MTc4NzQ1NjEwNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7146eac4c08b8',t:'MTc4NzQ1NjI1OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
