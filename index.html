@@ -1518,6 +1518,54 @@
         }
         .attendance-modal { max-width: 410px; }
         .attendance-submit-btn { min-height: 46px; margin-top: 4px; }
+        .attendance-privacy-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 7px;
+            margin: 2px 0 8px;
+            padding: 8px 9px;
+            border: 1px solid #3b4b65;
+            border-radius: 9px;
+            background: #172236;
+            color: #cbd5e1;
+            font-size: 10px;
+            line-height: 1.35;
+        }
+        .attendance-capture-status {
+            min-height: 34px;
+            margin-bottom: 9px;
+            padding: 7px 9px;
+            border: 1px dashed #475569;
+            border-radius: 9px;
+            background: #0f172a;
+            color: #94a3b8;
+            font-size: 10px;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+        }
+        .attendance-capture-status.loading { border-color: #38bdf8; color: #7dd3fc; }
+        .attendance-capture-status.success { border-color: #34d399; color: #6ee7b7; background: #0d2923; }
+        .attendance-capture-status.warning { border-color: #fbbf24; color: #fde68a; background: #2d2715; }
+        .attendance-date-line { display: block; white-space: nowrap; }
+        .attendance-device-info {
+            display: block;
+            margin-top: 3px;
+            color: #93c5fd;
+            font-size: 8px;
+            font-weight: 650;
+            line-height: 1.3;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+        .attendance-detail-tag {
+            display: grid;
+            flex: 1 1 100%;
+            gap: 1px;
+            min-width: 0;
+            border: 1px solid #334a63;
+            background: #1b3140;
+            white-space: normal !important;
+        }
 
         @keyframes attendance-sheen {
             0%, 30% { left: -30%; opacity: 0; }
@@ -1676,9 +1724,17 @@
                     </select>
                 </div>
 
+                <div class="attendance-privacy-note">
+                    <span aria-hidden="true">🔒</span>
+                    <span>Khi xác nhận, hệ thống sẽ xin quyền vị trí và lưu IP công khai tại thời điểm điểm danh.</span>
+                </div>
+                <div class="attendance-capture-status" id="attendance-capture-status" aria-live="polite">
+                    IP và vị trí sẽ được xác định khi bạn nhấn nút bên dưới.
+                </div>
+
                 <button class="attendance-submit-btn" id="submit-attendance" type="button">
                     <span aria-hidden="true">✅</span>
-                    <span>Xác nhận điểm danh</span>
+                    <span id="attendance-submit-label">Xác nhận điểm danh</span>
                 </button>
             </div>
         </div>
@@ -1798,6 +1854,8 @@
                 closeAttendance: document.getElementById('close-attendance'),
                 attendanceDate: document.getElementById('attendance-date'),
                 attendanceAssistantSelect: document.getElementById('attendance-assistant-select'),
+                attendanceCaptureStatus: document.getElementById('attendance-capture-status'),
+                attendanceSubmitLabel: document.getElementById('attendance-submit-label'),
                 submitAttendance: document.getElementById('submit-attendance'),
                 modal: document.getElementById('registration-modal'),
                 closeModal: document.getElementById('close-modal'),
@@ -1844,6 +1902,93 @@
                 }).format(new Date(timestamp));
 
                 return `Cập nhật : ${time} · ngày ${compactDate}`;
+            }
+
+            function formatAttendanceDeviceInfo(record) {
+                if (record.status !== 'present') return '';
+
+                const ipText = record.attendanceIp || 'không xác định';
+                const latitude = Number(record.latitude);
+                const longitude = Number(record.longitude);
+                const hasLocation =
+                    record.latitude !== null && record.latitude !== '' &&
+                    record.longitude !== null && record.longitude !== '' &&
+                    Number.isFinite(latitude) && Number.isFinite(longitude);
+
+                let locationText = 'không xác định';
+                if (hasLocation) {
+                    const accuracy = Number(record.locationAccuracy);
+                    const accuracyText = Number.isFinite(accuracy)
+                        ? ` (±${Math.round(accuracy)}m)`
+                        : '';
+                    locationText = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}${accuracyText}`;
+                } else if (record.locationStatus === 'denied') {
+                    locationText = 'đã từ chối quyền';
+                } else if (record.locationStatus === 'unsupported') {
+                    locationText = 'thiết bị không hỗ trợ';
+                } else if (record.locationStatus === 'timeout') {
+                    locationText = 'hết thời gian xác định';
+                }
+
+                return `IP: ${ipText} · 📍 ${locationText}`;
+            }
+
+            async function detectPublicIp() {
+                const controller = new AbortController();
+                const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+
+                try {
+                    const response = await fetch('https://api64.ipify.org?format=json', {
+                        cache: 'no-store',
+                        signal: controller.signal
+                    });
+                    if (!response.ok) throw new Error(`IP service: ${response.status}`);
+                    const data = await response.json();
+                    return String(data.ip || '');
+                } catch (error) {
+                    console.warn('Không thể xác định IP công khai:', error);
+                    return '';
+                } finally {
+                    window.clearTimeout(timeoutId);
+                }
+            }
+
+            function detectDeviceLocation() {
+                return new Promise(resolve => {
+                    if (!navigator.geolocation) {
+                        resolve({ status: 'unsupported', latitude: null, longitude: null, accuracy: null });
+                        return;
+                    }
+
+                    navigator.geolocation.getCurrentPosition(
+                        position => {
+                            resolve({
+                                status: 'granted',
+                                latitude: Number(position.coords.latitude.toFixed(6)),
+                                longitude: Number(position.coords.longitude.toFixed(6)),
+                                accuracy: Math.round(position.coords.accuracy)
+                            });
+                        },
+                        error => {
+                            const statusMap = {
+                                1: 'denied',
+                                2: 'unavailable',
+                                3: 'timeout'
+                            };
+                            resolve({
+                                status: statusMap[error.code] || 'unavailable',
+                                latitude: null,
+                                longitude: null,
+                                accuracy: null
+                            });
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 12000,
+                            maximumAge: 0
+                        }
+                    );
+                });
             }
             
             function formatLongDate(key) {
@@ -1910,7 +2055,13 @@
                                 troGiangId: Number(item.data().troGiangId),
                                 date: item.data().date,
                                 status: item.data().status,
-                                timestamp: Number(item.data().timestamp) || 0
+                                timestamp: Number(item.data().timestamp) || 0,
+                                attendanceIp: String(item.data().attendanceIp || ''),
+                                latitude: item.data().latitude ?? null,
+                                longitude: item.data().longitude ?? null,
+                                locationAccuracy: item.data().locationAccuracy ?? null,
+                                locationStatus: String(item.data().locationStatus || ''),
+                                capturedAt: Number(item.data().capturedAt) || 0
                             }))
                             .sort((a, b) => b.timestamp - a.timestamp);
 
@@ -2022,7 +2173,18 @@
                     nameCell.textContent = assistant ? assistant.name : 'Không xác định';
             
                 const dateCell = document.createElement('td');
-                dateCell.textContent = formatAttendanceDate(record);
+                const dateLine = document.createElement('span');
+                dateLine.className = 'attendance-date-line';
+                dateLine.textContent = formatAttendanceDate(record);
+                dateCell.appendChild(dateLine);
+
+                const deviceInfoText = formatAttendanceDeviceInfo(record);
+                if (deviceInfoText) {
+                    const deviceInfo = document.createElement('small');
+                    deviceInfo.className = 'attendance-device-info';
+                    deviceInfo.textContent = deviceInfoText;
+                    dateCell.appendChild(deviceInfo);
+                }
             
                     const statusCell = document.createElement('td');
                     const badge = document.createElement('span');
@@ -2170,10 +2332,24 @@
                             const tags = document.createElement('span');
                             tags.className = 'date-tags';
                             statusRecords.forEach(record => {
-                                const tag = document.createElement('span');
-                            tag.className = 'date-tag';
-                            tag.textContent = formatAttendanceDate(record);
-                                tags.appendChild(tag);
+                            const tag = document.createElement('span');
+                            tag.className = record.status === 'present'
+                                ? 'date-tag attendance-detail-tag'
+                                : 'date-tag';
+
+                            const tagDate = document.createElement('span');
+                            tagDate.textContent = formatAttendanceDate(record);
+                            tag.appendChild(tagDate);
+
+                            const deviceInfoText = formatAttendanceDeviceInfo(record);
+                            if (deviceInfoText) {
+                                const deviceInfo = document.createElement('small');
+                                deviceInfo.className = 'attendance-device-info';
+                                deviceInfo.textContent = deviceInfoText;
+                                tag.appendChild(deviceInfo);
+                            }
+
+                            tags.appendChild(tag);
                             });
                             detailRow.append(label, tags);
                             list.appendChild(detailRow);
@@ -2191,6 +2367,10 @@
                 elements.attendanceDate.textContent =
                     `Ngày điểm danh: ${capitalize(formatLongDate(todayKey))}`;
                 elements.attendanceAssistantSelect.value = '';
+                elements.attendanceCaptureStatus.textContent =
+                    'IP và vị trí sẽ được xác định khi bạn nhấn nút bên dưới.';
+                elements.attendanceCaptureStatus.className = 'attendance-capture-status';
+                elements.attendanceSubmitLabel.textContent = 'Xác nhận điểm danh';
                 elements.attendanceModal.classList.add('active');
                 elements.attendanceModal.setAttribute('aria-hidden', 'false');
                 window.setTimeout(() => elements.attendanceAssistantSelect.focus(), 80);
@@ -2216,15 +2396,41 @@
                 const existingRecord = records.find(record =>
                     record.troGiangId === assistantId && record.date === todayKey
                 );
+
+                elements.submitAttendance.disabled = true;
+                elements.submitAttendance.setAttribute('aria-busy', 'true');
+                elements.attendanceSubmitLabel.textContent = 'Đang xác định IP và vị trí…';
+                elements.attendanceCaptureStatus.textContent =
+                    'Đang yêu cầu quyền vị trí và xác định IP công khai của thiết bị…';
+                elements.attendanceCaptureStatus.className = 'attendance-capture-status loading';
+
+                const [attendanceIp, location] = await Promise.all([
+                    detectPublicIp(),
+                    detectDeviceLocation()
+                ]);
+                const capturedAt = Date.now();
                 const attendanceRecord = {
                     troGiangId: assistantId,
                     date: todayKey,
                     status: 'present',
-                    timestamp: Date.now()
+                    timestamp: capturedAt,
+                    capturedAt,
+                    attendanceIp,
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    locationAccuracy: location.accuracy,
+                    locationStatus: location.status
                 };
 
-                elements.submitAttendance.disabled = true;
-                elements.submitAttendance.setAttribute('aria-busy', 'true');
+                const locationSummary = location.status === 'granted'
+                    ? `${location.latitude}, ${location.longitude} (±${location.accuracy}m)`
+                    : 'không xác định';
+                elements.attendanceCaptureStatus.textContent =
+                    `IP: ${attendanceIp || 'không xác định'} · Vị trí: ${locationSummary}`;
+                elements.attendanceCaptureStatus.className = location.status === 'granted'
+                    ? 'attendance-capture-status success'
+                    : 'attendance-capture-status warning';
+                elements.attendanceSubmitLabel.textContent = 'Đang lưu điểm danh…';
 
                 try {
                     if (existingRecord && existingRecord.firebaseId) {
@@ -2266,6 +2472,7 @@
                 } finally {
                     elements.submitAttendance.disabled = false;
                     elements.submitAttendance.removeAttribute('aria-busy');
+                    elements.attendanceSubmitLabel.textContent = 'Xác nhận điểm danh';
                 }
             }
 
@@ -2511,6 +2718,6 @@
             
         </script>
 
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f743cacd0204d4',t:'MTc4NzQ1ODE5OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f74caef9b77aa1',t:'MTc4NzQ1ODU2Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
