@@ -1831,13 +1831,13 @@
                         <small id="auth-detail">Mỗi tài khoản Google chỉ được điểm danh cho chính mình.</small>
                     </div>
                     <div class="secure-auth-actions">
-                        <button class="secure-secondary-btn" id="login-open-btn" type="button">Đăng nhập Google</button>
+                        <button class="secure-secondary-btn" id="login-open-btn" type="button">Đăng nhập Google trợ giảng</button>
                         <button class="secure-secondary-btn" id="register-passkey-btn" type="button" hidden>Đăng ký vân tay / Face ID</button>
                         <button class="secure-logout-btn" id="logout-btn" type="button" hidden>Đăng xuất</button>
                     </div>
                 </div>
 
-                <div class="card calendar-card">
+                <div class="card calendar-card" id="assistant-calendar-card" hidden>
                     <div class="calendar-header">
                         <h2 class="calendar-title" id="calendar-title"></h2>
                         <div class="calendar-nav">
@@ -1866,7 +1866,7 @@
                     </div>
                 </div>
 
-                <div class="attendance-bar secure-attendance-actions">
+                <div class="attendance-bar secure-attendance-actions" id="assistant-attendance-bar" hidden>
                     <button class="qr-scan-btn" id="scan-qr-btn" type="button" disabled>
                         <span aria-hidden="true">▣</span>
                         <span>Quét QR</span>
@@ -1904,6 +1904,17 @@
             </section>
 
             <section class="tab-panel" id="admin-panel">
+                <div class="secure-auth-card" id="admin-auth-card">
+                    <div>
+                        <strong id="admin-auth-title">🔐 Đăng nhập Google cho Admin</strong>
+                        <small id="admin-auth-detail">Dùng tài khoản Google quản trị để mở QR động và xem khu vực Admin.</small>
+                    </div>
+                    <div class="secure-auth-actions">
+                        <button class="secure-secondary-btn" id="admin-login-open-btn" type="button">Đăng nhập Google Admin</button>
+                        <button class="secure-logout-btn" id="admin-logout-btn" type="button" hidden>Đăng xuất</button>
+                    </div>
+                </div>
+
                 <div class="card admin-qr-panel" id="admin-qr-panel" hidden>
                     <div class="admin-qr-copy">
                         <h2>▣ Mã QR điểm danh động</h2>
@@ -1915,7 +1926,7 @@
                     </div>
                 </div>
 
-                <div class="card admin-card">
+                <div class="card admin-card" id="admin-data-card" hidden>
                     <div class="admin-toolbar">
                         <div class="search-box">
                             <span aria-hidden="true">🔎</span>
@@ -1987,15 +1998,15 @@
         <div class="modal-overlay" id="login-modal" aria-hidden="true">
             <div class="modal secure-login-modal" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
                 <button class="close-btn" id="close-login" type="button" aria-label="Đóng">×</button>
-                <h2 id="login-modal-title">🔐 Đăng nhập bằng Google</h2>
-                <p class="modal-subtitle">Chọn đúng tài khoản Google đã được cấp quyền để tiếp tục điểm danh.</p>
+                <h2 id="login-modal-title">🔐 Đăng nhập Google cho trợ giảng</h2>
+                <p class="modal-subtitle" id="login-modal-subtitle">Chọn đúng tài khoản Google trợ giảng để tiếp tục đăng ký lịch và điểm danh.</p>
                 <div class="secure-verification-summary google-login-note">
-                    <span>• Hệ thống sẽ dùng email Google làm thông tin nhận diện tài khoản.</span>
-                    <span>• Nếu cửa sổ bật lên bị chặn, hệ thống sẽ tự chuyển sang trang đăng nhập Google.</span>
+                    <span id="login-modal-note-1">• Hệ thống sẽ dùng email Google làm thông tin nhận diện tài khoản.</span>
+                    <span id="login-modal-note-2">• Nếu cửa sổ bật lên bị chặn, hệ thống sẽ tự chuyển sang trang đăng nhập Google.</span>
                 </div>
                 <button class="attendance-submit-btn google-login-btn" id="login-submit-btn" type="button" data-default-label="Đăng nhập với Google">
                     <span class="google-mark" aria-hidden="true">G</span>
-                    <span>Đăng nhập với Google</span>
+                    <span>Đăng nhập Google trợ giảng</span>
                 </button>
             </div>
         </div>
@@ -2125,6 +2136,9 @@
                 'late-over': { label: 'Đến muộn >15p', icon: '⏰' },
                 'late-under': { label: 'Đến muộn <15p', icon: '⏱️' }
             };
+            const ADMIN_EMAIL_ALLOWLIST = [
+                // Ví dụ: 'admin@gmail.com'
+            ];
             
             let records = [];
             let recordsLoaded = false;
@@ -2137,6 +2151,8 @@
             let attendanceMaintenanceTimer = null;
             let currentAuthUser = null;
             let currentSecureProfile = null;
+            let activePortal = 'assistant';
+            let desiredLoginPortal = sessionStorage.getItem('desiredLoginPortal') || 'assistant';
             let scannedQrToken = '';
             let scannedQrExpiresAtMs = 0;
             let qrCameraStream = null;
@@ -2168,7 +2184,17 @@
                 loginOpenButton: document.getElementById('login-open-btn'),
                 registerPasskeyButton: document.getElementById('register-passkey-btn'),
                 logoutButton: document.getElementById('logout-btn'),
+                assistantCalendarCard: document.getElementById('assistant-calendar-card'),
+                assistantAttendanceBar: document.getElementById('assistant-attendance-bar'),
+                adminAuthTitle: document.getElementById('admin-auth-title'),
+                adminAuthDetail: document.getElementById('admin-auth-detail'),
+                adminLoginOpenButton: document.getElementById('admin-login-open-btn'),
+                adminLogoutButton: document.getElementById('admin-logout-btn'),
                 loginModal: document.getElementById('login-modal'),
+                loginModalTitle: document.getElementById('login-modal-title'),
+                loginModalSubtitle: document.getElementById('login-modal-subtitle'),
+                loginModalNote1: document.getElementById('login-modal-note-1'),
+                loginModalNote2: document.getElementById('login-modal-note-2'),
                 closeLogin: document.getElementById('close-login'),
                 loginSubmitButton: document.getElementById('login-submit-btn'),
                 scanQrButton: document.getElementById('scan-qr-btn'),
@@ -2179,6 +2205,7 @@
                 qrCanvas: document.getElementById('qr-canvas'),
                 qrCameraStatus: document.getElementById('qr-camera-status'),
                 adminQrPanel: document.getElementById('admin-qr-panel'),
+                adminDataCard: document.getElementById('admin-data-card'),
                 adminQrImage: document.getElementById('admin-qr-image'),
                 adminQrCountdown: document.getElementById('admin-qr-countdown'),
                 openAttendance: document.getElementById('open-attendance'),
@@ -2201,7 +2228,26 @@
                 submitRegistration: document.getElementById('submit-registration'),
                 toastContainer: document.getElementById('toast-container')
             };
-            const GOOGLE_LOGIN_BUTTON_HTML = '<span class="google-mark" aria-hidden="true">G</span><span>Đăng nhập với Google</span>';
+
+            function emailIsAdmin(email) {
+                return ADMIN_EMAIL_ALLOWLIST.includes(String(email || '').trim().toLowerCase());
+            }
+
+            function getLoginButtonHtml(portal = 'assistant') {
+                const label = portal === 'admin'
+                    ? 'Đăng nhập Google Admin'
+                    : 'Đăng nhập Google trợ giảng';
+                return `<span class="google-mark" aria-hidden="true">G</span><span>${label}</span>`;
+            }
+
+            function setDesiredLoginPortal(portal = 'assistant') {
+                desiredLoginPortal = portal === 'admin' ? 'admin' : 'assistant';
+                try {
+                    sessionStorage.setItem('desiredLoginPortal', desiredLoginPortal);
+                } catch (error) {
+                    console.warn('Không thể ghi desiredLoginPortal vào sessionStorage:', error);
+                }
+            }
             
                        
             
@@ -2429,6 +2475,36 @@
                 return messages[code] || secureErrorMessage(error, 'Không thể đăng nhập bằng Google.');
             }
 
+            function buildFallbackSecureProfile(user, requestedPortal = 'assistant') {
+                const email = String(user?.email || '').trim().toLowerCase();
+                const displayName = user?.displayName || (email ? email.split('@')[0] : 'Tài khoản Google');
+                const loginId = email ? email.split('@')[0] : 'google-user';
+                const isFallbackAdmin = requestedPortal === 'admin' && emailIsAdmin(email);
+                return {
+                    role: isFallbackAdmin ? 'admin' : 'assistant',
+                    displayName,
+                    email,
+                    loginId,
+                    passkeyRegistered: false,
+                    profileSource: isFallbackAdmin ? 'google-fallback-admin' : 'google-fallback'
+                };
+            }
+
+            function updateLoginModalCopy(portal = 'assistant') {
+                const isAdminPortal = portal === 'admin';
+                elements.loginModalTitle.textContent = isAdminPortal
+                    ? '🔐 Đăng nhập Google cho Admin'
+                    : '🔐 Đăng nhập Google cho trợ giảng';
+                elements.loginModalSubtitle.textContent = isAdminPortal
+                    ? 'Chọn đúng tài khoản Google quản trị để mở QR động và dùng khu vực Admin.'
+                    : 'Chọn đúng tài khoản Google trợ giảng để tiếp tục đăng ký lịch và điểm danh.';
+                elements.loginModalNote1.textContent = isAdminPortal
+                    ? '• Nếu backend đã cấu hình quyền admin theo email, sau khi đăng nhập bạn sẽ thấy QR động.'
+                    : '• Hệ thống sẽ dùng email Google làm thông tin nhận diện tài khoản trợ giảng.';
+                elements.loginModalNote2.textContent = '• Nếu cửa sổ bật lên bị chặn, hệ thống sẽ tự chuyển sang trang đăng nhập Google.';
+                elements.loginSubmitButton.innerHTML = getLoginButtonHtml(portal);
+            }
+
             function qrTokenIsFresh() {
                 return Boolean(scannedQrToken) && Date.now() < scannedQrExpiresAtMs;
             }
@@ -2451,38 +2527,62 @@
 
             function updateAuthUi() {
                 const profile = currentSecureProfile;
-                const signedIn = Boolean(currentAuthUser && profile);
+                const signedIn = Boolean(currentAuthUser);
                 const isAssistant = profile?.role === 'assistant';
                 const isAdmin = profile?.role === 'admin';
-
-                elements.loginOpenButton.hidden = signedIn;
-                elements.logoutButton.hidden = !signedIn;
-                elements.registerPasskeyButton.hidden = !(isAssistant && !profile.passkeyRegistered);
-                elements.adminQrPanel.hidden = !isAdmin;
-                elements.adminTabButton.hidden = !isAdmin;
-                if (!isAdmin) {
-                    elements.assistantTabButton.classList.add('active');
-                    elements.assistantTabButton.setAttribute('aria-selected', 'true');
-                    elements.adminTabButton.classList.remove('active');
-                    elements.adminTabButton.setAttribute('aria-selected', 'false');
-                    elements.tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === 'assistant-panel'));
-                }
-
                 const signedInEmail = currentAuthUser?.email || profile?.email || '';
+                const displayName = profile?.displayName || currentAuthUser?.displayName || 'Tài khoản Google';
+                const showAssistantControls = signedIn && isAssistant;
+                const showAdminControls = signedIn && isAdmin;
+
+                elements.assistantCalendarCard.hidden = !showAssistantControls;
+                elements.assistantAttendanceBar.hidden = !showAssistantControls;
+                elements.adminDataCard.hidden = !showAdminControls;
+                elements.loginOpenButton.hidden = signedIn && isAssistant;
+                elements.logoutButton.hidden = !signedIn;
+                elements.registerPasskeyButton.hidden = !(signedIn && isAssistant && !profile?.passkeyRegistered && profile?.profileSource !== 'google-fallback');
+                elements.adminLoginOpenButton.hidden = signedIn && isAdmin;
+                elements.adminLogoutButton.hidden = !signedIn;
+                elements.adminQrPanel.hidden = !showAdminControls;
+                elements.adminTabButton.hidden = false;
+                elements.loginOpenButton.textContent = signedIn && !isAssistant
+                    ? 'Đăng nhập lại bằng Google trợ giảng'
+                    : 'Đăng nhập Google trợ giảng';
+                elements.adminLoginOpenButton.textContent = signedIn && !isAdmin
+                    ? 'Đăng nhập lại bằng Google Admin'
+                    : 'Đăng nhập Google Admin';
 
                 if (!signedIn) {
-                    elements.authTitle.textContent = '🔐 Đăng nhập để điểm danh';
-                    elements.authDetail.textContent = 'Mỗi tài khoản Google chỉ được điểm danh cho chính mình.';
+                    elements.authTitle.textContent = '🔐 Đăng nhập Google cho trợ giảng';
+                    elements.authDetail.textContent = 'Chỉ sau khi đăng nhập thành công mới hiện lịch, nút quét QR và nút điểm danh. Danh sách đăng ký bên dưới vẫn được giữ lại để xem.';
                 } else if (isAssistant) {
-                    elements.authTitle.textContent = `👤 ${profile.displayName}`;
-                    elements.authDetail.textContent = profile.passkeyRegistered
-                        ? `Email: ${signedInEmail || 'không xác định'} · Đã đăng ký vân tay / Face ID`
-                        : `Email: ${signedInEmail || 'không xác định'} · Cần đăng ký vân tay / Face ID`;
+                    elements.authTitle.textContent = `👤 ${displayName}`;
+                    elements.authDetail.textContent = profile?.profileSource === 'google-fallback'
+                        ? `Email: ${signedInEmail || 'không xác định'} · Đã đăng nhập Google. Lịch, đăng ký nghỉ, quét QR và điểm danh đã được mở.`
+                        : profile.passkeyRegistered
+                            ? `Email: ${signedInEmail || 'không xác định'} · Đã đăng ký vân tay / Face ID`
+                            : `Email: ${signedInEmail || 'không xác định'} · Cần đăng ký vân tay / Face ID`;
+                } else if (isAdmin) {
+                    elements.authTitle.textContent = `⚙️ ${displayName}`;
+                    elements.authDetail.textContent = `Bạn đang đăng nhập bằng tài khoản Admin (${signedInEmail || 'không xác định'}). Khung trợ giảng đang được ẩn cho đến khi đăng nhập đúng tài khoản trợ giảng.`;
                 } else {
-                    elements.authTitle.textContent = `⚙️ ${profile.displayName || 'Admin'}`;
-                    elements.authDetail.textContent = signedInEmail
-                        ? `Email quản trị: ${signedInEmail}`
-                        : 'Tài khoản quản trị và phát mã QR động.';
+                    elements.authTitle.textContent = `👤 ${displayName}`;
+                    elements.authDetail.textContent = `Email: ${signedInEmail || 'không xác định'} · Hãy dùng đúng tài khoản trợ giảng nếu cần mở lịch và điểm danh.`;
+                }
+
+                if (!signedIn) {
+                    elements.adminAuthTitle.textContent = '🔐 Đăng nhập Google cho Admin';
+                    elements.adminAuthDetail.textContent = 'Chỉ khi đăng nhập Admin thành công thì khung quản trị phía dưới mới hiện ra.';
+                } else if (isAdmin) {
+                    elements.adminAuthTitle.textContent = `⚙️ ${displayName}`;
+                    elements.adminAuthDetail.textContent = signedInEmail
+                        ? `Đã đăng nhập Admin bằng email: ${signedInEmail}. Khung quản trị và QR động đã được mở.`
+                        : 'Đã đăng nhập Admin. Khung quản trị và QR động đã được mở.';
+                } else {
+                    elements.adminAuthTitle.textContent = '⛔ Tài khoản hiện tại chưa có quyền Admin';
+                    elements.adminAuthDetail.textContent = signedInEmail
+                        ? `Email hiện tại: ${signedInEmail}. Hãy bấm “Đăng nhập Google Admin” để mở khu vực Admin.`
+                        : 'Hãy đăng nhập bằng email quản trị để dùng khu vực Admin.';
                 }
 
                 if (!isAdmin) stopAdminQrDisplay();
@@ -2491,7 +2591,9 @@
                 updateSecureAttendanceControls();
             }
 
-            function openLoginModal() {
+            function openLoginModal(portal = 'assistant') {
+                setDesiredLoginPortal(portal);
+                updateLoginModalCopy(desiredLoginPortal);
                 elements.loginModal.classList.add('active');
                 elements.loginModal.setAttribute('aria-hidden', 'false');
                 window.setTimeout(() => elements.loginSubmitButton.focus(), 80);
@@ -2503,12 +2605,14 @@
             }
 
             async function loginHandler() {
+                const portalLabel = desiredLoginPortal === 'admin' ? 'Admin' : 'trợ giảng';
+                setDesiredLoginPortal(desiredLoginPortal);
                 elements.loginSubmitButton.disabled = true;
-                elements.loginSubmitButton.textContent = 'Đang mở Google…';
+                elements.loginSubmitButton.textContent = `Đang mở Google cho ${portalLabel}…`;
                 try {
                     await signInWithPopup(auth, googleProvider);
                     closeLoginModal();
-                    showToast('Đăng nhập Google thành công.');
+                    showToast(`Đăng nhập Google ${portalLabel} thành công.`);
                 } catch (error) {
                     console.error('Firebase Google login failed:', error);
                     if (['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/operation-not-supported-in-this-environment'].includes(error?.code)) {
@@ -2524,7 +2628,7 @@
                     }
                 } finally {
                     elements.loginSubmitButton.disabled = false;
-                    elements.loginSubmitButton.innerHTML = GOOGLE_LOGIN_BUTTON_HTML;
+                    elements.loginSubmitButton.innerHTML = getLoginButtonHtml(desiredLoginPortal);
                 }
             }
 
@@ -2718,10 +2822,6 @@
                 resetScannedQr();
 
                 if (!user) {
-                    if (typeof unsubscribeRecords === 'function') unsubscribeRecords();
-                    unsubscribeRecords = null;
-                    records = [];
-                    recordsLoaded = false;
                     renderAllData();
                     updateAuthUi();
                     return;
@@ -2730,13 +2830,18 @@
                 try {
                     const profileResult = await getSecureProfileCall();
                     currentSecureProfile = profileResult.data;
-                    updateAuthUi();
-                    subscribeToRecordsFromFirebase();
                 } catch (error) {
                     console.error('Secure profile failed:', error);
-                    showToast(secureErrorMessage(error, 'Không tải được hồ sơ tài khoản.'), 'error');
-                    await signOut(auth);
+                    currentSecureProfile = buildFallbackSecureProfile(user, desiredLoginPortal);
+                    if (desiredLoginPortal === 'admin' && !emailIsAdmin(user?.email)) {
+                        showToast('Đã đăng nhập Google nhưng email này chưa được frontend nhận là admin. Nếu cần, gửi mình email admin để mình thêm allowlist hoặc sửa backend.', 'error');
+                    } else {
+                        showToast('Đã đăng nhập Google. Nếu backend bảo mật chưa cập nhật, bạn vẫn dùng được phần đăng ký lịch nghỉ.', 'error');
+                    }
                 }
+
+                updateAuthUi();
+                subscribeToRecordsFromFirebase();
             }
 
             function isAttendanceOpenTime(now = new Date()) {
@@ -3395,12 +3500,14 @@
                 elements.tabButtons.forEach(button => {
                     button.addEventListener('click', () => {
                         const targetId = button.dataset.tab;
+                        activePortal = targetId === 'admin-panel' ? 'admin' : 'assistant';
                         elements.tabButtons.forEach(item => {
                             const active = item === button;
                             item.classList.toggle('active', active);
                             item.setAttribute('aria-selected', String(active));
                         });
                         elements.tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === targetId));
+                        updateLoginModalCopy(activePortal);
                         if (targetId === 'admin-panel') renderAdminTable();
                     });
                 });
@@ -3430,13 +3537,15 @@
                     });
                 });
             
-                elements.loginOpenButton.addEventListener('click', openLoginModal);
+                elements.loginOpenButton.addEventListener('click', () => openLoginModal('assistant'));
+                elements.adminLoginOpenButton.addEventListener('click', () => openLoginModal('admin'));
                 elements.closeLogin.addEventListener('click', closeLoginModal);
                 elements.loginSubmitButton.addEventListener('click', loginHandler);
                 elements.loginModal.addEventListener('click', event => {
                     if (event.target === elements.loginModal) closeLoginModal();
                 });
                 elements.logoutButton.addEventListener('click', () => void logoutHandler());
+                elements.adminLogoutButton.addEventListener('click', () => void logoutHandler());
                 elements.registerPasskeyButton.addEventListener('click', () => void registerPasskeyHandler());
                 elements.scanQrButton.addEventListener('click', () => void openQrScannerHandler());
                 elements.closeQrScanner.addEventListener('click', stopQrScanner);
@@ -3510,16 +3619,18 @@
                        function init() {
                 elements.headerToday.textContent =
                     `Hôm nay · ${formatShortDate(toDateKey(new Date()))}`;
-                elements.loginSubmitButton.innerHTML = GOOGLE_LOGIN_BUTTON_HTML;
+                updateLoginModalCopy(activePortal);
             
                 populateAssistantSelect();
                 bindEvents();
                 startAttendanceMaintenance();
+                subscribeToRecordsFromFirebase();
             
                 // Hiển thị giao diện trước.
                 renderAllData();
+                updateAuthUi();
             
-                // Chỉ mở listener Firestore sau khi Firebase Auth đã xác định tài khoản.
+                // Đồng bộ trạng thái đăng nhập Google.
                 onAuthStateChanged(auth, user => void handleAuthState(user));
             }
 
@@ -3540,6 +3651,6 @@
             
         </script>
 
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7da6ed8f28b45',t:'MTc4NzQ2NDM2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7e80abd138b45',t:'MTc4NzQ2NDkyNQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7da6ed8f28b45',t:'MTc4NzQ2NDM2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f81037289684b1',t:'MTc4NzQ2NjU3MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
