@@ -1760,7 +1760,36 @@
         }
         .assistant-login-only button:active { transform: translateY(0) scale(0.98); }
         /* Đăng nhập trợ giảng được gộp vào nút Trợ giảng trên thanh điều hướng */
+        /* Nút đăng nhập Google được tích hợp trực tiếp vào nút Trợ giảng */
         #secure-auth-card { display: none !important; }
+        .assistant-location-bar {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            max-width: 460px;
+            margin: 0 auto 8px;
+        }
+        .assistant-location-bar[hidden] { display: none !important; }
+        .assistant-location-btn {
+            width: 100%;
+            min-height: 44px;
+            padding: 9px 14px;
+            border: 1px solid #38bdf8;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #075985, #0e7490);
+            color: #ecfeff;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 850;
+            box-shadow: 0 5px 14px rgba(14, 116, 144, 0.28);
+            transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+        }
+        .assistant-location-btn:hover, .assistant-location-btn:focus-visible {
+            transform: translateY(-2px);
+            filter: brightness(1.14);
+            box-shadow: 0 0 14px rgba(34, 211, 238, 0.32);
+            outline: none;
+        }
         .admin-name-meta {
             display: grid;
             gap: 4px;
@@ -1795,6 +1824,32 @@
             border-color: #67e8f9;
             filter: brightness(1.14);
             outline: none;
+        }
+        /* Luôn giữ phần email và bản đồ nằm rõ ràng dưới tên trong Admin */
+        .admin-card td:nth-child(2) {
+            overflow: visible !important;
+            white-space: normal !important;
+            vertical-align: top;
+        }
+        .admin-card .admin-name-meta {
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 6px;
+            min-width: 0;
+            overflow: visible;
+            white-space: nowrap;
+        }
+        .admin-card .admin-name-email {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .admin-card .admin-name-map {
+            flex: 0 0 auto;
+            white-space: nowrap;
         }
         .assistant-login-btn {
             width: 100%;
@@ -2003,6 +2058,10 @@
                     <button class="google-login-btn assistant-login-btn" id="login-open-btn" type="button">✉️ Đăng nhập Google trợ giảng</button>
                     <button class="secure-secondary-btn" id="register-passkey-btn" type="button" hidden>Đăng ký vân tay / Face ID</button>
                     <button class="secure-logout-btn" id="logout-btn" type="button" hidden>Đăng xuất</button>
+                </div>
+
+                <div class="assistant-location-bar" id="assistant-location-bar" hidden>
+                    <button class="assistant-location-btn" id="assistant-location-btn" type="button">📍 Cho phép truy cập vị trí để tiếp tục</button>
                 </div>
 
                 <div class="card calendar-card" id="assistant-calendar-card" hidden>
@@ -2239,6 +2298,7 @@
                 collection,
                 onSnapshot,
                 addDoc,
+                setDoc,
                 updateDoc,
                 deleteDoc,
                 doc
@@ -2290,7 +2350,10 @@
             const submitSecureAttendanceCall = httpsCallable(functions, 'submitSecureAttendance');
             
             const recordsCollection = collection(db, "troGiangRecords");
+            const assistantLoginProfilesCollection = collection(db, "assistantLoginProfiles");
             let unsubscribeRecords = null;
+            let unsubscribeAssistantLoginProfiles = null;
+            let assistantLoginProfiles = [];
             
                        
             
@@ -2366,6 +2429,9 @@
                 authTitle: document.getElementById('auth-title'),
                 authDetail: document.getElementById('auth-detail'),
                 loginOpenButton: document.getElementById('login-open-btn'),
+                secureAuthCard: document.getElementById('secure-auth-card'),
+                assistantLocationBar: document.getElementById('assistant-location-bar'),
+                assistantLocationButton: document.getElementById('assistant-location-btn'),
                 registerPasskeyButton: document.getElementById('register-passkey-btn'),
                 logoutButton: document.getElementById('logout-btn'),
                 assistantCalendarCard: document.getElementById('assistant-calendar-card'),
@@ -2663,6 +2729,72 @@
                 }
             }
 
+            function getAssistantLoginEmails() {
+                try {
+                    return JSON.parse(localStorage.getItem('assistantLoginEmails') || '{}');
+                } catch (error) {
+                    console.warn('Không thể đọc assistantLoginEmails:', error);
+                    return {};
+                }
+            }
+
+            function saveAssistantLoginEmail(email, assistantId = 0) {
+                const normalizedEmail = String(email || '').trim().toLowerCase();
+                if (!normalizedEmail) return;
+                const emailBindings = getAssistantLoginEmails();
+                emailBindings[normalizedEmail] = {
+                    email: normalizedEmail,
+                    assistantId: Number(assistantId) || 0,
+                    updatedAt: Date.now()
+                };
+                try {
+                    localStorage.setItem('assistantLoginEmails', JSON.stringify(emailBindings));
+                } catch (error) {
+                    console.warn('Không thể lưu assistantLoginEmails:', error);
+                }
+            }
+
+            function getAssistantLoginLocations() {
+                try {
+                    return JSON.parse(localStorage.getItem('assistantLoginLocations') || '{}');
+                } catch (error) {
+                    console.warn('Không thể đọc assistantLoginLocations:', error);
+                    return {};
+                }
+            }
+
+            function saveAssistantLoginLocation(email, assistantId, location) {
+                const normalizedEmail = String(email || '').trim().toLowerCase();
+                if (!normalizedEmail || location?.status !== 'granted') return;
+                const locations = getAssistantLoginLocations();
+                locations[normalizedEmail] = {
+                    assistantId: Number(assistantId) || 0,
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    accuracy: location.accuracy,
+                    updatedAt: Date.now()
+                };
+                try {
+                    localStorage.setItem('assistantLoginLocations', JSON.stringify(locations));
+                } catch (error) {
+                    console.warn('Không thể lưu assistantLoginLocations:', error);
+                }
+            }
+
+            function getLatestLoginLocationForAssistant(assistantId) {
+                return Object.values(getAssistantLoginLocations())
+                    .filter(item => Number(item?.assistantId) === Number(assistantId))
+                    .sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0))[0] || null;
+            }
+
+            function getLatestLoginEmailForAssistant(assistantId) {
+                const bindings = Object.values(getAssistantLoginEmails());
+                const matched = bindings
+                    .filter(item => Number(item?.assistantId) === Number(assistantId) && item.email)
+                    .sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0))[0];
+                return matched?.email || '';
+            }
+
             function saveAttendanceAssistantBinding(email, assistantId) {
                 const normalizedEmail = String(email || '').trim().toLowerCase();
                 if (!normalizedEmail || !assistantId) return;
@@ -2686,6 +2818,26 @@
                 return matchedAssistant ? matchedAssistant.id : 0;
             }
 
+            async function syncAssistantLoginProfile(user = currentAuthUser, assistantId = 0, location = assistantSessionLocation) {
+                if (!user?.uid || !user?.email) return;
+                try {
+                    await setDoc(doc(db, 'assistantLoginProfiles', user.uid), {
+                        uid: user.uid,
+                        email: String(user.email).trim().toLowerCase(),
+                        displayName: user.displayName || '',
+                        assistantId: Number(assistantId) || 0,
+                        latitude: location?.status === 'granted' ? location.latitude : null,
+                        longitude: location?.status === 'granted' ? location.longitude : null,
+                        locationAccuracy: location?.status === 'granted' ? location.accuracy : null,
+                        locationStatus: location?.status || 'unknown',
+                        updatedAt: Date.now()
+                    }, { merge: true });
+                } catch (error) {
+                    console.error('Không thể đồng bộ hồ sơ đăng nhập trợ giảng:', error);
+                    showToast('Không thể lưu email/vị trí lên Firebase. Hãy kiểm tra Firestore Rules.', 'error');
+                }
+            }
+
             async function captureAssistantSessionLocation(showFeedback = false) {
                 const location = await detectDeviceLocation();
                 assistantSessionLocation = {
@@ -2695,6 +2847,11 @@
                     accuracy: location.accuracy,
                     capturedAt: Date.now()
                 };
+                if (currentAuthUser?.email && location.status === 'granted') {
+                    const boundAssistantId = getBoundAttendanceAssistantId(currentAuthUser);
+                    saveAssistantLoginLocation(currentAuthUser.email, boundAssistantId, location);
+                    void syncAssistantLoginProfile(currentAuthUser, boundAssistantId, location);
+                }
                 if (showFeedback) {
                     if (location.status === 'granted') {
                         showToast('Đã xác định vị trí đăng nhập trợ giảng.');
@@ -2799,7 +2956,8 @@
             function updateSecureAttendanceControls() {
                 const isAssistant = currentSecureProfile?.role === 'assistant';
                 const withinTime = isAttendanceOpenTime();
-                const canOpenAttendance = Boolean(currentAuthUser) && isAssistant && withinTime;
+                const hasLocationPermission = assistantSessionLocation.status === 'granted';
+                const canOpenAttendance = Boolean(currentAuthUser) && isAssistant && withinTime && hasLocationPermission;
 
                 elements.scanQrButton.disabled = true;
                 elements.openAttendance.disabled = !canOpenAttendance;
@@ -2813,6 +2971,9 @@
                 } else if (!isAssistant) {
                     attendanceReason = 'Tài khoản hiện tại chưa được nhận diện là trợ giảng.';
                     helperMessage = 'Hãy dùng đúng tài khoản Google trợ giảng.';
+                } else if (assistantSessionLocation.status !== 'granted') {
+                    attendanceReason = 'Bạn cần cấp quyền vị trí trước khi điểm danh.';
+                    helperMessage = attendanceReason;
                 } else if (!withinTime) {
                     attendanceReason = 'Điểm danh chỉ hoạt động từ 06:00 đến trước 22:00.';
                     helperMessage = attendanceReason;
@@ -2834,8 +2995,14 @@
                 const isAdmin = profile?.role === 'admin';
                 const signedInEmail = currentAuthUser?.email || profile?.email || '';
                 const displayName = profile?.displayName || currentAuthUser?.displayName || 'Tài khoản Google';
-                const showAssistantControls = signedIn && isAssistant;
+                const hasLocationPermission = assistantSessionLocation.status === 'granted';
+                const showAssistantControls = signedIn && isAssistant && hasLocationPermission;
+                const showLoginButton = !signedIn || !isAssistant;
+                const showLocationButton = signedIn && isAssistant && !hasLocationPermission;
 
+                // Trình tự bắt buộc: bấm Trợ giảng → Đăng nhập → Cấp quyền vị trí → Điểm danh.
+                elements.secureAuthCard.hidden = !showLoginButton;
+                elements.assistantLocationBar.hidden = !showLocationButton;
                 elements.assistantCalendarCard.hidden = !showAssistantControls;
                 elements.assistantAttendanceBar.hidden = !showAssistantControls;
                 elements.adminDataCard.hidden = false;
@@ -3137,6 +3304,13 @@
                     }
                 }
 
+                if (currentSecureProfile?.role === 'assistant') {
+                    const boundAssistantId = getBoundAttendanceAssistantId(user);
+                    saveAssistantLoginEmail(user.email, boundAssistantId);
+                    void syncAssistantLoginProfile(user, boundAssistantId);
+                    showToast(`Đã đăng nhập Google: ${user.email}. Hãy bấm nút cấp quyền vị trí.`);
+                }
+
                 updateAuthUi();
                 subscribeToRecordsFromFirebase();
             }
@@ -3229,6 +3403,26 @@
             
             
             
+            function subscribeToAssistantLoginProfiles() {
+                if (typeof unsubscribeAssistantLoginProfiles === 'function') {
+                    unsubscribeAssistantLoginProfiles();
+                }
+                unsubscribeAssistantLoginProfiles = onSnapshot(
+                    assistantLoginProfilesCollection,
+                    snapshot => {
+                        assistantLoginProfiles = snapshot.docs.map(item => ({
+                            firebaseId: item.id,
+                            ...item.data(),
+                            updatedAt: Number(item.data().updatedAt) || 0
+                        }));
+                        renderAdminTable();
+                    },
+                    error => {
+                        console.error('Không thể đọc hồ sơ đăng nhập trợ giảng:', error);
+                    }
+                );
+            }
+
             function renderCalendar() {
                 const year = viewDate.getFullYear();
                 const month = viewDate.getMonth();
@@ -3448,7 +3642,7 @@
                     )[0] || null;
 
                     const latestAttendanceRecord = [...assistant.records]
-                        .filter(record => record.status === 'present')
+                        .filter(record => record.status === 'present' || record.attendanceEmail)
                         .sort((a, b) =>
                             (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0) ||
                             b.date.localeCompare(a.date)
@@ -3464,38 +3658,9 @@
                         nameCell.appendChild(latestUpdate);
                     }
 
-                    // Khôi phục email đăng nhập và nút Bản đồ ngay dưới tên trợ giảng.
-                    if (latestAttendanceRecord) {
-                        const nameMeta = document.createElement('span');
-                        nameMeta.className = 'admin-name-meta';
-
-                        const email = document.createElement('span');
-                        email.className = 'admin-name-email';
-                        email.textContent = `✉️ ${latestAttendanceRecord.attendanceEmail || 'Email không xác định'}`;
-                        email.title = latestAttendanceRecord.attendanceEmail || 'Email không xác định';
-                        nameMeta.appendChild(email);
-
-                        const latitude = Number(latestAttendanceRecord.latitude);
-                        const longitude = Number(latestAttendanceRecord.longitude);
-                        const hasLocation = latestAttendanceRecord.latitude !== null
-                            && latestAttendanceRecord.latitude !== ''
-                            && latestAttendanceRecord.longitude !== null
-                            && latestAttendanceRecord.longitude !== ''
-                            && Number.isFinite(latitude) && Number.isFinite(longitude);
-                        if (hasLocation) {
-                            const mapLink = document.createElement('a');
-                            const coordinates = `${latitude},${longitude}`;
-                            mapLink.className = 'admin-name-map';
-                            mapLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(coordinates)}`;
-                            mapLink.target = '_blank';
-                            mapLink.rel = 'noopener noreferrer';
-                            mapLink.textContent = '🗺️ Bản đồ';
-                            mapLink.title = 'Mở vị trí điểm danh trên Google Maps';
-                            mapLink.setAttribute('aria-label', `Mở vị trí điểm danh của ${assistant.name} trên Google Maps`);
-                            nameMeta.appendChild(mapLink);
-                        }
-                        nameCell.appendChild(nameMeta);
-                    }
+                    // Email và vị trí được hiển thị ở phần chi tiết điểm danh bên dưới.
+                    // Không lặp lại email/bản đồ ngay dưới tên trợ giảng.
+                    
             
                     const phoneCell = document.createElement('td');
                     const phoneWrap = document.createElement('div');
@@ -3568,7 +3733,11 @@
             }
             
             async function requestLocationPermissionHandler() {
-                showToast('Phiên bản hiện tại không cần vị trí hoặc QR để điểm danh.', 'success');
+                const location = await captureAssistantSessionLocation(true);
+                updateAuthUi();
+                if (location.status === 'granted') {
+                    showToast('Đã cấp quyền vị trí. Nút điểm danh đã được mở.');
+                }
             }
 
             function openAttendanceModal() {
@@ -3664,6 +3833,9 @@
                     }
 
                     saveAttendanceAssistantBinding(currentAuthUser?.email, assistantId);
+                    saveAssistantLoginEmail(currentAuthUser?.email, assistantId);
+                    saveAssistantLoginLocation(currentAuthUser?.email, assistantId, currentLocation);
+                    void syncAssistantLoginProfile(currentAuthUser, assistantId, currentLocation);
                     elements.attendancePasskeyCheck.textContent = `✓ Đã gắn với trợ giảng: ${assistant.name}`;
                     selectedDateKey = todayKey;
                     viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -3833,6 +4005,8 @@
                     };
                     try {
                         localStorage.removeItem('attendanceAssistantBindings');
+                        localStorage.removeItem('assistantLoginEmails');
+                        localStorage.removeItem('assistantLoginLocations');
                     } catch (error) {
                         console.warn('Không thể xóa attendanceAssistantBindings:', error);
                     }
@@ -3873,7 +4047,12 @@
                         elements.tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === targetId));
                         updateLoginModalCopy(activePortal);
                         if (targetId === 'assistant-panel') {
-                            openLoginModal('assistant');
+                            if (currentAuthUser && currentSecureProfile?.role === 'assistant') {
+                                updateAuthUi();
+                            } else {
+                                // Không hiển thị nút đăng nhập riêng; nút Trợ giảng mở thẳng khung Google.
+                                openLoginModal('assistant');
+                            }
                         }
                         if (targetId === 'admin-panel') renderAdminTable();
                     });
@@ -3934,6 +4113,7 @@
                         ? `✓ Sẽ điểm danh cho: ${assistant.name}`
                         : '⌛ Chọn trợ giảng cho tài khoản Google này';
                 });
+                elements.assistantLocationButton.addEventListener('click', () => void requestLocationPermissionHandler());
                 elements.requestLocationPermission.addEventListener('click', requestLocationPermissionHandler);
                 elements.submitAttendance.addEventListener('click', submitAttendanceHandler);
                 elements.closeAttendance.addEventListener('click', closeAttendanceModal);
@@ -4006,6 +4186,7 @@
                 bindEvents();
                 startAttendanceMaintenance();
                 subscribeToRecordsFromFirebase();
+                subscribeToAssistantLoginProfiles();
             
                 // Hiển thị giao diện trước.
                 renderAllData();
@@ -4020,6 +4201,9 @@
                 if (typeof unsubscribeRecords === 'function') {
                     unsubscribeRecords();
                 }
+                if (typeof unsubscribeAssistantLoginProfiles === 'function') {
+                    unsubscribeAssistantLoginProfiles();
+                }
                 if (attendanceMaintenanceTimer) window.clearInterval(attendanceMaintenanceTimer);
                 stopAdminQrDisplay();
                 if (qrCameraStream) qrCameraStream.getTracks().forEach(track => track.stop());
@@ -4032,6 +4216,6 @@
             
         </script>
 
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7da6ed8f28b45',t:'MTc4NzQ2NDM2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f866c2cb5af57a',t:'MTc4NzQ3MDExNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7da6ed8f28b45',t:'MTc4NzQ2NDM2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f866c2cb5af57a',t:'MTc4NzQ3MDExNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f8b5743af485f2',t:'MTc4NzQ3MzMzOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
