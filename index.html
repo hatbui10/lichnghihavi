@@ -2714,6 +2714,39 @@
                 }
             }
 
+            function getAssistantLoginLocations() {
+                try {
+                    return JSON.parse(localStorage.getItem('assistantLoginLocations') || '{}');
+                } catch (error) {
+                    console.warn('Không thể đọc assistantLoginLocations:', error);
+                    return {};
+                }
+            }
+
+            function saveAssistantLoginLocation(email, assistantId, location) {
+                const normalizedEmail = String(email || '').trim().toLowerCase();
+                if (!normalizedEmail || location?.status !== 'granted') return;
+                const locations = getAssistantLoginLocations();
+                locations[normalizedEmail] = {
+                    assistantId: Number(assistantId) || 0,
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    accuracy: location.accuracy,
+                    updatedAt: Date.now()
+                };
+                try {
+                    localStorage.setItem('assistantLoginLocations', JSON.stringify(locations));
+                } catch (error) {
+                    console.warn('Không thể lưu assistantLoginLocations:', error);
+                }
+            }
+
+            function getLatestLoginLocationForAssistant(assistantId) {
+                return Object.values(getAssistantLoginLocations())
+                    .filter(item => Number(item?.assistantId) === Number(assistantId))
+                    .sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0))[0] || null;
+            }
+
             function getLatestLoginEmailForAssistant(assistantId) {
                 const bindings = Object.values(getAssistantLoginEmails());
                 const matched = bindings
@@ -2754,6 +2787,9 @@
                     accuracy: location.accuracy,
                     capturedAt: Date.now()
                 };
+                if (currentAuthUser?.email && location.status === 'granted') {
+                    saveAssistantLoginLocation(currentAuthUser.email, getBoundAttendanceAssistantId(currentAuthUser), location);
+                }
                 if (showFeedback) {
                     if (location.status === 'granted') {
                         showToast('Đã xác định vị trí đăng nhập trợ giảng.');
@@ -3540,6 +3576,10 @@
                     // Luôn hiển thị email và khu vực Bản đồ ngay dưới tên trong Admin.
                     // Khi chưa có dữ liệu điểm danh, hiển thị trạng thái để người dùng biết lý do.
                     const displayRecord = latestAttendanceRecord || latestRecord || {};
+                    const savedLoginLocation = getLatestLoginLocationForAssistant(assistant.id);
+                    const locationRecord = (Number.isFinite(Number(displayRecord.latitude)) && Number.isFinite(Number(displayRecord.longitude)))
+                        ? displayRecord
+                        : (savedLoginLocation || displayRecord);
                     const nameMeta = document.createElement('span');
                     nameMeta.className = 'admin-name-meta';
 
@@ -3551,12 +3591,12 @@
                     email.title = loginEmail || 'Chưa có email đăng nhập được lưu';
                     nameMeta.appendChild(email);
 
-                    const latitude = Number(displayRecord.latitude);
-                    const longitude = Number(displayRecord.longitude);
-                    const hasLocation = displayRecord.latitude !== null
-                        && displayRecord.latitude !== ''
-                        && displayRecord.longitude !== null
-                        && displayRecord.longitude !== ''
+                    const latitude = Number(locationRecord.latitude);
+                    const longitude = Number(locationRecord.longitude);
+                    const hasLocation = locationRecord.latitude !== null
+                        && locationRecord.latitude !== ''
+                        && locationRecord.longitude !== null
+                        && locationRecord.longitude !== ''
                         && Number.isFinite(latitude) && Number.isFinite(longitude);
                     if (hasLocation) {
                         const mapLink = document.createElement('a');
@@ -3750,6 +3790,7 @@
 
                     saveAttendanceAssistantBinding(currentAuthUser?.email, assistantId);
                     saveAssistantLoginEmail(currentAuthUser?.email, assistantId);
+                    saveAssistantLoginLocation(currentAuthUser?.email, assistantId, currentLocation);
                     elements.attendancePasskeyCheck.textContent = `✓ Đã gắn với trợ giảng: ${assistant.name}`;
                     selectedDateKey = todayKey;
                     viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -3920,6 +3961,7 @@
                     try {
                         localStorage.removeItem('attendanceAssistantBindings');
                         localStorage.removeItem('assistantLoginEmails');
+                        localStorage.removeItem('assistantLoginLocations');
                     } catch (error) {
                         console.warn('Không thể xóa attendanceAssistantBindings:', error);
                     }
@@ -3960,7 +4002,14 @@
                         elements.tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === targetId));
                         updateLoginModalCopy(activePortal);
                         if (targetId === 'assistant-panel') {
-                            openLoginModal('assistant');
+                            if (currentAuthUser && currentSecureProfile?.role === 'assistant') {
+                                void captureAssistantSessionLocation(true).then(() => {
+                                    updateAuthUi();
+                                    renderAllData();
+                                });
+                            } else {
+                                openLoginModal('assistant');
+                            }
                         }
                         if (targetId === 'admin-panel') renderAdminTable();
                     });
@@ -4119,6 +4168,6 @@
             
         </script>
 
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7da6ed8f28b45',t:'MTc4NzQ2NDM2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f866c2cb5af57a',t:'MTc4NzQ3MDExNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f8949f1f327d6c',t:'MTc4NzQ3MTk5NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7da6ed8f28b45',t:'MTc4NzQ2NDM2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f866c2cb5af57a',t:'MTc4NzQ3MDExNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f89aa4ecd7aec4',t:'MTc4NzQ3MjI0MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
