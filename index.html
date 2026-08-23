@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="theme-color" content="#4f46e5">
+        <meta name="theme-color" content="#0f172a">
         <title>Hệ thống đăng ký lịch trợ giảng</title>
         <style>
         :root {
@@ -892,6 +892,147 @@
             .day-number { inset: 0; font-size: 11px; }
             .legend { grid-template-columns: 1fr; }
         }
+
+        /* ==============================
+           GIAO DIỆN TỐI MẶC ĐỊNH
+        ============================== */
+        :root {
+            color-scheme: dark;
+            --primary: #818cf8;
+            --primary-hover: #6366f1;
+            --secondary: #a855f7;
+            --success: #34d399;
+            --warning: #fbbf24;
+            --danger: #fb7185;
+            --info: #22d3ee;
+            --text: #e5e7eb;
+            --muted: #94a3b8;
+            --surface: #111827;
+            --background: #020617;
+            --border: #334155;
+            --soft: #1e293b;
+            --shadow: 0 9px 26px rgba(0, 0, 0, 0.34);
+            --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.55);
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 8% 0%, rgba(99, 102, 241, 0.18), transparent 30rem),
+                radial-gradient(circle at 92% 18%, rgba(168, 85, 247, 0.10), transparent 24rem),
+                var(--background);
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #111827, #312e81 52%, #581c87);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.38);
+        }
+        .brand-icon,
+        .today-pill { background: rgba(15, 23, 42, 0.55); }
+
+        .tabs,
+        .card,
+        .calendar-card,
+        .registration-card,
+        .admin-card {
+            border-color: var(--border);
+            background: rgba(15, 23, 42, 0.94);
+        }
+        .tabs { background: rgba(15, 23, 42, 0.92); }
+        .tab-btn { color: var(--muted); }
+        .tab-btn:hover { background: #1e293b; color: #c7d2fe; }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: #ffffff;
+            box-shadow: 0 6px 18px rgba(79, 70, 229, 0.38);
+        }
+
+        .btn,
+        .filter-btn,
+        .delete-btn,
+        .clear-date-btn {
+            border-color: var(--border);
+            background: #172033;
+            color: var(--text);
+        }
+        .btn:hover,
+        .filter-btn:hover { border-color: #818cf8; background: #232d46; color: #c7d2fe; }
+        .btn-primary,
+        .filter-btn.active { border-color: #6366f1; background: #4f46e5; color: #ffffff; }
+        .delete-btn,
+        .clear-date-btn { border-color: #7f1d1d; color: #fda4af; }
+        .delete-btn:hover,
+        .clear-date-btn:hover { background: #3f1722; }
+
+        .weekday.mon { --weekday-bg: #25204f; color: #c7d2fe; }
+        .weekday.tue { --weekday-bg: #123642; color: #a5f3fc; }
+        .weekday.wed { --weekday-bg: #12382d; color: #a7f3d0; }
+        .weekday.thu { --weekday-bg: #3b3118; color: #fde68a; }
+        .weekday.fri { --weekday-bg: #40271a; color: #fed7aa; }
+        .weekday.sat { --weekday-bg: #35204b; color: #e9d5ff; }
+        .weekday.sun { --weekday-bg: #42202a; color: #fecdd3; }
+
+        .day-cell {
+            border-color: #334155;
+            background: linear-gradient(145deg, #172033, #111827);
+            color: #e5e7eb;
+        }
+        .day-cell:hover { border-color: #818cf8; background: #222c43; }
+        .day-cell.empty { border-color: transparent; background: transparent; }
+        .day-cell.today { border-color: #818cf8; background: #252f55; }
+        .day-cell.selected { box-shadow: inset 0 0 0 1px #818cf8, 0 0 10px rgba(129, 140, 248, 0.42); }
+        .today .day-number { color: #c7d2fe; }
+
+        .section-header,
+        .admin-toolbar { border-color: var(--border); background: #111827; }
+        .count-badge { background: #252f55; color: #c7d2fe; }
+
+        table { color: var(--text); }
+        th { background: #172033; color: #94a3b8; }
+        th, td { border-color: var(--border); }
+        tbody tr:hover { background: #172033; }
+        .registration-card tbody tr,
+        .admin-card tbody tr { border-color: var(--border); background: #111827; }
+        .registration-card,
+        .admin-card { background: #0b1220; }
+
+        .status-badge.full-day-off { background: rgba(244, 63, 94, 0.16); color: #fda4af; }
+        .status-badge.late-over { background: rgba(245, 158, 11, 0.16); color: #fcd34d; }
+        .status-badge.late-under { background: rgba(6, 182, 212, 0.16); color: #67e8f9; }
+        .empty-state,
+        .no-records { color: var(--muted); }
+
+        .search-box input,
+        .admin-date-control input,
+        .select-box {
+            border-color: var(--border);
+            background: #0f172a;
+            color: var(--text);
+        }
+        .search-box input::placeholder { color: #64748b; }
+        .search-box input:focus,
+        .select-box:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.22); }
+        .admin-date-control {
+            border-color: #4f46e5;
+            background: #20264a;
+            color: #c7d2fe;
+        }
+        .admin-date-control:focus-within { border-color: #a5b4fc; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.22); }
+
+        .phone-number { color: #a5b4fc; }
+        .call-link { background: #12372d; color: #6ee7b7; }
+        .date-tag { background: #1e293b; color: #cbd5e1; }
+        .detail-row { border-color: var(--border); }
+
+        .modal { background: #111827; color: var(--text); }
+        .close-btn { background: #1e293b; color: #94a3b8; }
+        .close-btn:hover { background: #3f1722; color: #fda4af; }
+        .status-option { border-color: var(--border); background: #172033; color: var(--text); }
+        .status-option:hover { border-color: #818cf8; background: #222c43; }
+        .status-option.selected { border-color: #818cf8; background: #252f55; color: #c7d2fe; box-shadow: inset 0 0 0 1px #818cf8; }
+
+        .toast { border-color: var(--border); background: #111827; color: var(--text); }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #475569; }
     </style>
     </head>
 
@@ -1054,9 +1195,7 @@
                 addDoc,
                 updateDoc,
                 deleteDoc,
-                doc,
-                query,
-                orderBy
+                doc
             } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
             
             // ==============================
@@ -1078,7 +1217,6 @@
             const db = getFirestore(app);
             
             const recordsCollection = collection(db, "troGiangRecords");
-            const recordsQuery = query(recordsCollection, orderBy("timestamp", "desc"));
             let unsubscribeRecords = null;
             
                        
@@ -1204,15 +1342,19 @@
                 }
 
                 unsubscribeRecords = onSnapshot(
-                    recordsQuery,
+                    recordsCollection,
                     snapshot => {
-                        records = snapshot.docs.map(item => ({
-                            firebaseId: item.id,
-                            troGiangId: Number(item.data().troGiangId),
-                            date: item.data().date,
-                            status: item.data().status,
-                            timestamp: Number(item.data().timestamp) || Date.now()
-                        }));
+                        // onSnapshot trả về toàn bộ collection hiện tại, không chỉ tài liệu vừa thêm.
+                        // Không dùng orderBy tại Firestore để các đăng ký cũ thiếu timestamp vẫn được giữ lại.
+                        records = snapshot.docs
+                            .map(item => ({
+                                firebaseId: item.id,
+                                troGiangId: Number(item.data().troGiangId),
+                                date: item.data().date,
+                                status: item.data().status,
+                                timestamp: Number(item.data().timestamp) || 0
+                            }))
+                            .sort((a, b) => b.timestamp - a.timestamp);
 
                         recordsLoaded = true;
                         renderAllData();
@@ -1719,6 +1861,6 @@
             
         </script>
 
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7146eac4c08b8',t:'MTc4NzQ1NjI1OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7199ebb67069f',t:'MTc4NzQ1NjQ3MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
