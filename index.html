@@ -1511,26 +1511,16 @@
         .attendance-open-btn:active,
         .attendance-submit-btn:active { transform: translateY(0) scale(0.99); }
         .attendance-submit-btn:disabled {
-            opacity: 0.58;
-            cursor: wait;
-            filter: grayscale(0.3);
+            opacity: 0.48;
+            cursor: not-allowed;
+            filter: grayscale(0.65);
             transform: none;
+            box-shadow: none;
         }
+        .attendance-submit-btn:disabled::after { display: none; }
+        .attendance-submit-btn:disabled:hover { transform: none; box-shadow: none; }
         .attendance-modal { max-width: 410px; }
         .attendance-submit-btn { min-height: 46px; margin-top: 4px; }
-        .attendance-privacy-note {
-            display: flex;
-            align-items: flex-start;
-            gap: 7px;
-            margin: 2px 0 8px;
-            padding: 8px 9px;
-            border: 1px solid #3b4b65;
-            border-radius: 9px;
-            background: #172236;
-            color: #cbd5e1;
-            font-size: 10px;
-            line-height: 1.35;
-        }
         .location-permission-btn {
             display: flex;
             align-items: center;
@@ -1550,22 +1540,13 @@
             box-shadow: 0 0 12px rgba(56, 189, 248, 0.16);
         }
         .location-permission-btn:hover { filter: brightness(1.12); }
-        .location-permission-btn:disabled { opacity: 0.58; cursor: wait; }
-        .attendance-capture-status {
-            min-height: 34px;
-            margin-bottom: 9px;
-            padding: 7px 9px;
-            border: 1px dashed #475569;
-            border-radius: 9px;
-            background: #0f172a;
-            color: #94a3b8;
-            font-size: 10px;
-            line-height: 1.35;
-            overflow-wrap: anywhere;
+        .location-permission-btn:disabled { opacity: 0.68; cursor: default; }
+        .location-permission-btn.granted {
+            border-color: #34d399;
+            background: linear-gradient(135deg, #065f46, #047857);
+            color: #d1fae5;
+            box-shadow: 0 0 14px rgba(52, 211, 153, 0.24);
         }
-        .attendance-capture-status.loading { border-color: #38bdf8; color: #7dd3fc; }
-        .attendance-capture-status.success { border-color: #34d399; color: #6ee7b7; background: #0d2923; }
-        .attendance-capture-status.warning { border-color: #fbbf24; color: #fde68a; background: #2d2715; }
         .attendance-date-line { display: block; white-space: nowrap; }
         .attendance-device-info {
             display: block;
@@ -1744,19 +1725,11 @@
                     </select>
                 </div>
 
-                <div class="attendance-privacy-note">
-                    <span aria-hidden="true">🔒</span>
-                    <span>Khi xác nhận, hệ thống sẽ xin quyền vị trí và lưu IP công khai tại thời điểm điểm danh.</span>
-                </div>
                 <button class="location-permission-btn" id="request-location-permission" type="button">
                     <span aria-hidden="true">📍</span>
-                    <span>Cho phép truy cập vị trí</span>
+                    <span id="request-location-label">Cho phép truy cập vị trí</span>
                 </button>
-                <div class="attendance-capture-status" id="attendance-capture-status" aria-live="polite">
-                    Hãy cho phép vị trí trước khi điểm danh.
-                </div>
-
-                <button class="attendance-submit-btn" id="submit-attendance" type="button">
+                <button class="attendance-submit-btn" id="submit-attendance" type="button" disabled>
                     <span aria-hidden="true">✅</span>
                     <span id="attendance-submit-label">Xác nhận điểm danh</span>
                 </button>
@@ -1855,6 +1828,7 @@
             let selectedStatus = '';
             let activeFilter = 'all';
             let adminSelectedDate = '';
+            let attendanceLocationGranted = false;
             
             const elements = {
                 tabButtons: document.querySelectorAll('.tab-btn'),
@@ -1879,7 +1853,7 @@
                 attendanceDate: document.getElementById('attendance-date'),
                 attendanceAssistantSelect: document.getElementById('attendance-assistant-select'),
                 requestLocationPermission: document.getElementById('request-location-permission'),
-                attendanceCaptureStatus: document.getElementById('attendance-capture-status'),
+                requestLocationLabel: document.getElementById('request-location-label'),
                 attendanceSubmitLabel: document.getElementById('attendance-submit-label'),
                 submitAttendance: document.getElementById('submit-attendance'),
                 modal: document.getElementById('registration-modal'),
@@ -2021,34 +1995,44 @@
                         return;
                     }
 
-                    navigator.geolocation.getCurrentPosition(
-                        position => {
-                            resolve({
-                                status: 'granted',
-                                latitude: Number(position.coords.latitude.toFixed(6)),
-                                longitude: Number(position.coords.longitude.toFixed(6)),
-                                accuracy: Math.round(position.coords.accuracy)
-                            });
-                        },
-                        error => {
-                            const statusMap = {
-                                1: 'denied',
-                                2: 'unavailable',
-                                3: 'timeout'
-                            };
-                            resolve({
-                                status: statusMap[error.code] || 'unavailable',
-                                latitude: null,
-                                longitude: null,
-                                accuracy: null
-                            });
-                        },
-                        {
-                            enableHighAccuracy: true,
-                            timeout: 12000,
-                            maximumAge: 0
-                        }
-                    );
+                    try {
+                        navigator.geolocation.getCurrentPosition(
+                            position => {
+                                resolve({
+                                    status: 'granted',
+                                    latitude: Number(position.coords.latitude.toFixed(6)),
+                                    longitude: Number(position.coords.longitude.toFixed(6)),
+                                    accuracy: Math.round(position.coords.accuracy)
+                                });
+                            },
+                            error => {
+                                const statusMap = {
+                                    1: 'denied',
+                                    2: 'unavailable',
+                                    3: 'timeout'
+                                };
+                                resolve({
+                                    status: statusMap[error.code] || 'unavailable',
+                                    latitude: null,
+                                    longitude: null,
+                                    accuracy: null
+                                });
+                            },
+                            {
+                                enableHighAccuracy: true,
+                                timeout: 12000,
+                                maximumAge: 0
+                            }
+                        );
+                    } catch (error) {
+                        console.warn('Không thể gọi API định vị:', error);
+                        resolve({
+                            status: error && error.name === 'SecurityError' ? 'blocked' : 'unavailable',
+                            latitude: null,
+                            longitude: null,
+                            accuracy: null
+                        });
+                    }
                 });
             }
             
@@ -2425,23 +2409,23 @@
             
             async function requestLocationPermissionHandler() {
                 elements.requestLocationPermission.disabled = true;
-                elements.attendanceCaptureStatus.textContent =
-                    'Đang yêu cầu quyền truy cập vị trí từ trình duyệt…';
-                elements.attendanceCaptureStatus.className = 'attendance-capture-status loading';
+                elements.requestLocationLabel.textContent = 'Đang yêu cầu quyền vị trí…';
 
-                try {
-                    const location = await detectDeviceLocation();
-                    if (location.status === 'granted') {
-                        elements.attendanceCaptureStatus.textContent =
-                            `Đã cho phép vị trí: ${location.latitude}, ${location.longitude} (±${location.accuracy}m).`;
-                        elements.attendanceCaptureStatus.className = 'attendance-capture-status success';
-                    } else {
-                        elements.attendanceCaptureStatus.textContent =
-                            getLocationStatusMessage(location.status);
-                        elements.attendanceCaptureStatus.className = 'attendance-capture-status warning';
-                    }
-                } finally {
+                const location = await detectDeviceLocation();
+                if (location.status === 'granted') {
+                    attendanceLocationGranted = true;
+                    elements.requestLocationPermission.classList.add('granted');
+                    elements.requestLocationPermission.disabled = true;
+                    elements.requestLocationLabel.textContent = 'Đã cho phép vị trí';
+                    elements.submitAttendance.disabled = false;
+                    showToast('Đã cấp quyền vị trí. Bạn có thể tiếp tục điểm danh.');
+                } else {
+                    attendanceLocationGranted = false;
+                    elements.requestLocationPermission.classList.remove('granted');
                     elements.requestLocationPermission.disabled = false;
+                    elements.requestLocationLabel.textContent = 'Cho phép truy cập vị trí';
+                    elements.submitAttendance.disabled = true;
+                    showToast(getLocationStatusMessage(location.status), 'error');
                 }
             }
 
@@ -2450,14 +2434,12 @@
                 elements.attendanceDate.textContent =
                     `Ngày điểm danh: ${capitalize(formatLongDate(todayKey))}`;
                 elements.attendanceAssistantSelect.value = '';
-                const environmentIssue = getGeolocationEnvironmentIssue();
-                elements.attendanceCaptureStatus.textContent = environmentIssue
-                    ? getLocationStatusMessage(environmentIssue)
-                    : 'Nhấn “Cho phép truy cập vị trí” để trình duyệt hiển thị hộp thoại cấp quyền.';
-                elements.attendanceCaptureStatus.className = environmentIssue
-                    ? 'attendance-capture-status warning'
-                    : 'attendance-capture-status';
+                attendanceLocationGranted = false;
+                elements.requestLocationPermission.classList.remove('granted');
+                elements.requestLocationPermission.disabled = false;
+                elements.requestLocationLabel.textContent = 'Cho phép truy cập vị trí';
                 elements.attendanceSubmitLabel.textContent = 'Xác nhận điểm danh';
+                elements.submitAttendance.disabled = true;
                 elements.attendanceModal.classList.add('active');
                 elements.attendanceModal.setAttribute('aria-hidden', 'false');
                 window.setTimeout(() => elements.attendanceAssistantSelect.focus(), 80);
@@ -2470,6 +2452,11 @@
             }
 
             async function submitAttendanceHandler() {
+                if (!attendanceLocationGranted) {
+                    showToast('Bạn cần cấp quyền truy cập vị trí để tiếp tục.', 'error');
+                    return;
+                }
+
                 const assistantId = Number(elements.attendanceAssistantSelect.value);
                 if (!assistantId) {
                     showToast('Vui lòng chọn trợ giảng cần điểm danh.', 'error');
@@ -2487,9 +2474,6 @@
                 elements.submitAttendance.disabled = true;
                 elements.submitAttendance.setAttribute('aria-busy', 'true');
                 elements.attendanceSubmitLabel.textContent = 'Đang xác định IP và vị trí…';
-                elements.attendanceCaptureStatus.textContent =
-                    'Đang yêu cầu quyền vị trí và xác định IP công khai của thiết bị…';
-                elements.attendanceCaptureStatus.className = 'attendance-capture-status loading';
 
                 const [attendanceIp, location] = await Promise.all([
                     detectPublicIp(),
@@ -2498,9 +2482,11 @@
 
                 if (location.status !== 'granted') {
                     const message = getLocationStatusMessage(location.status);
-                    elements.attendanceCaptureStatus.textContent = message;
-                    elements.attendanceCaptureStatus.className = 'attendance-capture-status warning';
-                    elements.submitAttendance.disabled = false;
+                    attendanceLocationGranted = false;
+                    elements.requestLocationPermission.classList.remove('granted');
+                    elements.requestLocationPermission.disabled = false;
+                    elements.requestLocationLabel.textContent = 'Cho phép truy cập vị trí';
+                    elements.submitAttendance.disabled = true;
                     elements.submitAttendance.removeAttribute('aria-busy');
                     elements.attendanceSubmitLabel.textContent = 'Xác nhận điểm danh';
                     showToast(message, 'error');
@@ -2521,14 +2507,6 @@
                     locationStatus: location.status
                 };
 
-                const locationSummary = location.status === 'granted'
-                    ? `${location.latitude}, ${location.longitude} (±${location.accuracy}m)`
-                    : 'không xác định';
-                elements.attendanceCaptureStatus.textContent =
-                    `IP: ${attendanceIp || 'không xác định'} · Vị trí: ${locationSummary}`;
-                elements.attendanceCaptureStatus.className = location.status === 'granted'
-                    ? 'attendance-capture-status success'
-                    : 'attendance-capture-status warning';
                 elements.attendanceSubmitLabel.textContent = 'Đang lưu điểm danh…';
 
                 try {
@@ -2569,7 +2547,7 @@
                     console.error('Lỗi điểm danh Firebase:', error);
                     showToast('Không thể lưu điểm danh lên Firebase.', 'error');
                 } finally {
-                    elements.submitAttendance.disabled = false;
+                    elements.submitAttendance.disabled = !attendanceLocationGranted;
                     elements.submitAttendance.removeAttribute('aria-busy');
                     elements.attendanceSubmitLabel.textContent = 'Xác nhận điểm danh';
                 }
@@ -2818,6 +2796,6 @@
             
         </script>
 
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f758ae5c040855',t:'MTc4NzQ1OTA1Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    </body>
 
 </html>
