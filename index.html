@@ -1643,6 +1643,21 @@
         .secure-auth-card small { display: block; }
         .secure-auth-card strong { color: #f8fafc; font-size: 12px; }
         .secure-auth-card small { margin-top: 2px; color: #94a3b8; font-size: 9px; }
+        .assistant-login-only {
+            width: 100%;
+            max-width: 460px;
+            margin: 0 auto 8px;
+        }
+        .assistant-login-btn {
+            width: 100%;
+        }
+        .admin-latest-update {
+            margin-left: 8px;
+            color: #93c5fd;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
         .secure-auth-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
         .secure-secondary-btn,
         .secure-logout-btn {
@@ -1695,6 +1710,13 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 7px;
+        }
+        #assistant-attendance-bar .attendance-open-btn,
+        #assistant-attendance-bar .qr-scan-state {
+            grid-column: 1 / -1;
+        }
+        #scan-qr-btn {
+            display: none !important;
         }
         .qr-scan-btn {
             display: inline-flex;
@@ -1825,16 +1847,12 @@
             </nav>
 
             <section class="tab-panel active" id="assistant-panel">
-                <div class="secure-auth-card" id="secure-auth-card">
-                    <div>
-                        <strong id="auth-title">🔐 Đăng nhập để điểm danh</strong>
-                        <small id="auth-detail">Mỗi tài khoản Google chỉ được điểm danh cho chính mình.</small>
-                    </div>
-                    <div class="secure-auth-actions">
-                        <button class="secure-secondary-btn" id="login-open-btn" type="button">Đăng nhập Google trợ giảng</button>
-                        <button class="secure-secondary-btn" id="register-passkey-btn" type="button" hidden>Đăng ký vân tay / Face ID</button>
-                        <button class="secure-logout-btn" id="logout-btn" type="button" hidden>Đăng xuất</button>
-                    </div>
+                <div class="assistant-login-only" id="secure-auth-card" hidden>
+                    <strong id="auth-title" hidden>🔐 Đăng nhập để điểm danh</strong>
+                    <small id="auth-detail" hidden>Mỗi tài khoản Google chỉ được điểm danh cho chính mình.</small>
+                    <button class="attendance-submit-btn google-login-btn assistant-login-btn" id="login-open-btn" type="button">Đăng nhập Google trợ giảng</button>
+                    <button class="secure-secondary-btn" id="register-passkey-btn" type="button" hidden>Đăng ký vân tay / Face ID</button>
+                    <button class="secure-logout-btn" id="logout-btn" type="button" hidden>Đăng xuất</button>
                 </div>
 
                 <div class="card calendar-card" id="assistant-calendar-card" hidden>
@@ -1867,7 +1885,7 @@
                 </div>
 
                 <div class="attendance-bar secure-attendance-actions" id="assistant-attendance-bar" hidden>
-                    <button class="qr-scan-btn" id="scan-qr-btn" type="button" disabled>
+                    <button class="qr-scan-btn" id="scan-qr-btn" type="button" hidden disabled>
                         <span aria-hidden="true">▣</span>
                         <span>Quét QR</span>
                     </button>
@@ -1875,7 +1893,7 @@
                         <span aria-hidden="true">✅</span>
                         <span>Điểm danh</span>
                     </button>
-                    <div class="qr-scan-state" id="qr-scan-state" aria-live="polite">Chưa quét mã QR động.</div>
+                    <div class="qr-scan-state" id="qr-scan-state" aria-live="polite">Đăng nhập Google là có thể điểm danh, không cần quét QR.</div>
                 </div>
 
                 <div class="card registration-card">
@@ -1904,10 +1922,10 @@
             </section>
 
             <section class="tab-panel" id="admin-panel">
-                <div class="secure-auth-card" id="admin-auth-card">
+                <div class="secure-auth-card" id="admin-auth-card" hidden style="display:none !important;">
                     <div>
                         <strong id="admin-auth-title">🔐 Đăng nhập Google cho Admin</strong>
-                        <small id="admin-auth-detail">Dùng tài khoản Google quản trị để mở QR động và xem khu vực Admin.</small>
+                        <small id="admin-auth-detail">Dùng tài khoản Google quản trị để xem khu vực Admin.</small>
                     </div>
                     <div class="secure-auth-actions">
                         <button class="secure-secondary-btn" id="admin-login-open-btn" type="button">Đăng nhập Google Admin</button>
@@ -1979,12 +1997,19 @@
                     <strong id="attendance-user-name">Chưa đăng nhập</strong>
                 </div>
                 <div class="secure-verification-summary">
-                    <span id="attendance-qr-check">⌛ Chưa xác nhận QR</span>
-                    <span id="attendance-zone-check">⌛ Chưa xác nhận bán kính 100 m</span>
-                    <span id="attendance-passkey-check">⌛ Chưa xác nhận vân tay / Face ID</span>
+                    <span id="attendance-qr-check">✓ Đã đăng nhập bằng Google</span>
+                    <span id="attendance-zone-check">✓ Không cần quét QR</span>
+                    <span id="attendance-passkey-check">⌛ Chưa chọn trợ giảng</span>
                 </div>
 
-                <button class="location-permission-btn" id="request-location-permission" type="button">
+                <div class="form-group" id="attendance-assistant-group" hidden>
+                    <label class="form-label" for="attendance-assistant-select">Chọn trợ giảng cho tài khoản Google này</label>
+                    <select class="select-box" id="attendance-assistant-select">
+                        <option value="">— Chọn trợ giảng —</option>
+                    </select>
+                </div>
+
+                <button class="location-permission-btn" id="request-location-permission" type="button" hidden>
                     <span aria-hidden="true">📍</span>
                     <span id="request-location-label">Cho phép truy cập vị trí</span>
                 </button>
@@ -2137,7 +2162,7 @@
                 'late-under': { label: 'Đến muộn <15p', icon: '⏱️' }
             };
             const ADMIN_EMAIL_ALLOWLIST = [
-                // Ví dụ: 'admin@gmail.com'
+                'cvbv674@gmail.com'
             ];
             
             let records = [];
@@ -2153,6 +2178,13 @@
             let currentSecureProfile = null;
             let activePortal = 'assistant';
             let desiredLoginPortal = sessionStorage.getItem('desiredLoginPortal') || 'assistant';
+            let assistantSessionLocation = {
+                status: 'unknown',
+                latitude: null,
+                longitude: null,
+                accuracy: null,
+                capturedAt: 0
+            };
             let scannedQrToken = '';
             let scannedQrExpiresAtMs = 0;
             let qrCameraStream = null;
@@ -2216,6 +2248,8 @@
                 attendanceQrCheck: document.getElementById('attendance-qr-check'),
                 attendanceZoneCheck: document.getElementById('attendance-zone-check'),
                 attendancePasskeyCheck: document.getElementById('attendance-passkey-check'),
+                attendanceAssistantGroup: document.getElementById('attendance-assistant-group'),
+                attendanceAssistantSelect: document.getElementById('attendance-assistant-select'),
                 requestLocationPermission: document.getElementById('request-location-permission'),
                 requestLocationLabel: document.getElementById('request-location-label'),
                 attendanceSubmitLabel: document.getElementById('attendance-submit-label'),
@@ -2273,7 +2307,7 @@
                 const compactDate = formatShortDate(record.date);
                 const timestamp = Number(record.timestamp);
 
-                if (record.status !== 'present' || !timestamp) {
+                if (!timestamp) {
                     return compactDate;
                 }
 
@@ -2451,7 +2485,68 @@
                     option.textContent = assistant.name;
                     elements.assistantSelect.appendChild(option);
 
+                    const attendanceOption = document.createElement('option');
+                    attendanceOption.value = assistant.id;
+                    attendanceOption.textContent = assistant.name;
+                    elements.attendanceAssistantSelect.appendChild(attendanceOption);
                 });
+            }
+
+            function getAttendanceAssistantBindings() {
+                try {
+                    return JSON.parse(localStorage.getItem('attendanceAssistantBindings') || '{}');
+                } catch (error) {
+                    console.warn('Không thể đọc attendanceAssistantBindings:', error);
+                    return {};
+                }
+            }
+
+            function saveAttendanceAssistantBinding(email, assistantId) {
+                const normalizedEmail = String(email || '').trim().toLowerCase();
+                if (!normalizedEmail || !assistantId) return;
+                const bindings = getAttendanceAssistantBindings();
+                bindings[normalizedEmail] = Number(assistantId);
+                try {
+                    localStorage.setItem('attendanceAssistantBindings', JSON.stringify(bindings));
+                } catch (error) {
+                    console.warn('Không thể lưu attendanceAssistantBindings:', error);
+                }
+            }
+
+            function getBoundAttendanceAssistantId(user = currentAuthUser) {
+                const email = String(user?.email || '').trim().toLowerCase();
+                const bindings = getAttendanceAssistantBindings();
+                const boundId = Number(bindings[email] || 0);
+                if (boundId && getAssistant(boundId)) return boundId;
+
+                const candidateName = normalizeText(user?.displayName || currentSecureProfile?.displayName || '');
+                const matchedAssistant = ASSISTANTS.find(assistant => normalizeText(assistant.name) === candidateName);
+                return matchedAssistant ? matchedAssistant.id : 0;
+            }
+
+            async function captureAssistantSessionLocation(showFeedback = false) {
+                const location = await detectDeviceLocation();
+                assistantSessionLocation = {
+                    status: location.status,
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    accuracy: location.accuracy,
+                    capturedAt: Date.now()
+                };
+                if (showFeedback) {
+                    if (location.status === 'granted') {
+                        showToast('Đã xác định vị trí đăng nhập trợ giảng.');
+                    } else {
+                        showToast(getLocationStatusMessage(location.status), 'error');
+                    }
+                }
+                return assistantSessionLocation;
+            }
+
+            function formatLatestAdminUpdate(record) {
+                if (!record) return '';
+                const todayKey = toDateKey(new Date());
+                return record.date === todayKey ? formatAttendanceDate(record) : '';
             }
 
             function secureErrorMessage(error, fallback = 'Không thể hoàn tất yêu cầu bảo mật.') {
@@ -2490,16 +2585,28 @@
                 };
             }
 
+            function applyFrontendRoleOverrides(profile, user) {
+                if (!profile) return profile;
+                const email = String(user?.email || profile?.email || '').trim().toLowerCase();
+                if (!emailIsAdmin(email)) return profile;
+                return {
+                    ...profile,
+                    role: 'admin',
+                    email,
+                    profileSource: profile.profileSource || 'frontend-admin-allowlist'
+                };
+            }
+
             function updateLoginModalCopy(portal = 'assistant') {
                 const isAdminPortal = portal === 'admin';
                 elements.loginModalTitle.textContent = isAdminPortal
                     ? '🔐 Đăng nhập Google cho Admin'
                     : '🔐 Đăng nhập Google cho trợ giảng';
                 elements.loginModalSubtitle.textContent = isAdminPortal
-                    ? 'Chọn đúng tài khoản Google quản trị để mở QR động và dùng khu vực Admin.'
+                    ? 'Chọn đúng tài khoản Google quản trị để dùng khu vực Admin.'
                     : 'Chọn đúng tài khoản Google trợ giảng để tiếp tục đăng ký lịch và điểm danh.';
                 elements.loginModalNote1.textContent = isAdminPortal
-                    ? '• Nếu backend đã cấu hình quyền admin theo email, sau khi đăng nhập bạn sẽ thấy QR động.'
+                    ? '• Nếu backend đã cấu hình quyền admin theo email, sau khi đăng nhập bạn sẽ thấy khu vực Admin.'
                     : '• Hệ thống sẽ dùng email Google làm thông tin nhận diện tài khoản trợ giảng.';
                 elements.loginModalNote2.textContent = '• Nếu cửa sổ bật lên bị chặn, hệ thống sẽ tự chuyển sang trang đăng nhập Google.';
                 elements.loginSubmitButton.innerHTML = getLoginButtonHtml(portal);
@@ -2509,7 +2616,7 @@
                 return Boolean(scannedQrToken) && Date.now() < scannedQrExpiresAtMs;
             }
 
-            function resetScannedQr(message = 'Chưa quét mã QR động.') {
+            function resetScannedQr(message = 'Đăng nhập Google là có thể điểm danh, không cần quét QR.') {
                 scannedQrToken = '';
                 scannedQrExpiresAtMs = 0;
                 elements.qrScanState.textContent = message;
@@ -2519,10 +2626,33 @@
 
             function updateSecureAttendanceControls() {
                 const isAssistant = currentSecureProfile?.role === 'assistant';
-                const passkeyReady = Boolean(currentSecureProfile?.passkeyRegistered);
                 const withinTime = isAttendanceOpenTime();
-                elements.scanQrButton.disabled = !(isAssistant && passkeyReady && withinTime);
-                elements.openAttendance.disabled = !(isAssistant && passkeyReady && withinTime && qrTokenIsFresh());
+                const canOpenAttendance = Boolean(currentAuthUser) && isAssistant && withinTime;
+
+                elements.scanQrButton.disabled = true;
+                elements.openAttendance.disabled = !canOpenAttendance;
+
+                let attendanceReason = '';
+                let helperMessage = 'Đăng nhập Google là có thể điểm danh, không cần quét QR.';
+
+                if (!currentAuthUser) {
+                    attendanceReason = 'Hãy đăng nhập tài khoản trợ giảng trước.';
+                    helperMessage = 'Hãy đăng nhập Google để mở nút điểm danh.';
+                } else if (!isAssistant) {
+                    attendanceReason = 'Tài khoản hiện tại chưa được nhận diện là trợ giảng.';
+                    helperMessage = 'Hãy dùng đúng tài khoản Google trợ giảng.';
+                } else if (!withinTime) {
+                    attendanceReason = 'Điểm danh chỉ hoạt động từ 06:00 đến trước 22:00.';
+                    helperMessage = attendanceReason;
+                }
+
+                elements.qrScanState.textContent = helperMessage;
+
+                if (attendanceReason) {
+                    elements.openAttendance.title = attendanceReason;
+                } else {
+                    elements.openAttendance.removeAttribute('title');
+                }
             }
 
             function updateAuthUi() {
@@ -2533,60 +2663,54 @@
                 const signedInEmail = currentAuthUser?.email || profile?.email || '';
                 const displayName = profile?.displayName || currentAuthUser?.displayName || 'Tài khoản Google';
                 const showAssistantControls = signedIn && isAssistant;
-                const showAdminControls = signedIn && isAdmin;
 
                 elements.assistantCalendarCard.hidden = !showAssistantControls;
                 elements.assistantAttendanceBar.hidden = !showAssistantControls;
-                elements.adminDataCard.hidden = !showAdminControls;
-                elements.loginOpenButton.hidden = signedIn && isAssistant;
-                elements.logoutButton.hidden = !signedIn;
-                elements.registerPasskeyButton.hidden = !(signedIn && isAssistant && !profile?.passkeyRegistered && profile?.profileSource !== 'google-fallback');
-                elements.adminLoginOpenButton.hidden = signedIn && isAdmin;
-                elements.adminLogoutButton.hidden = !signedIn;
-                elements.adminQrPanel.hidden = !showAdminControls;
+                elements.adminDataCard.hidden = false;
+                elements.loginOpenButton.hidden = false;
+                elements.logoutButton.hidden = true;
+                elements.registerPasskeyButton.hidden = true;
+                elements.adminLoginOpenButton.hidden = false;
+                elements.adminLogoutButton.hidden = true;
+                elements.adminQrPanel.hidden = true;
                 elements.adminTabButton.hidden = false;
-                elements.loginOpenButton.textContent = signedIn && !isAssistant
-                    ? 'Đăng nhập lại bằng Google trợ giảng'
+                elements.loginOpenButton.textContent = showAssistantControls
+                    ? 'Đổi tài khoản Google trợ giảng'
                     : 'Đăng nhập Google trợ giảng';
-                elements.adminLoginOpenButton.textContent = signedIn && !isAdmin
-                    ? 'Đăng nhập lại bằng Google Admin'
+                elements.adminLoginOpenButton.textContent = isAdmin
+                    ? 'Đổi tài khoản Google Admin'
                     : 'Đăng nhập Google Admin';
 
                 if (!signedIn) {
                     elements.authTitle.textContent = '🔐 Đăng nhập Google cho trợ giảng';
-                    elements.authDetail.textContent = 'Chỉ sau khi đăng nhập thành công mới hiện lịch, nút quét QR và nút điểm danh. Danh sách đăng ký bên dưới vẫn được giữ lại để xem.';
+                    elements.authDetail.textContent = 'Chỉ sau khi đăng nhập thành công mới hiện lịch và nút điểm danh. Danh sách đăng ký bên dưới vẫn được giữ lại để xem.';
                 } else if (isAssistant) {
                     elements.authTitle.textContent = `👤 ${displayName}`;
-                    elements.authDetail.textContent = profile?.profileSource === 'google-fallback'
-                        ? `Email: ${signedInEmail || 'không xác định'} · Đã đăng nhập Google. Lịch, đăng ký nghỉ, quét QR và điểm danh đã được mở.`
-                        : profile.passkeyRegistered
-                            ? `Email: ${signedInEmail || 'không xác định'} · Đã đăng ký vân tay / Face ID`
-                            : `Email: ${signedInEmail || 'không xác định'} · Cần đăng ký vân tay / Face ID`;
+                    elements.authDetail.textContent = `Email: ${signedInEmail || 'không xác định'} · Đã đăng nhập Google. Lịch, đăng ký nghỉ và điểm danh đã được mở; không cần quét QR.`;
                 } else if (isAdmin) {
                     elements.authTitle.textContent = `⚙️ ${displayName}`;
-                    elements.authDetail.textContent = `Bạn đang đăng nhập bằng tài khoản Admin (${signedInEmail || 'không xác định'}). Khung trợ giảng đang được ẩn cho đến khi đăng nhập đúng tài khoản trợ giảng.`;
+                    elements.authDetail.textContent = `Bạn đang đăng nhập bằng tài khoản Admin (${signedInEmail || 'không xác định'}). Nếu cần điểm danh, hãy bấm nút đăng nhập Google trợ giảng.`;
                 } else {
                     elements.authTitle.textContent = `👤 ${displayName}`;
                     elements.authDetail.textContent = `Email: ${signedInEmail || 'không xác định'} · Hãy dùng đúng tài khoản trợ giảng nếu cần mở lịch và điểm danh.`;
                 }
 
                 if (!signedIn) {
-                    elements.adminAuthTitle.textContent = '🔐 Đăng nhập Google cho Admin';
-                    elements.adminAuthDetail.textContent = 'Chỉ khi đăng nhập Admin thành công thì khung quản trị phía dưới mới hiện ra.';
+                    elements.adminAuthTitle.textContent = '⚙️ Khu vực Admin đang mở để test';
+                    elements.adminAuthDetail.textContent = 'Bạn có thể test các chức năng bên dưới ngay, chưa cần đăng nhập Google Admin.';
                 } else if (isAdmin) {
                     elements.adminAuthTitle.textContent = `⚙️ ${displayName}`;
                     elements.adminAuthDetail.textContent = signedInEmail
-                        ? `Đã đăng nhập Admin bằng email: ${signedInEmail}. Khung quản trị và QR động đã được mở.`
-                        : 'Đã đăng nhập Admin. Khung quản trị và QR động đã được mở.';
+                        ? `Đã đăng nhập Admin bằng email: ${signedInEmail}. Khung quản trị vẫn mở để test.`
+                        : 'Đã đăng nhập Admin. Khung quản trị vẫn mở để test.';
                 } else {
-                    elements.adminAuthTitle.textContent = '⛔ Tài khoản hiện tại chưa có quyền Admin';
+                    elements.adminAuthTitle.textContent = '⚙️ Khu vực Admin đang mở để test';
                     elements.adminAuthDetail.textContent = signedInEmail
-                        ? `Email hiện tại: ${signedInEmail}. Hãy bấm “Đăng nhập Google Admin” để mở khu vực Admin.`
-                        : 'Hãy đăng nhập bằng email quản trị để dùng khu vực Admin.';
+                        ? `Email hiện tại: ${signedInEmail}. Bạn vẫn có thể test bên dưới, hoặc bấm “Đăng nhập Google Admin” để đổi tài khoản sau.`
+                        : 'Bạn vẫn có thể test bên dưới, hoặc đăng nhập Google Admin sau.';
                 }
 
-                if (!isAdmin) stopAdminQrDisplay();
-                if (isAdmin) void startAdminQrDisplay();
+                stopAdminQrDisplay();
                 if (!isAssistant) resetScannedQr();
                 updateSecureAttendanceControls();
             }
@@ -2612,6 +2736,9 @@
                 try {
                     await signInWithPopup(auth, googleProvider);
                     closeLoginModal();
+                    if (desiredLoginPortal === 'assistant') {
+                        void captureAssistantSessionLocation(true);
+                    }
                     showToast(`Đăng nhập Google ${portalLabel} thành công.`);
                 } catch (error) {
                     console.error('Firebase Google login failed:', error);
@@ -2829,10 +2956,10 @@
 
                 try {
                     const profileResult = await getSecureProfileCall();
-                    currentSecureProfile = profileResult.data;
+                    currentSecureProfile = applyFrontendRoleOverrides(profileResult.data, user);
                 } catch (error) {
                     console.error('Secure profile failed:', error);
-                    currentSecureProfile = buildFallbackSecureProfile(user, desiredLoginPortal);
+                    currentSecureProfile = applyFrontendRoleOverrides(buildFallbackSecureProfile(user, desiredLoginPortal), user);
                     if (desiredLoginPortal === 'admin' && !emailIsAdmin(user?.email)) {
                         showToast('Đã đăng nhập Google nhưng email này chưa được frontend nhận là admin. Nếu cần, gửi mình email admin để mình thêm allowlist hoặc sửa backend.', 'error');
                     } else {
@@ -3145,8 +3272,20 @@
                     const orderCell = document.createElement('td');
                     orderCell.textContent = index + 1;
             
+                    const latestRecord = [...assistant.records].sort((a, b) =>
+                        (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0) ||
+                        b.date.localeCompare(a.date)
+                    )[0] || null;
+
                     const nameCell = document.createElement('td');
                     nameCell.textContent = assistant.name;
+                    const latestUpdateText = formatLatestAdminUpdate(latestRecord);
+                    if (latestUpdateText) {
+                        const latestUpdate = document.createElement('span');
+                        latestUpdate.className = 'admin-latest-update';
+                        latestUpdate.textContent = latestUpdateText;
+                        nameCell.appendChild(latestUpdate);
+                    }
             
                     const phoneCell = document.createElement('td');
                     const phoneWrap = document.createElement('div');
@@ -3164,20 +3303,6 @@
             
                     const detailCell = document.createElement('td');
                     detailCell.className = 'admin-detail-cell';
-
-                    const latestAttendanceRecord = assistant.records
-                        .filter(record => record.status === 'present')
-                        .sort((a, b) =>
-                            (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0) ||
-                            b.date.localeCompare(a.date)
-                        )[0];
-                    const headerDeviceInfo = latestAttendanceRecord
-                        ? createAdminAttendanceDeviceInfo(latestAttendanceRecord)
-                        : null;
-                    if (headerDeviceInfo) {
-                        headerDeviceInfo.classList.add('admin-header-attendance');
-                        detailCell.appendChild(headerDeviceInfo);
-                    }
 
                     if (!assistant.records.length) {
                         const noRecords = document.createElement('span');
@@ -3201,17 +3326,17 @@
                             const tags = document.createElement('span');
                             tags.className = 'date-tags';
                             statusRecords.forEach(record => {
-                            const tag = document.createElement('span');
-                            tag.className = record.status === 'present'
-                                ? 'date-tag attendance-detail-tag'
-                                : 'date-tag';
+                                const tag = document.createElement('span');
+                                tag.className = record.status === 'present'
+                                    ? 'date-tag attendance-detail-tag'
+                                    : 'date-tag';
 
-                            const tagDate = document.createElement('span');
-                            tagDate.className = 'admin-attendance-update';
-                            tagDate.textContent = formatAttendanceDate(record);
-                            tag.appendChild(tagDate);
+                                const tagDate = document.createElement('span');
+                                tagDate.className = 'admin-attendance-update';
+                                tagDate.textContent = formatShortDate(record.date);
+                                tag.appendChild(tagDate);
 
-                            tags.appendChild(tag);
+                                tags.appendChild(tag);
                             });
                             detailRow.append(label, tags);
                             list.appendChild(detailRow);
@@ -3225,49 +3350,7 @@
             }
             
             async function requestLocationPermissionHandler() {
-                if (!isAttendanceOpenTime() || currentSecureProfile?.role !== 'assistant' || !qrTokenIsFresh()) {
-                    showToast('Hãy đăng nhập và quét mã QR động trước.', 'error');
-                    return;
-                }
-
-                elements.requestLocationPermission.disabled = true;
-                elements.requestLocationLabel.textContent = 'Đang kiểm tra bán kính 100 m…';
-                const location = await detectDeviceLocation();
-
-                if (location.status === 'granted') {
-                    const distance = distanceFromAttendanceCenter(location.latitude, location.longitude);
-                    if (location.accuracy <= 100 && distance <= 100) {
-                        attendanceLocationGranted = true;
-                        elements.requestLocationPermission.classList.add('granted');
-                        elements.requestLocationPermission.disabled = true;
-                        elements.requestLocationLabel.textContent = `Trong vùng cho phép (cách ${Math.round(distance)} m)`;
-                        elements.attendanceZoneCheck.textContent = `✓ Trong bán kính 100 m (cách khoảng ${Math.round(distance)} m)`;
-                        elements.submitAttendance.disabled = false;
-                        showToast('Vị trí hợp lệ. Bạn có thể xác nhận điểm danh.');
-                        return;
-                    }
-
-                    attendanceLocationGranted = false;
-                    elements.attendanceZoneCheck.textContent = distance > 100
-                        ? `✕ Ngoài bán kính: cách khoảng ${Math.round(distance)} m`
-                        : '✕ Tín hiệu GPS chưa đủ chính xác';
-                    const message = distance > 100
-                        ? `Bạn đang cách vị trí quy định khoảng ${Math.round(distance)} m; chỉ được điểm danh trong bán kính 100 m.`
-                        : 'Tín hiệu GPS chưa đủ chính xác. Hãy ra nơi thoáng và thử lại.';
-                    elements.requestLocationPermission.disabled = false;
-                    elements.requestLocationLabel.textContent = 'Kiểm tra lại vị trí';
-                    elements.submitAttendance.disabled = true;
-                    showToast(message, 'error');
-                    return;
-                }
-
-                attendanceLocationGranted = false;
-                elements.requestLocationPermission.classList.remove('granted');
-                elements.requestLocationPermission.disabled = false;
-                elements.requestLocationLabel.textContent = 'Cho phép truy cập vị trí';
-                elements.attendanceZoneCheck.textContent = '✕ Chưa cấp được quyền vị trí';
-                elements.submitAttendance.disabled = true;
-                showToast(getLocationStatusMessage(location.status), 'error');
+                showToast('Phiên bản hiện tại không cần vị trí hoặc QR để điểm danh.', 'success');
             }
 
             function openAttendanceModal() {
@@ -3276,31 +3359,33 @@
                     showToast('Điểm danh chỉ hoạt động từ 06:00 đến trước 22:00 mỗi ngày.', 'error');
                     return;
                 }
-                if (currentSecureProfile?.role !== 'assistant' || !currentSecureProfile.passkeyRegistered) {
-                    showToast('Hãy đăng nhập và đăng ký vân tay / Face ID trước.', 'error');
-                    return;
-                }
-                if (!qrTokenIsFresh()) {
-                    resetScannedQr('Mã QR chưa được quét hoặc đã hết hạn.');
-                    showToast('Hãy quét mã QR động trước khi điểm danh.', 'error');
+                if (currentSecureProfile?.role !== 'assistant') {
+                    showToast('Hãy đăng nhập tài khoản trợ giảng trước.', 'error');
                     return;
                 }
 
                 const todayKey = toDateKey(new Date());
+                const boundAssistantId = getBoundAttendanceAssistantId();
                 elements.attendanceDate.textContent = `Ngày điểm danh: ${capitalize(formatLongDate(todayKey))}`;
-                elements.attendanceUserName.textContent = currentSecureProfile.displayName;
-                elements.attendanceQrCheck.textContent = '✓ Đã quét mã QR động';
-                elements.attendanceZoneCheck.textContent = '⌛ Chưa xác nhận bán kính 100 m';
-                elements.attendancePasskeyCheck.textContent = '⌛ Vân tay / Face ID sẽ được yêu cầu khi xác nhận';
-                attendanceLocationGranted = false;
-                elements.requestLocationPermission.classList.remove('granted');
-                elements.requestLocationPermission.disabled = false;
-                elements.requestLocationLabel.textContent = 'Cho phép truy cập vị trí';
-                elements.attendanceSubmitLabel.textContent = 'Xác nhận bằng vân tay / Face ID';
-                elements.submitAttendance.disabled = true;
+                elements.attendanceUserName.textContent = currentSecureProfile.displayName || currentAuthUser?.displayName || currentAuthUser?.email || 'Tài khoản Google';
+                elements.attendanceQrCheck.textContent = '✓ Đã đăng nhập bằng Google';
+                elements.attendanceZoneCheck.textContent = '✓ Không cần quét QR';
+                elements.attendancePasskeyCheck.textContent = boundAssistantId
+                    ? `✓ Đã gắn với trợ giảng: ${getAssistant(boundAssistantId)?.name || 'Không xác định'}`
+                    : '⌛ Chọn trợ giảng cho tài khoản Google này';
+                elements.attendanceAssistantGroup.hidden = Boolean(boundAssistantId);
+                elements.attendanceAssistantSelect.value = boundAssistantId ? String(boundAssistantId) : '';
+                elements.attendanceSubmitLabel.textContent = 'Xác nhận điểm danh';
+                elements.submitAttendance.disabled = !boundAssistantId && !elements.attendanceAssistantSelect.value;
                 elements.attendanceModal.classList.add('active');
                 elements.attendanceModal.setAttribute('aria-hidden', 'false');
-                window.setTimeout(() => elements.requestLocationPermission.focus(), 80);
+                window.setTimeout(() => {
+                    if (elements.attendanceAssistantGroup.hidden) {
+                        elements.submitAttendance.focus();
+                    } else {
+                        elements.attendanceAssistantSelect.focus();
+                    }
+                }, 80);
             }
 
             function closeAttendanceModal() {
@@ -3315,70 +3400,74 @@
                     showToast('Tài khoản hoặc thời gian điểm danh không hợp lệ.', 'error');
                     return;
                 }
-                if (!qrTokenIsFresh()) {
-                    closeAttendanceModal();
-                    resetScannedQr('Mã QR đã hết hạn. Hãy quét mã mới.');
-                    showToast('Mã QR đã hết hạn. Hãy quét mã mới.', 'error');
-                    return;
-                }
-                if (!attendanceLocationGranted) {
-                    showToast('Bạn cần xác nhận vị trí trong bán kính 100 m.', 'error');
+
+                const assistantId = getBoundAttendanceAssistantId() || Number(elements.attendanceAssistantSelect.value);
+                const assistant = getAssistant(assistantId);
+                if (!assistant) {
+                    elements.attendancePasskeyCheck.textContent = '✕ Bạn cần chọn trợ giảng trước khi điểm danh';
+                    showToast('Vui lòng chọn trợ giảng cho tài khoản Google này.', 'error');
+                    elements.attendanceAssistantGroup.hidden = false;
+                    elements.attendanceAssistantSelect.focus();
                     return;
                 }
 
                 elements.submitAttendance.disabled = true;
                 elements.submitAttendance.setAttribute('aria-busy', 'true');
-                elements.attendanceSubmitLabel.textContent = 'Đang lấy vị trí mới nhất…';
+                elements.attendanceSubmitLabel.textContent = 'Đang lưu điểm danh…';
 
                 try {
-                    const location = await detectDeviceLocation();
-                    if (location.status !== 'granted') {
-                        throw new Error(getLocationStatusMessage(location.status));
-                    }
-                    const distance = distanceFromAttendanceCenter(location.latitude, location.longitude);
-                    if (location.accuracy > 100 || distance > 100) {
-                        throw new Error(distance > 100
-                            ? `Bạn đang cách vị trí quy định khoảng ${Math.round(distance)} m; ngoài bán kính 100 m.`
-                            : 'Tín hiệu GPS chưa đủ chính xác. Hãy thử lại.');
-                    }
-
-                    elements.attendanceSubmitLabel.textContent = 'Chạm vân tay / xác nhận Face ID…';
-                    const optionsResult = await beginAttendanceVerificationCall({ qrToken: scannedQrToken });
-                    const authenticationResponse = await startAuthentication({ optionsJSON: optionsResult.data });
-                    elements.attendancePasskeyCheck.textContent = '✓ Đã xác nhận vân tay / Face ID';
-                    elements.attendanceSubmitLabel.textContent = 'Đang lưu bảo mật trên Firebase…';
-
-                    const result = await submitSecureAttendanceCall({
-                        qrToken: scannedQrToken,
-                        authenticationResponse,
-                        latitude: location.latitude,
-                        longitude: location.longitude,
-                        accuracy: location.accuracy
-                    });
-
                     const today = new Date();
-                    selectedDateKey = toDateKey(today);
+                    const todayKey = toDateKey(today);
+                    const currentLocation = assistantSessionLocation.capturedAt
+                        ? assistantSessionLocation
+                        : await captureAssistantSessionLocation(false);
+                    const attendanceRecord = {
+                        troGiangId: assistantId,
+                        date: todayKey,
+                        status: 'present',
+                        timestamp: Date.now(),
+                        attendanceEmail: String(currentAuthUser?.email || '').trim().toLowerCase(),
+                        attendanceIp: '',
+                        latitude: currentLocation.latitude ?? null,
+                        longitude: currentLocation.longitude ?? null,
+                        locationAccuracy: currentLocation.accuracy ?? null,
+                        locationStatus: currentLocation.status || 'google-login-only',
+                        capturedAt: Date.now()
+                    };
+
+                    const existingRecord = records.find(record =>
+                        record.troGiangId === assistantId && record.date === todayKey
+                    );
+
+                    if (existingRecord?.firebaseId) {
+                        await updateDoc(doc(db, 'troGiangRecords', existingRecord.firebaseId), attendanceRecord);
+                    } else {
+                        await addDoc(recordsCollection, attendanceRecord);
+                    }
+
+                    saveAttendanceAssistantBinding(currentAuthUser?.email, assistantId);
+                    elements.attendancePasskeyCheck.textContent = `✓ Đã gắn với trợ giảng: ${assistant.name}`;
+                    selectedDateKey = todayKey;
                     viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
                     closeAttendanceModal();
-                    resetScannedQr('Điểm danh thành công. Cần quét QR mới cho lần sau.');
+                    resetScannedQr('Điểm danh thành công bằng đăng nhập Google, không cần quét QR.');
                     renderAllData();
-                    showToast(`Điểm danh thành công. Lần tiếp theo sau ${new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit' }).format(new Date(result.data.nextAllowedAtMs))}.`);
+                    showToast(`Điểm danh thành công cho ${assistant.name}.`);
                 } catch (error) {
-                    console.error('Secure attendance failed:', error);
-                    const message = secureErrorMessage(error, 'Không thể hoàn tất điểm danh bảo mật.');
-                    if (/QR|hết hạn/i.test(message)) resetScannedQr('Mã QR không hợp lệ hoặc đã hết hạn.');
-                    showToast(message, 'error');
+                    console.error('Simple attendance failed:', error);
+                    showToast('Không thể lưu điểm danh lên Firebase.', 'error');
                 } finally {
-                    elements.submitAttendance.disabled = !attendanceLocationGranted;
                     elements.submitAttendance.removeAttribute('aria-busy');
-                    elements.attendanceSubmitLabel.textContent = 'Xác nhận bằng vân tay / Face ID';
+                    elements.attendanceSubmitLabel.textContent = 'Xác nhận điểm danh';
+                    updateSecureAttendanceControls();
                 }
             }
 
             function openRegistrationModal(key) {
                 if (!currentAuthUser) {
-                    showToast('Hãy đăng nhập trước khi tạo đăng ký.', 'error');
-                    openLoginModal();
+                    showToast('Hãy đăng nhập Google trợ giảng trước khi tạo đăng ký.', 'error');
+                    setDesiredLoginPortal('assistant');
+                    void loginHandler();
                     return;
                 }
                 selectedDateKey = key;
@@ -3508,6 +3597,14 @@
                         });
                         elements.tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === targetId));
                         updateLoginModalCopy(activePortal);
+                        if (targetId === 'assistant-panel') {
+                            if (!(currentAuthUser && currentSecureProfile?.role === 'assistant')) {
+                                setDesiredLoginPortal('assistant');
+                                void loginHandler();
+                            } else {
+                                void captureAssistantSessionLocation(false);
+                            }
+                        }
                         if (targetId === 'admin-panel') renderAdminTable();
                     });
                 });
@@ -3537,8 +3634,14 @@
                     });
                 });
             
-                elements.loginOpenButton.addEventListener('click', () => openLoginModal('assistant'));
-                elements.adminLoginOpenButton.addEventListener('click', () => openLoginModal('admin'));
+                elements.loginOpenButton.addEventListener('click', () => {
+                    setDesiredLoginPortal('assistant');
+                    void loginHandler();
+                });
+                elements.adminLoginOpenButton.addEventListener('click', () => {
+                    setDesiredLoginPortal('admin');
+                    void loginHandler();
+                });
                 elements.closeLogin.addEventListener('click', closeLoginModal);
                 elements.loginSubmitButton.addEventListener('click', loginHandler);
                 elements.loginModal.addEventListener('click', event => {
@@ -3554,6 +3657,14 @@
                 });
 
                 elements.openAttendance.addEventListener('click', openAttendanceModal);
+                elements.attendanceAssistantSelect.addEventListener('change', () => {
+                    const assistantId = Number(elements.attendanceAssistantSelect.value || 0);
+                    const assistant = getAssistant(assistantId);
+                    elements.submitAttendance.disabled = !assistant;
+                    elements.attendancePasskeyCheck.textContent = assistant
+                        ? `✓ Sẽ điểm danh cho: ${assistant.name}`
+                        : '⌛ Chọn trợ giảng cho tài khoản Google này';
+                });
                 elements.requestLocationPermission.addEventListener('click', requestLocationPermissionHandler);
                 elements.submitAttendance.addEventListener('click', submitAttendanceHandler);
                 elements.closeAttendance.addEventListener('click', closeAttendanceModal);
@@ -3651,6 +3762,6 @@
             
         </script>
 
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7da6ed8f28b45',t:'MTc4NzQ2NDM2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f81037289684b1',t:'MTc4NzQ2NjU3MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7da6ed8f28b45',t:'MTc4NzQ2NDM2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f8433e3c8c85ce',t:'MTc4NzQ2ODY2MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
