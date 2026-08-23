@@ -1548,20 +1548,67 @@
             box-shadow: 0 0 14px rgba(52, 211, 153, 0.24);
         }
         .attendance-date-line { display: block; white-space: nowrap; }
-        .attendance-device-info {
-            display: block;
-            margin-top: 3px;
-            color: #93c5fd;
-            font-size: 8px;
-            font-weight: 650;
+        .admin-attendance-device-info {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px 7px;
+            min-width: 0;
+            margin-bottom: 2px;
+            color: #bfdbfe;
+            font-size: 9px;
+            font-weight: 750;
             line-height: 1.3;
-            white-space: normal;
-            overflow-wrap: anywhere;
         }
+        .admin-attendance-ip { white-space: nowrap; }
+        .admin-attendance-location {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        .attendance-location-unavailable { color: #94a3b8; white-space: nowrap; }
+        .attendance-map-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 24px;
+            padding: 3px 8px;
+            border: 1px solid #38bdf8;
+            border-radius: 7px;
+            background: linear-gradient(135deg, #075985, #0e7490);
+            color: #ecfeff;
+            text-decoration: none;
+            white-space: nowrap;
+            font-size: 9px;
+            font-weight: 850;
+            box-shadow: 0 2px 7px rgba(14, 116, 144, 0.28);
+        }
+        .attendance-map-btn:hover,
+        .attendance-map-btn:focus-visible {
+            border-color: #67e8f9;
+            filter: brightness(1.14);
+            outline: none;
+        }
+        .admin-attendance-update { display: block; }
+        .admin-card tbody td.admin-detail-cell {
+            padding-top: 4px;
+            border-top: 0;
+        }
+        .admin-header-attendance {
+            margin: 0;
+            padding: 0 1px 5px;
+        }
+        .admin-card .admin-detail-cell > .detail-list,
+        .admin-card .admin-detail-cell > .no-records {
+            padding-top: 5px;
+            border-top: 1px solid var(--border);
+        }
+        .admin-card .admin-detail-cell > .no-records { display: block; }
         .attendance-detail-tag {
             display: grid;
             flex: 1 1 100%;
-            gap: 1px;
+            gap: 2px;
             min-width: 0;
             border: 1px solid #334a63;
             background: #1b3140;
@@ -1903,10 +1950,17 @@
                 return `Cập nhật : ${time} · ngày ${compactDate}`;
             }
 
-            function formatAttendanceDeviceInfo(record) {
-                if (record.status !== 'present') return '';
+            function createAdminAttendanceDeviceInfo(record) {
+                if (record.status !== 'present') return null;
 
-                const ipText = record.attendanceIp || 'không xác định';
+                const wrapper = document.createElement('span');
+                wrapper.className = 'admin-attendance-device-info';
+
+                const ip = document.createElement('span');
+                ip.className = 'admin-attendance-ip';
+                ip.textContent = `IP: ${record.attendanceIp || 'không xác định'}`;
+                wrapper.appendChild(ip);
+
                 const latitude = Number(record.latitude);
                 const longitude = Number(record.longitude);
                 const hasLocation =
@@ -1914,28 +1968,34 @@
                     record.longitude !== null && record.longitude !== '' &&
                     Number.isFinite(latitude) && Number.isFinite(longitude);
 
-                let locationText = 'không xác định';
+                const location = document.createElement('span');
+                location.className = 'admin-attendance-location';
+                location.appendChild(document.createTextNode('Vị trí: '));
+
                 if (hasLocation) {
+                    const mapLink = document.createElement('a');
+                    const coordinates = `${latitude},${longitude}`;
                     const accuracy = Number(record.locationAccuracy);
                     const accuracyText = Number.isFinite(accuracy)
-                        ? ` (±${Math.round(accuracy)}m)`
+                        ? `, độ chính xác khoảng ${Math.round(accuracy)} mét`
                         : '';
-                    locationText = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}${accuracyText}`;
-                } else if (record.locationStatus === 'denied') {
-                    locationText = 'đã từ chối quyền';
-                } else if (record.locationStatus === 'unsupported') {
-                    locationText = 'thiết bị không hỗ trợ';
-                } else if (record.locationStatus === 'timeout') {
-                    locationText = 'hết thời gian xác định';
-                } else if (record.locationStatus === 'blocked') {
-                    locationText = 'bị khung trang chặn';
-                } else if (record.locationStatus === 'insecure') {
-                    locationText = 'trang không dùng HTTPS';
-                } else if (record.locationStatus === 'unavailable') {
-                    locationText = 'GPS không khả dụng';
+                    mapLink.className = 'attendance-map-btn';
+                    mapLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(coordinates)}`;
+                    mapLink.target = '_blank';
+                    mapLink.rel = 'noopener noreferrer';
+                    mapLink.textContent = '🗺️ Bản đồ';
+                    mapLink.title = `Mở vị trí điểm danh trên bản đồ${accuracyText}`;
+                    mapLink.setAttribute('aria-label', `Mở vị trí điểm danh trên bản đồ${accuracyText}`);
+                    location.appendChild(mapLink);
+                } else {
+                    const unavailable = document.createElement('span');
+                    unavailable.className = 'attendance-location-unavailable';
+                    unavailable.textContent = 'không xác định';
+                    location.appendChild(unavailable);
                 }
+                wrapper.appendChild(location);
 
-                return `IP: ${ipText} · 📍 ${locationText}`;
+                return wrapper;
             }
 
             async function detectPublicIp() {
@@ -2223,14 +2283,6 @@
                 dateLine.textContent = formatAttendanceDate(record);
                 dateCell.appendChild(dateLine);
 
-                const deviceInfoText = formatAttendanceDeviceInfo(record);
-                if (deviceInfoText) {
-                    const deviceInfo = document.createElement('small');
-                    deviceInfo.className = 'attendance-device-info';
-                    deviceInfo.textContent = deviceInfoText;
-                    dateCell.appendChild(deviceInfo);
-                }
-            
                     const statusCell = document.createElement('td');
                     const badge = document.createElement('span');
                     badge.className = `status-badge ${record.status}`;
@@ -2355,6 +2407,22 @@
                     phoneCell.appendChild(phoneWrap);
             
                     const detailCell = document.createElement('td');
+                    detailCell.className = 'admin-detail-cell';
+
+                    const latestAttendanceRecord = assistant.records
+                        .filter(record => record.status === 'present')
+                        .sort((a, b) =>
+                            (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0) ||
+                            b.date.localeCompare(a.date)
+                        )[0];
+                    const headerDeviceInfo = latestAttendanceRecord
+                        ? createAdminAttendanceDeviceInfo(latestAttendanceRecord)
+                        : null;
+                    if (headerDeviceInfo) {
+                        headerDeviceInfo.classList.add('admin-header-attendance');
+                        detailCell.appendChild(headerDeviceInfo);
+                    }
+
                     if (!assistant.records.length) {
                         const noRecords = document.createElement('span');
                         noRecords.className = 'no-records';
@@ -2383,16 +2451,9 @@
                                 : 'date-tag';
 
                             const tagDate = document.createElement('span');
+                            tagDate.className = 'admin-attendance-update';
                             tagDate.textContent = formatAttendanceDate(record);
                             tag.appendChild(tagDate);
-
-                            const deviceInfoText = formatAttendanceDeviceInfo(record);
-                            if (deviceInfoText) {
-                                const deviceInfo = document.createElement('small');
-                                deviceInfo.className = 'attendance-device-info';
-                                deviceInfo.textContent = deviceInfoText;
-                                tag.appendChild(deviceInfo);
-                            }
 
                             tags.appendChild(tag);
                             });
