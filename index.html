@@ -278,6 +278,7 @@
         }
 
         .record-dot { width: 5px; height: 5px; border-radius: 99px; }
+        .record-dot.present { background: var(--success); }
         .record-dot.full-day-off { background: var(--danger); }
         .record-dot.late-over { background: var(--warning); }
         .record-dot.late-under { background: var(--info); }
@@ -330,6 +331,7 @@
             font-weight: 750;
             white-space: nowrap;
         }
+        .status-badge.present { background: #ecfdf5; color: var(--success); }
         .status-badge.full-day-off { background: #fef2f2; color: var(--danger); }
         .status-badge.late-over { background: #fffbeb; color: var(--warning); }
         .status-badge.late-under { background: #ecfeff; color: var(--info); }
@@ -995,6 +997,7 @@
         .registration-card,
         .admin-card { background: #0b1220; }
 
+        .status-badge.present { background: rgba(16, 185, 129, 0.17); color: #6ee7b7; }
         .status-badge.full-day-off { background: rgba(244, 63, 94, 0.16); color: #fda4af; }
         .status-badge.late-over { background: rgba(245, 158, 11, 0.16); color: #fcd34d; }
         .status-badge.late-under { background: rgba(6, 182, 212, 0.16); color: #67e8f9; }
@@ -1460,6 +1463,76 @@
             }
             .admin-card .detail-row { grid-template-columns: 96px minmax(0, 1fr); }
         }
+
+        /* Nút và hộp thoại điểm danh */
+        .attendance-bar {
+            width: 100%;
+            max-width: 370px;
+            margin: 8px auto 0;
+        }
+        .attendance-open-btn,
+        .attendance-submit-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            min-height: 42px;
+            padding: 9px 14px;
+            overflow: hidden;
+            border: 1px solid rgba(110, 231, 183, 0.62);
+            border-radius: 11px;
+            background: linear-gradient(135deg, #047857, #059669 46%, #0f766e);
+            color: #ecfdf5;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 850;
+            box-shadow: 0 7px 18px rgba(5, 150, 105, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+        }
+        .attendance-open-btn::after,
+        .attendance-submit-btn::after {
+            content: '';
+            position: absolute;
+            inset: -100% auto -100% -30%;
+            width: 22%;
+            transform: rotate(18deg);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.34), transparent);
+            animation: attendance-sheen 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .attendance-open-btn:hover,
+        .attendance-submit-btn:hover {
+            filter: brightness(1.10);
+            transform: translateY(-1px);
+            box-shadow: 0 9px 22px rgba(5, 150, 105, 0.34), 0 0 12px rgba(52, 211, 153, 0.20);
+        }
+        .attendance-open-btn:active,
+        .attendance-submit-btn:active { transform: translateY(0) scale(0.99); }
+        .attendance-submit-btn:disabled {
+            opacity: 0.58;
+            cursor: wait;
+            filter: grayscale(0.3);
+            transform: none;
+        }
+        .attendance-modal { max-width: 410px; }
+        .attendance-submit-btn { min-height: 46px; margin-top: 4px; }
+
+        @keyframes attendance-sheen {
+            0%, 30% { left: -30%; opacity: 0; }
+            42% { opacity: 0.72; }
+            62%, 100% { left: 118%; opacity: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .attendance-open-btn::after,
+            .attendance-submit-btn::after { animation: none; }
+        }
+        @media (max-width: 620px) {
+            .attendance-bar { max-width: 100%; margin-top: 7px; }
+            .attendance-open-btn { min-height: 44px; font-size: 13px; }
+            .attendance-modal { width: 100%; max-width: none; }
+        }
     </style>
     </head>
 
@@ -1508,10 +1581,18 @@
                     <div class="calendar-grid" id="calendar-grid"></div>
 
                     <div class="legend" aria-label="Chú thích trạng thái">
+                        <span class="legend-item"><i class="record-dot present"></i>Đã điểm danh</span>
                         <span class="legend-item"><i class="record-dot full-day-off"></i>Nghỉ cả ngày</span>
                         <span class="legend-item"><i class="record-dot late-over"></i>Muộn trên 15 phút</span>
                         <span class="legend-item"><i class="record-dot late-under"></i>Muộn dưới 15 phút</span>
                     </div>
+                </div>
+
+                <div class="attendance-bar">
+                    <button class="attendance-open-btn" id="open-attendance" type="button">
+                        <span aria-hidden="true">✅</span>
+                        <span>Điểm danh hôm nay</span>
+                    </button>
                 </div>
 
                 <div class="card registration-card">
@@ -1557,6 +1638,7 @@
                             </div>
                             <div class="filters" aria-label="Lọc trợ giảng">
                                 <button class="filter-btn active" type="button" data-filter="all">Tất cả</button>
+                                <button class="filter-btn" type="button" data-filter="present">Đã điểm danh</button>
                                 <button class="filter-btn" type="button" data-filter="full-day-off">Nghỉ</button>
                                 <button class="filter-btn" type="button" data-filter="late-over">Muộn &gt;15p</button>
                                 <button class="filter-btn" type="button" data-filter="late-under">Muộn &lt;15p</button>
@@ -1580,6 +1662,26 @@
                 </div>
             </section>
         </main>
+
+        <div class="modal-overlay" id="attendance-modal" aria-hidden="true">
+            <div class="modal attendance-modal" role="dialog" aria-modal="true" aria-labelledby="attendance-modal-title">
+                <button class="close-btn" id="close-attendance" type="button" aria-label="Đóng">×</button>
+                <h2 id="attendance-modal-title">✅ Điểm danh</h2>
+                <p class="modal-subtitle" id="attendance-date"></p>
+
+                <div class="form-group">
+                    <label class="form-label" for="attendance-assistant-select">Chọn trợ giảng</label>
+                    <select class="select-box" id="attendance-assistant-select">
+                        <option value="">— Chọn trợ giảng cần điểm danh —</option>
+                    </select>
+                </div>
+
+                <button class="attendance-submit-btn" id="submit-attendance" type="button">
+                    <span aria-hidden="true">✅</span>
+                    <span>Xác nhận điểm danh</span>
+                </button>
+            </div>
+        </div>
 
         <div class="modal-overlay" id="registration-modal" aria-hidden="true">
             <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -1660,6 +1762,7 @@
             ];
             
             const STATUS = {
+                'present': { label: 'Đã điểm danh', icon: '✅' },
                 'full-day-off': { label: 'Nghỉ cả ngày', icon: '🚫' },
                 'late-over': { label: 'Đến muộn >15p', icon: '⏰' },
                 'late-under': { label: 'Đến muộn <15p', icon: '⏱️' }
@@ -1690,6 +1793,12 @@
                 adminDatePicker: document.getElementById('admin-date-picker'),
                 clearAdminDate: document.getElementById('clear-admin-date'),
                 filterButtons: document.querySelectorAll('.filter-btn'),
+                openAttendance: document.getElementById('open-attendance'),
+                attendanceModal: document.getElementById('attendance-modal'),
+                closeAttendance: document.getElementById('close-attendance'),
+                attendanceDate: document.getElementById('attendance-date'),
+                attendanceAssistantSelect: document.getElementById('attendance-assistant-select'),
+                submitAttendance: document.getElementById('submit-attendance'),
                 modal: document.getElementById('registration-modal'),
                 closeModal: document.getElementById('close-modal'),
                 modalDate: document.getElementById('modal-date'),
@@ -1715,9 +1824,26 @@
             }
             
             function formatShortDate(key) {
-                return new Intl.DateTimeFormat('vi-VN', {
-                    day: '2-digit', month: '2-digit', year: 'numeric'
-                }).format(fromDateKey(key));
+                const date = fromDateKey(key);
+                return `${date.getDate()}/${date.getMonth() + 1}`;
+            }
+
+            function formatAttendanceDate(record) {
+                const compactDate = formatShortDate(record.date);
+                const timestamp = Number(record.timestamp);
+
+                if (record.status !== 'present' || !timestamp) {
+                    return compactDate;
+                }
+
+                const time = new Intl.DateTimeFormat('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                }).format(new Date(timestamp));
+
+                return `Cập nhật : ${time} · ngày ${compactDate}`;
             }
             
             function formatLongDate(key) {
@@ -1757,6 +1883,11 @@
                     option.value = assistant.id;
                     option.textContent = assistant.name;
                     elements.assistantSelect.appendChild(option);
+
+                    const attendanceOption = document.createElement('option');
+                    attendanceOption.value = assistant.id;
+                    attendanceOption.textContent = assistant.name;
+                    elements.attendanceAssistantSelect.appendChild(attendanceOption);
                 });
             }
             
@@ -1890,8 +2021,8 @@
                     const nameCell = document.createElement('td');
                     nameCell.textContent = assistant ? assistant.name : 'Không xác định';
             
-                    const dateCell = document.createElement('td');
-                    dateCell.textContent = formatShortDate(record.date);
+                const dateCell = document.createElement('td');
+                dateCell.textContent = formatAttendanceDate(record);
             
                     const statusCell = document.createElement('td');
                     const badge = document.createElement('span');
@@ -2040,8 +2171,8 @@
                             tags.className = 'date-tags';
                             statusRecords.forEach(record => {
                                 const tag = document.createElement('span');
-                                tag.className = 'date-tag';
-                                tag.textContent = formatShortDate(record.date);
+                            tag.className = 'date-tag';
+                            tag.textContent = formatAttendanceDate(record);
                                 tags.appendChild(tag);
                             });
                             detailRow.append(label, tags);
@@ -2055,6 +2186,89 @@
                 });
             }
             
+            function openAttendanceModal() {
+                const todayKey = toDateKey(new Date());
+                elements.attendanceDate.textContent =
+                    `Ngày điểm danh: ${capitalize(formatLongDate(todayKey))}`;
+                elements.attendanceAssistantSelect.value = '';
+                elements.attendanceModal.classList.add('active');
+                elements.attendanceModal.setAttribute('aria-hidden', 'false');
+                window.setTimeout(() => elements.attendanceAssistantSelect.focus(), 80);
+            }
+
+            function closeAttendanceModal() {
+                elements.attendanceModal.classList.remove('active');
+                elements.attendanceModal.setAttribute('aria-hidden', 'true');
+                elements.attendanceAssistantSelect.value = '';
+            }
+
+            async function submitAttendanceHandler() {
+                const assistantId = Number(elements.attendanceAssistantSelect.value);
+                if (!assistantId) {
+                    showToast('Vui lòng chọn trợ giảng cần điểm danh.', 'error');
+                    elements.attendanceAssistantSelect.focus();
+                    return;
+                }
+
+                const today = new Date();
+                const todayKey = toDateKey(today);
+                const assistant = getAssistant(assistantId);
+                const existingRecord = records.find(record =>
+                    record.troGiangId === assistantId && record.date === todayKey
+                );
+                const attendanceRecord = {
+                    troGiangId: assistantId,
+                    date: todayKey,
+                    status: 'present',
+                    timestamp: Date.now()
+                };
+
+                elements.submitAttendance.disabled = true;
+                elements.submitAttendance.setAttribute('aria-busy', 'true');
+
+                try {
+                    if (existingRecord && existingRecord.firebaseId) {
+                        await updateDoc(
+                            doc(db, "troGiangRecords", existingRecord.firebaseId),
+                            attendanceRecord
+                        );
+
+                        const index = records.findIndex(
+                            record => record.firebaseId === existingRecord.firebaseId
+                        );
+                        if (index !== -1) {
+                            records[index] = {
+                                ...attendanceRecord,
+                                firebaseId: existingRecord.firebaseId
+                            };
+                        }
+                    } else {
+                        const docRef = await addDoc(recordsCollection, attendanceRecord);
+                        const realtimeIndex = records.findIndex(
+                            record => record.firebaseId === docRef.id
+                        );
+                        if (realtimeIndex === -1) {
+                            records.push({
+                                ...attendanceRecord,
+                                firebaseId: docRef.id
+                            });
+                        }
+                    }
+
+                    selectedDateKey = todayKey;
+                    viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    closeAttendanceModal();
+                    renderAllData();
+                    showToast(`Đã điểm danh cho ${assistant ? assistant.name : 'trợ giảng'}.`);
+                } catch (error) {
+                    console.error('Lỗi điểm danh Firebase:', error);
+                    showToast('Không thể lưu điểm danh lên Firebase.', 'error');
+                } finally {
+                    elements.submitAttendance.disabled = false;
+                    elements.submitAttendance.removeAttribute('aria-busy');
+                }
+            }
+
             function openRegistrationModal(key) {
                 selectedDateKey = key;
                 selectedStatus = '';
@@ -2209,13 +2423,22 @@
                     });
                 });
             
+                elements.openAttendance.addEventListener('click', openAttendanceModal);
+                elements.submitAttendance.addEventListener('click', submitAttendanceHandler);
+                elements.closeAttendance.addEventListener('click', closeAttendanceModal);
+                elements.attendanceModal.addEventListener('click', event => {
+                    if (event.target === elements.attendanceModal) closeAttendanceModal();
+                });
+
                 elements.submitRegistration.addEventListener('click', submitRegistration);
                 elements.closeModal.addEventListener('click', closeRegistrationModal);
                 elements.modal.addEventListener('click', event => {
                     if (event.target === elements.modal) closeRegistrationModal();
                 });
                 document.addEventListener('keydown', event => {
-                    if (event.key === 'Escape' && elements.modal.classList.contains('active')) closeRegistrationModal();
+                    if (event.key !== 'Escape') return;
+                    if (elements.modal.classList.contains('active')) closeRegistrationModal();
+                    if (elements.attendanceModal.classList.contains('active')) closeAttendanceModal();
                 });
             
                 elements.searchInput.addEventListener('input', renderAdminTable);
@@ -2288,6 +2511,6 @@
             
         </script>
 
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f72f524ad49b7f',t:'MTc4NzQ1NzM1OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f743cacd0204d4',t:'MTc4NzQ1ODE5OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
