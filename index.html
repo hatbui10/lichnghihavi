@@ -1531,6 +1531,26 @@
             font-size: 10px;
             line-height: 1.35;
         }
+        .location-permission-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            width: 100%;
+            min-height: 38px;
+            margin: 0 0 7px;
+            padding: 7px 10px;
+            border: 1px solid #38bdf8;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #0c4a6e, #075985);
+            color: #e0f2fe;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 800;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.16);
+        }
+        .location-permission-btn:hover { filter: brightness(1.12); }
+        .location-permission-btn:disabled { opacity: 0.58; cursor: wait; }
         .attendance-capture-status {
             min-height: 34px;
             margin-bottom: 9px;
@@ -1728,8 +1748,12 @@
                     <span aria-hidden="true">🔒</span>
                     <span>Khi xác nhận, hệ thống sẽ xin quyền vị trí và lưu IP công khai tại thời điểm điểm danh.</span>
                 </div>
+                <button class="location-permission-btn" id="request-location-permission" type="button">
+                    <span aria-hidden="true">📍</span>
+                    <span>Cho phép truy cập vị trí</span>
+                </button>
                 <div class="attendance-capture-status" id="attendance-capture-status" aria-live="polite">
-                    IP và vị trí sẽ được xác định khi bạn nhấn nút bên dưới.
+                    Hãy cho phép vị trí trước khi điểm danh.
                 </div>
 
                 <button class="attendance-submit-btn" id="submit-attendance" type="button">
@@ -1854,6 +1878,7 @@
                 closeAttendance: document.getElementById('close-attendance'),
                 attendanceDate: document.getElementById('attendance-date'),
                 attendanceAssistantSelect: document.getElementById('attendance-assistant-select'),
+                requestLocationPermission: document.getElementById('request-location-permission'),
                 attendanceCaptureStatus: document.getElementById('attendance-capture-status'),
                 attendanceSubmitLabel: document.getElementById('attendance-submit-label'),
                 submitAttendance: document.getElementById('submit-attendance'),
@@ -1928,6 +1953,12 @@
                     locationText = 'thiết bị không hỗ trợ';
                 } else if (record.locationStatus === 'timeout') {
                     locationText = 'hết thời gian xác định';
+                } else if (record.locationStatus === 'blocked') {
+                    locationText = 'bị khung trang chặn';
+                } else if (record.locationStatus === 'insecure') {
+                    locationText = 'trang không dùng HTTPS';
+                } else if (record.locationStatus === 'unavailable') {
+                    locationText = 'GPS không khả dụng';
                 }
 
                 return `IP: ${ipText} · 📍 ${locationText}`;
@@ -1953,10 +1984,40 @@
                 }
             }
 
+            function getGeolocationEnvironmentIssue() {
+                if (!window.isSecureContext) return 'insecure';
+                if (!navigator.geolocation) return 'unsupported';
+
+                try {
+                    const policy = document.permissionsPolicy || document.featurePolicy;
+                    if (policy && typeof policy.allowsFeature === 'function' && !policy.allowsFeature('geolocation')) {
+                        return 'blocked';
+                    }
+                } catch (error) {
+                    console.warn('Không thể kiểm tra Permissions Policy:', error);
+                }
+
+                return '';
+            }
+
+            function getLocationStatusMessage(status) {
+                const messages = {
+                    granted: 'Đã cho phép vị trí.',
+                    denied: 'Bạn cần cấp quyền truy cập vị trí để tiếp tục.',
+                    blocked: 'Khung xem trước đang chặn định vị. Hãy mở trang trực tiếp bằng HTTPS để cấp quyền.',
+                    insecure: 'Định vị chỉ hoạt động trên HTTPS hoặc localhost.',
+                    unsupported: 'Trình duyệt hoặc thiết bị không hỗ trợ định vị.',
+                    unavailable: 'Thiết bị chưa xác định được vị trí. Hãy bật GPS và thử lại.',
+                    timeout: 'Quá thời gian xác định vị trí. Hãy thử lại ở nơi có tín hiệu GPS tốt hơn.'
+                };
+                return messages[status] || 'Không thể xác định vị trí.';
+            }
+
             function detectDeviceLocation() {
                 return new Promise(resolve => {
-                    if (!navigator.geolocation) {
-                        resolve({ status: 'unsupported', latitude: null, longitude: null, accuracy: null });
+                    const environmentIssue = getGeolocationEnvironmentIssue();
+                    if (environmentIssue) {
+                        resolve({ status: environmentIssue, latitude: null, longitude: null, accuracy: null });
                         return;
                     }
 
@@ -2362,14 +2423,40 @@
                 });
             }
             
+            async function requestLocationPermissionHandler() {
+                elements.requestLocationPermission.disabled = true;
+                elements.attendanceCaptureStatus.textContent =
+                    'Đang yêu cầu quyền truy cập vị trí từ trình duyệt…';
+                elements.attendanceCaptureStatus.className = 'attendance-capture-status loading';
+
+                try {
+                    const location = await detectDeviceLocation();
+                    if (location.status === 'granted') {
+                        elements.attendanceCaptureStatus.textContent =
+                            `Đã cho phép vị trí: ${location.latitude}, ${location.longitude} (±${location.accuracy}m).`;
+                        elements.attendanceCaptureStatus.className = 'attendance-capture-status success';
+                    } else {
+                        elements.attendanceCaptureStatus.textContent =
+                            getLocationStatusMessage(location.status);
+                        elements.attendanceCaptureStatus.className = 'attendance-capture-status warning';
+                    }
+                } finally {
+                    elements.requestLocationPermission.disabled = false;
+                }
+            }
+
             function openAttendanceModal() {
                 const todayKey = toDateKey(new Date());
                 elements.attendanceDate.textContent =
                     `Ngày điểm danh: ${capitalize(formatLongDate(todayKey))}`;
                 elements.attendanceAssistantSelect.value = '';
-                elements.attendanceCaptureStatus.textContent =
-                    'IP và vị trí sẽ được xác định khi bạn nhấn nút bên dưới.';
-                elements.attendanceCaptureStatus.className = 'attendance-capture-status';
+                const environmentIssue = getGeolocationEnvironmentIssue();
+                elements.attendanceCaptureStatus.textContent = environmentIssue
+                    ? getLocationStatusMessage(environmentIssue)
+                    : 'Nhấn “Cho phép truy cập vị trí” để trình duyệt hiển thị hộp thoại cấp quyền.';
+                elements.attendanceCaptureStatus.className = environmentIssue
+                    ? 'attendance-capture-status warning'
+                    : 'attendance-capture-status';
                 elements.attendanceSubmitLabel.textContent = 'Xác nhận điểm danh';
                 elements.attendanceModal.classList.add('active');
                 elements.attendanceModal.setAttribute('aria-hidden', 'false');
@@ -2408,6 +2495,18 @@
                     detectPublicIp(),
                     detectDeviceLocation()
                 ]);
+
+                if (location.status !== 'granted') {
+                    const message = getLocationStatusMessage(location.status);
+                    elements.attendanceCaptureStatus.textContent = message;
+                    elements.attendanceCaptureStatus.className = 'attendance-capture-status warning';
+                    elements.submitAttendance.disabled = false;
+                    elements.submitAttendance.removeAttribute('aria-busy');
+                    elements.attendanceSubmitLabel.textContent = 'Xác nhận điểm danh';
+                    showToast(message, 'error');
+                    return;
+                }
+
                 const capturedAt = Date.now();
                 const attendanceRecord = {
                     troGiangId: assistantId,
@@ -2631,6 +2730,7 @@
                 });
             
                 elements.openAttendance.addEventListener('click', openAttendanceModal);
+                elements.requestLocationPermission.addEventListener('click', requestLocationPermissionHandler);
                 elements.submitAttendance.addEventListener('click', submitAttendanceHandler);
                 elements.closeAttendance.addEventListener('click', closeAttendanceModal);
                 elements.attendanceModal.addEventListener('click', event => {
@@ -2718,6 +2818,6 @@
             
         </script>
 
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f74caef9b77aa1',t:'MTc4NzQ1ODU2Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f758ae5c040855',t:'MTc4NzQ1OTA1Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
