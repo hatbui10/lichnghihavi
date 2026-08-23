@@ -1033,6 +1033,174 @@
         .toast { border-color: var(--border); background: #111827; color: var(--text); }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #475569; }
+
+        /* Hai danh sách chuyển sang dạng thẻ ở điện thoại và máy tính bảng */
+        @media (max-width: 820px) {
+            .registration-card,
+            .admin-card {
+                width: 100%;
+                max-width: 500px;
+                margin-inline: auto;
+            }
+
+            .registration-card .table-wrap,
+            .admin-card .table-wrap {
+                overflow: visible;
+                padding: 6px;
+            }
+            .registration-card table,
+            .registration-card tbody,
+            .admin-card table,
+            .admin-card tbody {
+                display: block;
+                width: 100%;
+            }
+            .registration-card thead,
+            .admin-card thead { display: none; }
+
+            /* Thẻ đăng ký ở tab Trợ giảng */
+            .registration-card tbody tr {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                grid-template-areas:
+                    "name action"
+                    "date action"
+                    "status action";
+                gap: 3px 8px;
+                width: 100%;
+                margin-bottom: 6px;
+                padding: 9px 10px;
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                background: #111827;
+            }
+            .registration-card tbody tr:last-child { margin-bottom: 0; }
+            .registration-card tbody td { display: block; padding: 0; border: 0; min-width: 0; }
+            .registration-card tbody td:nth-child(1) { display: none; }
+            .registration-card tbody td:nth-child(2) {
+                grid-area: name;
+                overflow: hidden;
+                color: var(--text);
+                font-size: 13px;
+                font-weight: 850;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            .registration-card tbody td:nth-child(3) {
+                grid-area: date;
+                color: var(--muted);
+                font-size: 10px;
+                white-space: nowrap;
+            }
+            .registration-card tbody td:nth-child(4) {
+                grid-area: status;
+                margin: 0;
+                white-space: nowrap;
+            }
+            .registration-card tbody td:nth-child(5) {
+                grid-area: action;
+                align-self: center;
+            }
+            .registration-card .status-badge {
+                max-width: 100%;
+                padding: 4px 6px;
+                font-size: 9px;
+                white-space: nowrap;
+            }
+            .registration-card .delete-btn {
+                min-width: 40px;
+                min-height: 31px;
+                padding: 4px 6px;
+                font-size: 9px;
+                white-space: nowrap;
+            }
+            .registration-card tbody td.empty-state {
+                display: block;
+                grid-area: 1 / 1 / -1 / -1;
+                padding: 18px 8px !important;
+                white-space: normal;
+            }
+
+            /* Thẻ trợ giảng ở tab Admin */
+            .admin-card tbody tr {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                grid-template-areas:
+                    "admin-name admin-phone"
+                    "admin-detail admin-detail";
+                gap: 6px 10px;
+                width: 100%;
+                margin-bottom: 6px;
+                padding: 9px 10px;
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                background: #111827;
+            }
+            .admin-card tbody tr:last-child { margin-bottom: 0; }
+            .admin-card tbody td { display: block; padding: 0; border: 0; min-width: 0; }
+            .admin-card tbody td:nth-child(1) { display: none; }
+            .admin-card tbody td:nth-child(2) {
+                grid-area: admin-name;
+                align-self: center;
+                overflow: hidden;
+                margin: 0;
+                font-size: 13px;
+                font-weight: 850;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            .admin-card tbody td:nth-child(3) {
+                grid-area: admin-phone;
+                align-self: center;
+                margin: 0;
+            }
+            .admin-card tbody td:nth-child(4) {
+                grid-area: admin-detail;
+                padding-top: 7px;
+                border-top: 1px solid var(--border);
+            }
+            .admin-card .phone-wrap {
+                justify-content: flex-end;
+                gap: 5px;
+                white-space: nowrap;
+            }
+            .admin-card .phone-number { font-size: 10px; white-space: nowrap; }
+            .admin-card .call-link { width: 30px; height: 30px; font-size: 13px; }
+            .admin-card .detail-list { min-width: 0; gap: 5px; }
+            .admin-card .detail-row {
+                display: grid;
+                grid-template-columns: 100px minmax(0, 1fr);
+                gap: 6px;
+                align-items: center;
+            }
+            .admin-card .detail-label {
+                overflow: hidden;
+                font-size: 9px;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            .admin-card .date-tags { gap: 3px; }
+            .admin-card .date-tag { padding: 3px 5px; font-size: 9px; white-space: nowrap; }
+            .admin-card tbody td.empty-state {
+                display: block;
+                grid-area: 1 / 1 / -1 / -1;
+                padding: 18px 8px !important;
+                white-space: normal;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .admin-card tbody tr {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "admin-name"
+                    "admin-phone"
+                    "admin-detail";
+                gap: 4px;
+            }
+            .admin-card .phone-wrap { justify-content: space-between; }
+            .admin-card .detail-row { grid-template-columns: 92px minmax(0, 1fr); }
+        }
     </style>
     </head>
 
@@ -1861,6 +2029,6 @@
             
         </script>
 
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7199ebb67069f',t:'MTc4NzQ1NjQ3MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f71fd2982b03db',t:'MTc4NzQ1NjcyNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
