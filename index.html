@@ -118,33 +118,59 @@
 
         .tabs {
             display: flex;
+            justify-content: center;
             width: 100%;
-            max-width: 370px;
-            gap: 5px;
-            padding: 5px;
+            max-width: 460px;
+            gap: 8px;
+            padding: 0;
             margin: 0 auto 12px;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.85);
-            box-shadow: var(--shadow);
         }
 
         .tab-btn {
+            position: relative;
             flex: 1;
             min-width: 0;
-            min-height: 42px;
-            padding: 9px 12px;
-            border: 0;
-            border-radius: 10px;
-            background: transparent;
-            color: var(--muted);
+            min-height: 44px;
+            padding: 9px 16px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            background:
+                linear-gradient(145deg, #172033, #0f172a) padding-box,
+                linear-gradient(120deg, #818cf8, #22d3ee, #f0abfc, #fbbf24, #34d399, #818cf8) border-box;
+            background-size: 100% 100%, 300% 300%;
+            background-position: center, 0% 50%;
+            color: #dbeafe;
             cursor: pointer;
-            font-weight: 750;
-            transition: 0.2s ease;
+            font-weight: 850;
+            box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.12), 0 6px 16px rgba(0, 0, 0, 0.24);
+            animation: tab-border-shimmer 4s linear infinite;
+            transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
         }
 
-        .tab-btn:hover { background: #eef2ff; color: var(--primary); }
-        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 5px 15px rgba(79, 70, 229, 0.24); }
+        .tab-btn:hover,
+        .tab-btn:focus-visible {
+            color: #ffffff;
+            transform: translateY(-2px);
+            filter: brightness(1.16);
+            box-shadow: 0 0 14px rgba(34, 211, 238, 0.28), 0 8px 20px rgba(0, 0, 0, 0.28);
+            outline: none;
+        }
+        .tab-btn:active { transform: translateY(0) scale(0.98); }
+        .tab-btn.active {
+            background:
+                linear-gradient(135deg, #3730a3, #6d28d9 52%, #0e7490) padding-box,
+                linear-gradient(120deg, #67e8f9, #f0abfc, #fbbf24, #6ee7b7, #67e8f9) border-box;
+            background-size: 100% 100%, 300% 300%;
+            color: #ffffff;
+            box-shadow: 0 0 16px rgba(129, 140, 248, 0.42), 0 8px 22px rgba(0, 0, 0, 0.30);
+        }
+        @keyframes tab-border-shimmer {
+            0% { background-position: center, 0% 50%; }
+            100% { background-position: center, 300% 50%; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .tab-btn { animation: none; }
+        }
 
         .tab-panel { display: none; }
         .tab-panel.active { display: block; animation: fade-in 0.22s ease; }
@@ -707,10 +733,10 @@
                 display: flex;
                 width: 100%;
                 margin: 0 0 11px;
-                padding: 5px;
-                border-radius: 13px;
-                background: rgba(255, 255, 255, 0.96);
-                backdrop-filter: blur(12px);
+                padding: 0;
+                border-radius: 0;
+                background: transparent;
+                backdrop-filter: none;
             }
             .tab-btn {
                 flex: 1;
@@ -989,7 +1015,7 @@
             border-color: var(--border);
             background: rgba(15, 23, 42, 0.94);
         }
-        .tabs { background: rgba(15, 23, 42, 0.92); }
+        .tabs { background: transparent; box-shadow: none; }
         .tab-btn { color: var(--muted); }
         .tab-btn:hover { background: #1e293b; color: #c7d2fe; }
         .tab-btn.active {
@@ -1698,6 +1724,78 @@
             max-width: 460px;
             margin: 0 auto 8px;
         }
+        /* Hai nút đăng nhập độc lập, không dùng khung bao quanh */
+        .assistant-login-only {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            max-width: 460px;
+            margin: 0 auto 8px;
+        }
+        .assistant-login-only strong,
+        .assistant-login-only small { display: none; }
+        .assistant-login-only button {
+            flex: 1 1 210px;
+            min-height: 44px;
+            padding: 9px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 850;
+            transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+        }
+        .assistant-login-only button:hover,
+        .assistant-login-only button:focus-visible {
+            transform: translateY(-2px);
+            filter: brightness(1.12);
+            outline: none;
+        }
+        .assistant-login-btn {
+            border: 1px solid #dadce0;
+            background: linear-gradient(135deg, #ffffff, #eef2ff);
+            color: #111827;
+            box-shadow: 0 5px 14px rgba(79, 70, 229, 0.22);
+        }
+        .assistant-login-only button:active { transform: translateY(0) scale(0.98); }
+        /* Đăng nhập trợ giảng được gộp vào nút Trợ giảng trên thanh điều hướng */
+        #secure-auth-card { display: none !important; }
+        .admin-name-meta {
+            display: grid;
+            gap: 4px;
+            margin-top: 5px;
+            color: #bfdbfe;
+            font-size: 9px;
+            font-weight: 750;
+            line-height: 1.25;
+        }
+        .admin-name-email {
+            overflow: hidden;
+            color: #cbd5e1;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .admin-name-map {
+            display: inline-flex;
+            width: fit-content;
+            align-items: center;
+            justify-content: center;
+            min-height: 24px;
+            padding: 3px 8px;
+            border: 1px solid #38bdf8;
+            border-radius: 7px;
+            background: linear-gradient(135deg, #075985, #0e7490);
+            color: #ecfeff;
+            text-decoration: none;
+            font-size: 9px;
+            font-weight: 850;
+        }
+        .admin-name-map:hover, .admin-name-map:focus-visible {
+            border-color: #67e8f9;
+            filter: brightness(1.14);
+            outline: none;
+        }
         .assistant-login-btn {
             width: 100%;
         }
@@ -1899,10 +1997,10 @@
             </nav>
 
             <section class="tab-panel active" id="assistant-panel">
-                <div class="assistant-login-only" id="secure-auth-card" hidden>
-                    <strong id="auth-title" hidden>🔐 Đăng nhập để điểm danh</strong>
-                    <small id="auth-detail" hidden>Mỗi tài khoản Google chỉ được điểm danh cho chính mình.</small>
-                    <button class="attendance-submit-btn google-login-btn assistant-login-btn" id="login-open-btn" type="button">Đăng nhập Google trợ giảng</button>
+                <div class="assistant-login-only" id="secure-auth-card">
+                    <strong id="auth-title">🔐 Đăng nhập Google cho trợ giảng</strong>
+                    <small id="auth-detail">Email Google dùng để nhận diện tài khoản và điểm danh.</small>
+                    <button class="google-login-btn assistant-login-btn" id="login-open-btn" type="button">✉️ Đăng nhập Google trợ giảng</button>
                     <button class="secure-secondary-btn" id="register-passkey-btn" type="button" hidden>Đăng ký vân tay / Face ID</button>
                     <button class="secure-logout-btn" id="logout-btn" type="button" hidden>Đăng xuất</button>
                 </div>
@@ -3349,6 +3447,13 @@
                         b.date.localeCompare(a.date)
                     )[0] || null;
 
+                    const latestAttendanceRecord = [...assistant.records]
+                        .filter(record => record.status === 'present')
+                        .sort((a, b) =>
+                            (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0) ||
+                            b.date.localeCompare(a.date)
+                        )[0];
+
                     const nameCell = document.createElement('td');
                     nameCell.textContent = assistant.name;
                     const latestUpdateText = formatLatestAdminUpdate(latestRecord);
@@ -3357,6 +3462,39 @@
                         latestUpdate.className = 'admin-latest-update';
                         latestUpdate.textContent = latestUpdateText;
                         nameCell.appendChild(latestUpdate);
+                    }
+
+                    // Khôi phục email đăng nhập và nút Bản đồ ngay dưới tên trợ giảng.
+                    if (latestAttendanceRecord) {
+                        const nameMeta = document.createElement('span');
+                        nameMeta.className = 'admin-name-meta';
+
+                        const email = document.createElement('span');
+                        email.className = 'admin-name-email';
+                        email.textContent = `✉️ ${latestAttendanceRecord.attendanceEmail || 'Email không xác định'}`;
+                        email.title = latestAttendanceRecord.attendanceEmail || 'Email không xác định';
+                        nameMeta.appendChild(email);
+
+                        const latitude = Number(latestAttendanceRecord.latitude);
+                        const longitude = Number(latestAttendanceRecord.longitude);
+                        const hasLocation = latestAttendanceRecord.latitude !== null
+                            && latestAttendanceRecord.latitude !== ''
+                            && latestAttendanceRecord.longitude !== null
+                            && latestAttendanceRecord.longitude !== ''
+                            && Number.isFinite(latitude) && Number.isFinite(longitude);
+                        if (hasLocation) {
+                            const mapLink = document.createElement('a');
+                            const coordinates = `${latitude},${longitude}`;
+                            mapLink.className = 'admin-name-map';
+                            mapLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(coordinates)}`;
+                            mapLink.target = '_blank';
+                            mapLink.rel = 'noopener noreferrer';
+                            mapLink.textContent = '🗺️ Bản đồ';
+                            mapLink.title = 'Mở vị trí điểm danh trên Google Maps';
+                            mapLink.setAttribute('aria-label', `Mở vị trí điểm danh của ${assistant.name} trên Google Maps`);
+                            nameMeta.appendChild(mapLink);
+                        }
+                        nameCell.appendChild(nameMeta);
                     }
             
                     const phoneCell = document.createElement('td');
@@ -3376,12 +3514,6 @@
                     const detailCell = document.createElement('td');
                     detailCell.className = 'admin-detail-cell';
 
-                    const latestAttendanceRecord = [...assistant.records]
-                        .filter(record => record.status === 'present')
-                        .sort((a, b) =>
-                            (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0) ||
-                            b.date.localeCompare(a.date)
-                        )[0];
                     const headerDeviceInfo = latestAttendanceRecord
                         ? createAdminAttendanceDeviceInfo(latestAttendanceRecord)
                         : null;
@@ -3741,12 +3873,7 @@
                         elements.tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === targetId));
                         updateLoginModalCopy(activePortal);
                         if (targetId === 'assistant-panel') {
-                            if (!(currentAuthUser && currentSecureProfile?.role === 'assistant')) {
-                                setDesiredLoginPortal('assistant');
-                                void loginHandler();
-                            } else {
-                                void captureAssistantSessionLocation(false);
-                            }
+                            openLoginModal('assistant');
                         }
                         if (targetId === 'admin-panel') renderAdminTable();
                     });
@@ -3778,8 +3905,7 @@
                 });
             
                 elements.loginOpenButton.addEventListener('click', () => {
-                    setDesiredLoginPortal('assistant');
-                    void loginHandler();
+                    openLoginModal('assistant');
                 });
                 elements.adminLoginOpenButton.addEventListener('click', () => {
                     setDesiredLoginPortal('admin');
