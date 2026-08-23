@@ -291,15 +291,15 @@
             .admin-filter-panel {
                 display: grid;
                 justify-items: end;
-                gap: 9px;
+                gap: 6px;
             }
-            .admin-date-tools { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+            .admin-date-tools { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
             .admin-date-control {
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                min-height: 42px;
-                padding: 5px 7px 5px 11px;
+                gap: 4px;
+                min-height: 38px;
+                padding: 4px 6px 4px 9px;
                 border: 1px solid #c7d2fe;
                 border-radius: 10px;
                 background: #eef2ff;
@@ -310,9 +310,9 @@
             }
             .admin-date-control:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px #eef2ff; }
             .admin-date-control input {
-                min-width: 130px;
-                height: 32px;
-                padding: 5px 7px;
+                min-width: 120px;
+                height: 30px;
+                padding: 4px 6px;
                 border: 0;
                 border-radius: 7px;
                 outline: none;
@@ -323,8 +323,8 @@
                 font-weight: 750;
             }
             .clear-date-btn {
-                min-height: 40px;
-                padding: 8px 11px;
+                min-height: 36px;
+                padding: 6px 9px;
                 border: 1px solid #fecaca;
                 border-radius: 9px;
                 background: #fff;
@@ -335,15 +335,15 @@
             }
             .clear-date-btn:hover { background: #fef2f2; }
             
-            .filters { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+            .filters { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
             .filter-btn {
-                padding: 9px 12px;
+                padding: 7px 9px;
                 border: 1px solid var(--border);
                 border-radius: 9px;
                 background: white;
                 color: var(--muted);
                 cursor: pointer;
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: 750;
             }
             .filter-btn:hover { border-color: #a5b4fc; color: var(--primary); }
@@ -638,19 +638,30 @@
                 .delete-btn { min-width: 48px; min-height: 40px; }
             
                 /* Thanh tìm kiếm và bộ lọc có thể vuốt ngang bằng ngón tay */
-                .admin-toolbar { padding: 13px 12px 9px; gap: 10px; }
-                .search-box input { height: 46px; font-size: 14px; }
-                .admin-filter-panel { width: 100%; gap: 8px; }
-                .admin-date-tools { width: 100%; flex-wrap: wrap; gap: 7px; }
-                .admin-date-control { width: 100%; min-height: 47px; padding-left: 12px; }
-                .admin-date-control input { min-width: 118px; height: 35px; margin-left: auto; }
-                .clear-date-btn { width: 100%; min-height: 42px; }
+                .admin-toolbar { padding: 10px 8px 7px; gap: 8px; }
+                .search-box input { height: 42px; font-size: 13px; }
+                .admin-filter-panel { width: 100%; gap: 5px; }
+                .admin-date-tools { width: 100%; flex-wrap: wrap; gap: 5px; }
+                .admin-date-control {
+                    width: 100%;
+                    min-height: 42px;
+                    gap: 4px;
+                    padding: 4px 6px 4px 9px;
+                }
+                .admin-date-control input {
+                    flex: 1;
+                    min-width: 0;
+                    height: 32px;
+                    margin-left: 0;
+                    padding-inline: 5px;
+                }
+                .clear-date-btn { width: auto; min-height: 32px; padding: 5px 8px; }
                 .filters {
                     width: 100%;
                     flex-wrap: nowrap;
                     justify-content: flex-start;
-                    gap: 7px;
-                    padding: 1px 0 5px;
+                    gap: 4px;
+                    padding: 0 0 3px;
                     overflow-x: auto;
                     overscroll-behavior-inline: contain;
                     scrollbar-width: none;
@@ -659,42 +670,44 @@
                 .filters::-webkit-scrollbar { display: none; }
                 .filter-btn {
                     flex: 0 0 auto;
-                    min-height: 42px;
-                    padding: 9px 13px;
-                    font-size: 12px;
+                    min-height: 32px;
+                    padding: 5px 8px;
+                    border-radius: 7px;
+                    font-size: 10px;
                 }
             
                 /* Bảng Admin cũng hiển thị dạng thẻ trên điện thoại */
                 .admin-card { background: #f8fafc; }
-                .admin-card .table-wrap { overflow: visible; padding: 10px; }
+                .admin-card .table-wrap { overflow: visible; padding: 5px; }
                 .admin-card table,
                 .admin-card tbody { display: block; width: 100%; }
                 .admin-card thead { display: none; }
                 .admin-card tbody tr {
                     display: block;
                     width: 100%;
-                    margin-bottom: 10px;
-                    padding: 14px;
+                    margin-bottom: 6px;
+                    padding: 9px;
                     border: 1px solid var(--border);
-                    border-radius: 13px;
+                    border-radius: 10px;
                     background: white;
                 }
                 .admin-card tbody tr:last-child { margin-bottom: 0; }
                 .admin-card tbody td { display: block; padding: 0; border: 0; }
                 .admin-card tbody td:nth-child(1) { display: none; }
-                .admin-card tbody td:nth-child(2) { margin-bottom: 8px; font-size: 15px; font-weight: 850; }
-                .admin-card tbody td:nth-child(3) { margin-bottom: 12px; }
+                .admin-card tbody td:nth-child(2) { margin-bottom: 3px; font-size: 14px; font-weight: 850; }
+                .admin-card tbody td:nth-child(3) { margin-bottom: 6px; }
                 .admin-card tbody td:nth-child(4) {
-                    padding-top: 11px;
+                    padding-top: 7px;
                     border-top: 1px solid var(--border);
                 }
-                .admin-card tbody td.empty-state { display: block; padding: 25px 10px !important; }
+                .admin-card tbody td.empty-state { display: block; padding: 20px 7px !important; }
                 .phone-wrap { justify-content: space-between; }
-                .call-link { width: 42px; height: 42px; font-size: 18px; }
-                .detail-list { min-width: 0; gap: 11px; }
-                .detail-row { grid-template-columns: 1fr; gap: 6px; }
-                .detail-label { font-size: 11px; }
-                .date-tag { padding: 5px 7px; }
+                .phone-number { font-size: 12px; }
+                .call-link { width: 34px; height: 34px; font-size: 15px; }
+                .detail-list { min-width: 0; gap: 8px; }
+                .detail-row { grid-template-columns: 1fr; gap: 4px; }
+                .detail-label { font-size: 10px; }
+                .date-tag { padding: 4px 6px; font-size: 10px; }
             
                 /* Modal dạng bottom sheet, dễ thao tác bằng một tay */
                 .modal-overlay {
@@ -730,8 +743,8 @@
                 .brand h1 { font-size: 16px; }
                 .calendar-card { padding-inline: 7px; }
                 .calendar-nav { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 5px; }
-                .admin-date-control { gap: 5px; padding-left: 9px; font-size: 11px; }
-                .admin-date-control input { min-width: 108px; padding-inline: 4px; font-size: 11px; }
+                .admin-date-control { gap: 3px; padding-left: 7px; font-size: 10px; }
+                .admin-date-control input { min-width: 0; padding-inline: 3px; font-size: 10px; }
                 .weekdays, .calendar-grid { gap: 2px; }
                 .day-cell { min-height: 37px; border-radius: 7px; }
                 .day-number { top: 5px; left: 6px; font-size: 11px; }
@@ -890,43 +903,7 @@
             </div>
         </div>
 
-        <script type="module">
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-            import {
-                getFirestore,
-                collection,
-                getDocs,
-                addDoc,
-                updateDoc,
-                deleteDoc,
-                doc,
-                query,
-                orderBy
-            } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
-            
-            // ==============================
-            // FIREBASE
-            // ==============================
-            
-                       const firebaseConfig = {
-              apiKey: "AIzaSyAWhTOkNwonuBVWf6vIICjBk-kNEz4WWhM",
-              authDomain: "xinnghihavi.firebaseapp.com",
-              projectId: "xinnghihavi",
-              storageBucket: "xinnghihavi.firebasestorage.app",
-              messagingSenderId: "627636802679",
-              appId: "1:627636802679:web:ae41a96b100627291ba272",
-              measurementId: "G-FTF2T5PSGV"
-            };
-            
-            
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
-            
-            const recordsCollection = collection(db, "troGiangRecords");
-            
-                       
-            
-                   
+        <script>
             'use strict';
             
             const ASSISTANTS = [
@@ -943,8 +920,9 @@
                 'late-under': { label: 'Đến muộn <15p', icon: '⏱️' }
             };
             
-            let records = [];
-            let recordsLoaded = false;
+            const STORAGE_KEY = 'troGiangRecords';
+            let storageAvailable = true;
+            let records = loadRecords();
             let viewDate = new Date();
             let selectedDateKey = toDateKey(new Date());
             let selectedStatus = '';
@@ -977,8 +955,37 @@
                 toastContainer: document.getElementById('toast-container')
             };
             
-                       
+            function loadRecords() {
+                try {
+                    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                    if (!Array.isArray(parsed)) return [];
+                    return parsed.filter(record =>
+                        record &&
+                        /^\d{4}-\d{2}-\d{2}$/.test(record.date) &&
+                        STATUS[record.status] &&
+                        ASSISTANTS.some(item => item.id === Number(record.troGiangId))
+                    ).map(record => ({
+                        troGiangId: Number(record.troGiangId),
+                        date: record.date,
+                        status: record.status,
+                        timestamp: Number(record.timestamp) || Date.now()
+                    }));
+                } catch (error) {
+                    storageAvailable = false;
+                    return [];
+                }
+            }
             
+            function saveRecords() {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+                    storageAvailable = true;
+                    return true;
+                } catch (error) {
+                    storageAvailable = false;
+                    return false;
+                }
+            }
             
             function toDateKey(date) {
                 const year = date.getFullYear();
@@ -1037,34 +1044,6 @@
                     elements.assistantSelect.appendChild(option);
                 });
             }
-            
-            
-            
-            async function loadRecordsFromFirebase() {
-                try {
-                    const snapshot = await getDocs(recordsCollection);
-            
-                    records = snapshot.docs.map(item => ({
-            firebaseId: item.id,
-            troGiangId: Number(item.data().troGiangId),
-            date: item.data().date,
-            status: item.data().status,
-            timestamp: Number(item.data().timestamp) || Date.now()
-                    }));
-            
-                    recordsLoaded = true;
-            
-                    renderAllData();
-            
-                    console.log("Đã tải dữ liệu Firebase:", records);
-            
-                } catch (error) {
-                    console.error("Lỗi tải Firebase:", error);
-                    showToast("Không thể tải dữ liệu từ Firebase.", "error");
-                }
-            }
-            
-            
             
             function renderCalendar() {
                 const year = viewDate.getFullYear();
@@ -1181,45 +1160,19 @@
                 });
             }
             
-            
-            
-            
-                       async function deleteRegistration(recordToDelete) {
+            function deleteRegistration(recordToDelete) {
                 const assistant = getAssistant(recordToDelete.troGiangId);
-            
-                const confirmed = window.confirm(
-                    `Xóa đăng ký của ${
-            assistant ? assistant.name : 'trợ giảng này'
-                    } ngày ${formatShortDate(recordToDelete.date)}?`
-                );
-            
+                const confirmed = window.confirm(`Xóa đăng ký của ${assistant ? assistant.name : 'trợ giảng này'} ngày ${formatShortDate(recordToDelete.date)}?`);
                 if (!confirmed) return;
             
-                try {
-            
-                    if (recordToDelete.firebaseId) {
-            await deleteDoc(
-                doc(db, "troGiangRecords", recordToDelete.firebaseId)
-            );
-                    }
-            
-                    records = records.filter(record =>
-            record.firebaseId !== recordToDelete.firebaseId
-                    );
-            
-                    renderAllData();
-            
-                    showToast('Đã xóa đăng ký.');
-            
-                } catch (error) {
-                    console.error("Lỗi xóa Firebase:", error);
-                    showToast('Không thể xóa đăng ký.', 'error');
-                }
+                records = records.filter(record => !(
+                    record.troGiangId === recordToDelete.troGiangId &&
+                    record.date === recordToDelete.date
+                ));
+                saveRecords();
+                renderAllData();
+                showToast('Đã xóa đăng ký.');
             }
-            
-            
-            
-            
             
             function renderAdminTable() {
                 const searchTerm = normalizeText(elements.searchInput.value);
@@ -1341,28 +1294,21 @@
                 selectedStatus = '';
             }
             
-            
-            
-            
-            async function submitRegistration() {
+            function submitRegistration() {
                 const assistantId = Number(elements.assistantSelect.value);
-            
                 if (!assistantId) {
                     showToast('Vui lòng chọn trợ giảng.', 'error');
                     elements.assistantSelect.focus();
                     return;
                 }
-            
                 if (!selectedStatus) {
                     showToast('Vui lòng chọn trạng thái đăng ký.', 'error');
                     return;
                 }
             
-                const existingRecord = records.find(record =>
-                    record.troGiangId === assistantId &&
-                    record.date === selectedDateKey
+                const existingIndex = records.findIndex(record =>
+                    record.troGiangId === assistantId && record.date === selectedDateKey
                 );
-            
                 const newRecord = {
                     troGiangId: assistantId,
                     date: selectedDateKey,
@@ -1370,56 +1316,16 @@
                     timestamp: Date.now()
                 };
             
-                try {
-                    if (existingRecord && existingRecord.firebaseId) {
+                const isUpdate = existingIndex >= 0;
+                if (isUpdate) records[existingIndex] = newRecord;
+                else records.push(newRecord);
             
-            // Đã có đăng ký → cập nhật
-            await updateDoc(
-                doc(db, "troGiangRecords", existingRecord.firebaseId),
-                newRecord
-            );
-            
-            const index = records.findIndex(
-                record => record.firebaseId === existingRecord.firebaseId
-            );
-            
-            if (index !== -1) {
-                records[index] = {
-                    ...newRecord,
-                    firebaseId: existingRecord.firebaseId
-                };
+                const saved = saveRecords();
+                closeRegistrationModal();
+                renderAllData();
+                showToast(isUpdate ? 'Đã cập nhật đăng ký.' : 'Đăng ký thành công.');
+                if (!saved) showToast('Trình duyệt không cho phép lưu lâu dài; dữ liệu chỉ còn trong phiên này.', 'error');
             }
-            
-            showToast('Đã cập nhật đăng ký.');
-            
-                    } else {
-            
-            // Chưa có → tạo mới
-            const docRef = await addDoc(
-                recordsCollection,
-                newRecord
-            );
-            
-            records.push({
-                ...newRecord,
-                firebaseId: docRef.id
-            });
-            
-            showToast('Đăng ký thành công.');
-                    }
-            
-                    closeRegistrationModal();
-                    renderAllData();
-            
-                } catch (error) {
-                    console.error("Lỗi lưu Firebase:", error);
-                    showToast('Không thể lưu đăng ký lên Firebase.', 'error');
-                }
-            }
-            
-            
-            
-            
             
             function renderAllData() {
                 renderCalendar();
@@ -1514,30 +1420,21 @@
                 });
             }
             
-            
-            
-            
-                       async function init() {
-                elements.headerToday.textContent =
-                    `Hôm nay · ${formatShortDate(toDateKey(new Date()))}`;
-            
+            function init() {
+                elements.headerToday.textContent = `Hôm nay · ${formatShortDate(toDateKey(new Date()))}`;
                 populateAssistantSelect();
                 bindEvents();
-            
-                // Hiển thị giao diện trước
                 renderAllData();
-            
-                // Sau đó tải dữ liệu từ Firebase
-                await loadRecordsFromFirebase();
+                if (!storageAvailable) {
+                    showToast('Không thể đọc bộ nhớ trình duyệt; ứng dụng đang dùng dữ liệu tạm thời.', 'error');
+                }
             }
             
             init();
-            
-            
-            
-            
         </script>
-
+        <script>
+            (function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f6b174fa160725',t:'MTc4NzQ1MjIwNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
+        </script>
     </body>
 
 </html>
