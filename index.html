@@ -1803,9 +1803,24 @@
             vertical-align: top;
         }
         .admin-card .admin-name-meta {
-            display: grid;
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 6px;
+            min-width: 0;
             overflow: visible;
-            white-space: normal;
+            white-space: nowrap;
+        }
+        .admin-card .admin-name-email {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .admin-card .admin-name-map {
+            flex: 0 0 auto;
+            white-space: nowrap;
         }
         .assistant-login-btn {
             width: 100%;
@@ -3475,38 +3490,44 @@
                         nameCell.appendChild(latestUpdate);
                     }
 
-                    // Khôi phục email đăng nhập và nút Bản đồ ngay dưới tên trợ giảng.
-                    if (latestAttendanceRecord) {
-                        const nameMeta = document.createElement('span');
-                        nameMeta.className = 'admin-name-meta';
+                    // Luôn hiển thị email và khu vực Bản đồ ngay dưới tên trong Admin.
+                    // Khi chưa có dữ liệu điểm danh, hiển thị trạng thái để người dùng biết lý do.
+                    const displayRecord = latestAttendanceRecord || latestRecord || {};
+                    const nameMeta = document.createElement('span');
+                    nameMeta.className = 'admin-name-meta';
 
-                        const email = document.createElement('span');
-                        email.className = 'admin-name-email';
-                        email.textContent = `✉️ ${latestAttendanceRecord.attendanceEmail || 'Email không xác định'}`;
-                        email.title = latestAttendanceRecord.attendanceEmail || 'Email không xác định';
-                        nameMeta.appendChild(email);
+                    const email = document.createElement('span');
+                    email.className = 'admin-name-email';
+                    email.textContent = `✉️ Email đăng nhập: ${displayRecord.attendanceEmail || 'chưa có dữ liệu'}`;
+                    email.title = displayRecord.attendanceEmail || 'Chưa có email đăng nhập được lưu';
+                    nameMeta.appendChild(email);
 
-                        const latitude = Number(latestAttendanceRecord.latitude);
-                        const longitude = Number(latestAttendanceRecord.longitude);
-                        const hasLocation = latestAttendanceRecord.latitude !== null
-                            && latestAttendanceRecord.latitude !== ''
-                            && latestAttendanceRecord.longitude !== null
-                            && latestAttendanceRecord.longitude !== ''
-                            && Number.isFinite(latitude) && Number.isFinite(longitude);
-                        if (hasLocation) {
-                            const mapLink = document.createElement('a');
-                            const coordinates = `${latitude},${longitude}`;
-                            mapLink.className = 'admin-name-map';
-                            mapLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(coordinates)}`;
-                            mapLink.target = '_blank';
-                            mapLink.rel = 'noopener noreferrer';
-                            mapLink.textContent = '🗺️ Bản đồ';
-                            mapLink.title = 'Mở vị trí điểm danh trên Google Maps';
-                            mapLink.setAttribute('aria-label', `Mở vị trí điểm danh của ${assistant.name} trên Google Maps`);
-                            nameMeta.appendChild(mapLink);
-                        }
-                        nameCell.appendChild(nameMeta);
+                    const latitude = Number(displayRecord.latitude);
+                    const longitude = Number(displayRecord.longitude);
+                    const hasLocation = displayRecord.latitude !== null
+                        && displayRecord.latitude !== ''
+                        && displayRecord.longitude !== null
+                        && displayRecord.longitude !== ''
+                        && Number.isFinite(latitude) && Number.isFinite(longitude);
+                    if (hasLocation) {
+                        const mapLink = document.createElement('a');
+                        const coordinates = `${latitude},${longitude}`;
+                        mapLink.className = 'admin-name-map';
+                        mapLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(coordinates)}`;
+                        mapLink.target = '_blank';
+                        mapLink.rel = 'noopener noreferrer';
+                        mapLink.textContent = '🗺️ Bản đồ';
+                        mapLink.title = 'Mở vị trí điểm danh trên Google Maps';
+                        mapLink.setAttribute('aria-label', `Mở vị trí điểm danh của ${assistant.name} trên Google Maps`);
+                        nameMeta.appendChild(mapLink);
+                    } else {
+                        const mapUnavailable = document.createElement('span');
+                        mapUnavailable.className = 'admin-name-map admin-map-unavailable';
+                        mapUnavailable.textContent = '🗺️ Bản đồ: chưa có vị trí';
+                        mapUnavailable.title = 'Chưa có tọa độ vị trí trong bản ghi điểm danh';
+                        nameMeta.appendChild(mapUnavailable);
                     }
+                    nameCell.appendChild(nameMeta);
             
                     const phoneCell = document.createElement('td');
                     const phoneWrap = document.createElement('div');
@@ -4043,6 +4064,6 @@
             
         </script>
 
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7da6ed8f28b45',t:'MTc4NzQ2NDM2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f866c2cb5af57a',t:'MTc4NzQ3MDExNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f885d1be8d09a0',t:'MTc4NzQ3MTM4OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7da6ed8f28b45',t:'MTc4NzQ2NDM2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f866c2cb5af57a',t:'MTc4NzQ3MDExNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f88c254a688550',t:'MTc4NzQ3MTY0Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
