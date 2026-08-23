@@ -1519,6 +1519,15 @@
         }
         .attendance-submit-btn:disabled::after { display: none; }
         .attendance-submit-btn:disabled:hover { transform: none; box-shadow: none; }
+        .attendance-open-btn:disabled {
+            opacity: 0.48;
+            cursor: not-allowed;
+            filter: grayscale(0.65);
+            transform: none;
+            box-shadow: none;
+        }
+        .attendance-open-btn:disabled::after { display: none; }
+        .attendance-open-btn:disabled:hover { transform: none; box-shadow: none; }
         .attendance-modal { max-width: 410px; }
         .attendance-submit-btn { min-height: 46px; margin-top: 4px; }
         .location-permission-btn {
@@ -1876,6 +1885,8 @@
             let activeFilter = 'all';
             let adminSelectedDate = '';
             let attendanceLocationGranted = false;
+            let attendanceResetInProgress = false;
+            let attendanceMaintenanceTimer = null;
             
             const elements = {
                 tabButtons: document.querySelectorAll('.tab-btn'),
@@ -2140,6 +2151,86 @@
                     elements.attendanceAssistantSelect.appendChild(attendanceOption);
                 });
             }
+
+            function isAttendanceOpenTime(now = new Date()) {
+                const hour = now.getHours();
+                return hour >= 6 && hour < 22;
+            }
+
+            function getExpiredAttendanceRecords(now = new Date()) {
+                const todayKey = toDateKey(now);
+                const resetWindowActive = !isAttendanceOpenTime(now);
+
+                return records.filter(record => {
+                    if (record.status !== 'present' || !record.firebaseId) return false;
+                    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(record.date || ''))) return false;
+
+                    // Điểm danh của các ngày đã qua luôn hết hiệu lực. Trong khung 22:00–06:00,
+                    // điểm danh của ngày hiện tại cũng được xóa; các trạng thái nghỉ/muộn được giữ nguyên.
+                    return record.date < todayKey || (record.date === todayKey && resetWindowActive);
+                });
+            }
+
+            function updateAttendanceTimeWindow(now = new Date()) {
+                const isOpen = isAttendanceOpenTime(now);
+                elements.openAttendance.disabled = !isOpen;
+                elements.openAttendance.setAttribute('aria-disabled', String(!isOpen));
+
+                if (isOpen) {
+                    elements.openAttendance.removeAttribute('title');
+                } else {
+                    elements.openAttendance.title = 'Điểm danh chỉ hoạt động từ 06:00 đến trước 22:00 mỗi ngày.';
+                    if (elements.attendanceModal.classList.contains('active')) {
+                        closeAttendanceModal();
+                    }
+                }
+
+                return isOpen;
+            }
+
+            async function resetExpiredAttendanceRecords(now = new Date()) {
+                if (!recordsLoaded || attendanceResetInProgress) return;
+
+                const expiredRecords = getExpiredAttendanceRecords(now);
+                if (!expiredRecords.length) return;
+
+                attendanceResetInProgress = true;
+                const expiredIds = new Set(expiredRecords.map(record => record.firebaseId));
+
+                try {
+                    await Promise.all(expiredRecords.map(record =>
+                        deleteDoc(doc(db, "troGiangRecords", record.firebaseId))
+                    ));
+
+                    // Chỉ loại các mục điểm danh; toàn bộ đăng ký nghỉ/muộn vẫn được giữ lại.
+                    records = records.filter(record => !expiredIds.has(record.firebaseId));
+                    renderAllData();
+                    showToast(`Đã tự động đặt lại ${expiredRecords.length} mục điểm danh; các đăng ký khác vẫn được giữ nguyên.`);
+                } catch (error) {
+                    console.error('Lỗi tự động đặt lại điểm danh Firebase:', error);
+                    showToast('Không thể tự động đặt lại điểm danh trên Firebase.', 'error');
+                } finally {
+                    attendanceResetInProgress = false;
+                }
+            }
+
+            function runAttendanceMaintenance() {
+                const now = new Date();
+                updateAttendanceTimeWindow(now);
+                void resetExpiredAttendanceRecords(now);
+            }
+
+            function startAttendanceMaintenance() {
+                if (attendanceMaintenanceTimer) {
+                    window.clearInterval(attendanceMaintenanceTimer);
+                }
+
+                runAttendanceMaintenance();
+                attendanceMaintenanceTimer = window.setInterval(runAttendanceMaintenance, 30000);
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) runAttendanceMaintenance();
+                });
+            }
             
             
             
@@ -2173,6 +2264,7 @@
                         recordsLoaded = true;
                         renderAllData();
                         console.log("Đã đồng bộ dữ liệu Firebase theo thời gian thực:", records);
+                        void resetExpiredAttendanceRecords();
                     },
                     error => {
                         recordsLoaded = false;
@@ -2469,6 +2561,13 @@
             }
             
             async function requestLocationPermissionHandler() {
+                if (!isAttendanceOpenTime()) {
+                    closeAttendanceModal();
+                    updateAttendanceTimeWindow();
+                    showToast('Điểm danh chỉ hoạt động từ 06:00 đến trước 22:00 mỗi ngày.', 'error');
+                    return;
+                }
+
                 elements.requestLocationPermission.disabled = true;
                 elements.requestLocationLabel.textContent = 'Đang yêu cầu quyền vị trí…';
 
@@ -2491,6 +2590,12 @@
             }
 
             function openAttendanceModal() {
+                if (!isAttendanceOpenTime()) {
+                    updateAttendanceTimeWindow();
+                    showToast('Điểm danh chỉ hoạt động từ 06:00 đến trước 22:00 mỗi ngày.', 'error');
+                    return;
+                }
+
                 const todayKey = toDateKey(new Date());
                 elements.attendanceDate.textContent =
                     `Ngày điểm danh: ${capitalize(formatLongDate(todayKey))}`;
@@ -2513,6 +2618,13 @@
             }
 
             async function submitAttendanceHandler() {
+                if (!isAttendanceOpenTime()) {
+                    closeAttendanceModal();
+                    updateAttendanceTimeWindow();
+                    showToast('Điểm danh chỉ hoạt động từ 06:00 đến trước 22:00 mỗi ngày.', 'error');
+                    return;
+                }
+
                 if (!attendanceLocationGranted) {
                     showToast('Bạn cần cấp quyền truy cập vị trí để tiếp tục.', 'error');
                     return;
@@ -2540,6 +2652,15 @@
                     detectPublicIp(),
                     detectDeviceLocation()
                 ]);
+
+                if (!isAttendanceOpenTime()) {
+                    elements.submitAttendance.removeAttribute('aria-busy');
+                    elements.attendanceSubmitLabel.textContent = 'Xác nhận điểm danh';
+                    closeAttendanceModal();
+                    updateAttendanceTimeWindow();
+                    showToast('Đã qua 22:00. Điểm danh không được lưu và đã chuyển sang chế độ tự đặt lại.', 'error');
+                    return;
+                }
 
                 if (location.status !== 'granted') {
                     const message = getLocationStatusMessage(location.status);
@@ -2835,6 +2956,7 @@
             
                 populateAssistantSelect();
                 bindEvents();
+                startAttendanceMaintenance();
             
                 // Hiển thị giao diện trước.
                 renderAllData();
@@ -2848,6 +2970,9 @@
                 if (typeof unsubscribeRecords === 'function') {
                     unsubscribeRecords();
                 }
+                if (attendanceMaintenanceTimer) {
+                    window.clearInterval(attendanceMaintenanceTimer);
+                }
             });
             
             init();
@@ -2857,6 +2982,6 @@
             
         </script>
 
-    </body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7939499f9a6a8',t:'MTc4NzQ2MTQ2Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
