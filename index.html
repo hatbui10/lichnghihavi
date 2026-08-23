@@ -2595,10 +2595,20 @@
                 };
             }
 
-            function applyFrontendRoleOverrides(profile, user) {
+            function applyFrontendRoleOverrides(profile, user, requestedPortal = desiredLoginPortal) {
                 if (!profile) return profile;
                 const email = String(user?.email || profile?.email || '').trim().toLowerCase();
-                if (!emailIsAdmin(email)) return profile;
+
+                if (requestedPortal === 'assistant') {
+                    return {
+                        ...profile,
+                        role: 'assistant',
+                        email,
+                        profileSource: profile.profileSource || 'assistant-portal-override'
+                    };
+                }
+
+                if (!emailIsAdmin(email)) return { ...profile, email };
                 return {
                     ...profile,
                     role: 'admin',
@@ -2747,7 +2757,7 @@
                     await signInWithPopup(auth, googleProvider);
                     closeLoginModal();
                     if (desiredLoginPortal === 'assistant') {
-                        void captureAssistantSessionLocation(true);
+                        void captureAssistantSessionLocation(false);
                     }
                     showToast(`Đăng nhập Google ${portalLabel} thành công.`);
                 } catch (error) {
@@ -2966,14 +2976,12 @@
 
                 try {
                     const profileResult = await getSecureProfileCall();
-                    currentSecureProfile = applyFrontendRoleOverrides(profileResult.data, user);
+                    currentSecureProfile = applyFrontendRoleOverrides(profileResult.data, user, desiredLoginPortal);
                 } catch (error) {
                     console.error('Secure profile failed:', error);
-                    currentSecureProfile = applyFrontendRoleOverrides(buildFallbackSecureProfile(user, desiredLoginPortal), user);
+                    currentSecureProfile = applyFrontendRoleOverrides(buildFallbackSecureProfile(user, desiredLoginPortal), user, desiredLoginPortal);
                     if (desiredLoginPortal === 'admin' && !emailIsAdmin(user?.email)) {
                         showToast('Đã đăng nhập Google nhưng email này chưa được frontend nhận là admin. Nếu cần, gửi mình email admin để mình thêm allowlist hoặc sửa backend.', 'error');
-                    } else {
-                        showToast('Đã đăng nhập Google. Nếu backend bảo mật chưa cập nhật, bạn vẫn dùng được phần đăng ký lịch nghỉ.', 'error');
                     }
                 }
 
@@ -3313,6 +3321,20 @@
             
                     const detailCell = document.createElement('td');
                     detailCell.className = 'admin-detail-cell';
+
+                    const latestAttendanceRecord = [...assistant.records]
+                        .filter(record => record.status === 'present')
+                        .sort((a, b) =>
+                            (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0) ||
+                            b.date.localeCompare(a.date)
+                        )[0];
+                    const headerDeviceInfo = latestAttendanceRecord
+                        ? createAdminAttendanceDeviceInfo(latestAttendanceRecord)
+                        : null;
+                    if (headerDeviceInfo) {
+                        headerDeviceInfo.classList.add('admin-header-attendance');
+                        detailCell.appendChild(headerDeviceInfo);
+                    }
 
                     if (!assistant.records.length) {
                         const noRecords = document.createElement('span');
@@ -3772,6 +3794,6 @@
             
         </script>
 
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7da6ed8f28b45',t:'MTc4NzQ2NDM2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f846536840ddc2',t:'MTc4NzQ2ODc4Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7da6ed8f28b45',t:'MTc4NzQ2NDM2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f84fc39f20e8cb',t:'MTc4NzQ2OTE3NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
