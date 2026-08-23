@@ -1,770 +1,834 @@
 <!DOCTYPE html>
 <html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4f46e5">
+    <title>Hệ thống đăng ký lịch trợ giảng</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #7c3aed;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --info: #0891b2;
+            --text: #111827;
+            --muted: #6b7280;
+            --surface: #ffffff;
+            --background: #f3f4f6;
+            --border: #e5e7eb;
+            --soft: #f9fafb;
+            --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 22px 55px rgba(15, 23, 42, 0.22);
+        }
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="theme-color" content="#4f46e5">
-        <title>Hệ thống đăng ký lịch trợ giảng</title>
-        <style>
-            :root {
-                --primary: #4f46e5;
-                --primary-hover: #4338ca;
-                --secondary: #7c3aed;
-                --success: #059669;
-                --warning: #d97706;
-                --danger: #dc2626;
-                --info: #0891b2;
-                --text: #111827;
-                --muted: #6b7280;
-                --surface: #ffffff;
-                --background: #f3f4f6;
-                --border: #e5e7eb;
-                --soft: #f9fafb;
-                --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-                --shadow-lg: 0 22px 55px rgba(15, 23, 42, 0.22);
-            }
-            
-            * { box-sizing: border-box; }
-            
-            html { color-scheme: light; }
-            
+        * { box-sizing: border-box; }
+
+        html { color-scheme: light; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 8% 0%, rgba(99, 102, 241, 0.13), transparent 30rem),
+                var(--background);
+            color: var(--text);
+            font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        button, input, select { font: inherit; }
+        button { -webkit-tap-highlight-color: transparent; }
+
+        .app-header {
+            color: white;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.2);
+        }
+
+        .header-inner {
+            width: min(1120px, calc(100% - 32px));
+            min-height: 126px;
+            margin: 0 auto;
+            padding: 26px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .brand { display: flex; align-items: center; gap: 15px; }
+
+        .brand-icon {
+            width: 52px;
+            height: 52px;
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.15);
+            font-size: 27px;
+            backdrop-filter: blur(8px);
+        }
+
+        .brand h1 { margin: 0 0 6px; font-size: clamp(20px, 3vw, 28px); line-height: 1.2; }
+        .brand p { margin: 0; color: rgba(255, 255, 255, 0.82); font-size: 14px; }
+
+        .today-pill {
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.14);
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .container {
+            width: min(1120px, calc(100% - 32px));
+            margin: 24px auto 48px;
+        }
+
+        .tabs {
+            display: inline-flex;
+            gap: 6px;
+            padding: 6px;
+            margin-bottom: 18px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: var(--shadow);
+        }
+
+        .tab-btn {
+            min-width: 145px;
+            padding: 11px 18px;
+            border: 0;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-weight: 750;
+            transition: 0.2s ease;
+        }
+
+        .tab-btn:hover { background: #eef2ff; color: var(--primary); }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 5px 15px rgba(79, 70, 229, 0.24); }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; animation: fade-in 0.22s ease; }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } }
+
+        .card {
+            border: 1px solid rgba(229, 231, 235, 0.9);
+            border-radius: 18px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .calendar-card { padding: 24px; }
+
+        .calendar-header,
+        .section-header,
+        .admin-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .calendar-header { margin-bottom: 20px; }
+        .calendar-title { margin: 0; font-size: 21px; text-transform: capitalize; }
+
+        .calendar-nav { display: flex; gap: 8px; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            min-height: 40px;
+            padding: 9px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: white;
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 700;
+            transition: 0.18s ease;
+        }
+
+        .btn:hover { border-color: #c7d2fe; background: #eef2ff; color: var(--primary); transform: translateY(-1px); }
+        .btn-primary { border-color: var(--primary); background: var(--primary); color: white; }
+        .btn-primary:hover { border-color: var(--primary-hover); background: var(--primary-hover); color: white; }
+        .btn-icon { width: 40px; padding: 0; font-size: 19px; }
+
+        .weekdays,
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .weekdays { margin-bottom: 8px; }
+
+        .weekday {
+            padding: 8px 2px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 800;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .day-cell {
+            position: relative;
+            min-width: 0;
+            aspect-ratio: 1.32 / 1;
+            min-height: 58px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: white;
+            color: var(--text);
+            cursor: pointer;
+            overflow: hidden;
+            transition: 0.17s ease;
+        }
+
+        .day-cell:hover { z-index: 1; border-color: #a5b4fc; background: #f5f7ff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(79, 70, 229, 0.12); }
+        .day-cell.empty { border-color: transparent; background: transparent; cursor: default; box-shadow: none; }
+        .day-cell.today { border: 2px solid var(--primary); background: #eef2ff; }
+        .day-cell.selected { box-shadow: inset 0 0 0 2px #a78bfa; }
+        .day-number { position: absolute; top: 9px; left: 10px; font-size: 14px; font-weight: 800; }
+        .today .day-number { color: var(--primary); }
+
+        .record-dots {
+            position: absolute;
+            left: 9px;
+            right: 9px;
+            bottom: 8px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .record-dot { width: 7px; height: 7px; border-radius: 99px; }
+        .record-dot.full-day-off { background: var(--danger); }
+        .record-dot.late-over { background: var(--warning); }
+        .record-dot.late-under { background: var(--info); }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 16px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 650;
+        }
+        .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+
+        .registration-card { margin-top: 18px; overflow: hidden; }
+        .section-header { padding: 19px 22px; border-bottom: 1px solid var(--border); }
+        .section-header h2 { margin: 0 0 4px; font-size: 17px; }
+        .section-header p { margin: 0; color: var(--muted); font-size: 13px; }
+        .count-badge { padding: 6px 10px; border-radius: 999px; background: #eef2ff; color: var(--primary); font-size: 12px; font-weight: 800; }
+
+        .table-wrap { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 14px 16px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+        th { background: var(--soft); color: var(--muted); font-size: 11px; letter-spacing: 0.055em; text-transform: uppercase; }
+        td { font-size: 14px; }
+        tbody tr:last-child td { border-bottom: 0; }
+        tbody tr:hover { background: #fafafa; }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 750;
+            white-space: nowrap;
+        }
+        .status-badge.full-day-off { background: #fef2f2; color: var(--danger); }
+        .status-badge.late-over { background: #fffbeb; color: var(--warning); }
+        .status-badge.late-under { background: #ecfeff; color: var(--info); }
+
+        .empty-state { padding: 42px 20px !important; color: var(--muted); text-align: center; }
+        .empty-icon { display: block; margin-bottom: 8px; font-size: 28px; }
+
+        .delete-btn {
+            padding: 7px 9px;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            background: #fff;
+            color: var(--danger);
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .delete-btn:hover { background: #fef2f2; }
+
+        .admin-card { overflow: hidden; }
+        .admin-toolbar { padding: 20px 22px; border-bottom: 1px solid var(--border); align-items: flex-start; }
+        .search-box { position: relative; flex: 1 1 300px; max-width: 400px; }
+        .search-box span { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+        .search-box input {
+            width: 100%;
+            height: 42px;
+            padding: 9px 14px 9px 40px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            color: var(--text);
+            background: white;
+        }
+        .search-box input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px #eef2ff; }
+
+        .admin-filter-panel {
+            display: grid;
+            justify-items: end;
+            gap: 9px;
+        }
+        .admin-date-tools { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+        .admin-date-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 42px;
+            padding: 5px 7px 5px 11px;
+            border: 1px solid #c7d2fe;
+            border-radius: 10px;
+            background: #eef2ff;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .admin-date-control:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px #eef2ff; }
+        .admin-date-control input {
+            min-width: 130px;
+            height: 32px;
+            padding: 5px 7px;
+            border: 0;
+            border-radius: 7px;
+            outline: none;
+            background: white;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 750;
+        }
+        .clear-date-btn {
+            min-height: 40px;
+            padding: 8px 11px;
+            border: 1px solid #fecaca;
+            border-radius: 9px;
+            background: #fff;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 750;
+        }
+        .clear-date-btn:hover { background: #fef2f2; }
+
+        .filters { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+        .filter-btn {
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: white;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 750;
+        }
+        .filter-btn:hover { border-color: #a5b4fc; color: var(--primary); }
+        .filter-btn.active { border-color: var(--primary); background: var(--primary); color: white; }
+
+        .phone-wrap { display: flex; align-items: center; gap: 9px; }
+        .phone-number { color: var(--primary); font-weight: 750; white-space: nowrap; }
+        .call-link {
+            display: inline-grid;
+            width: 31px;
+            height: 31px;
+            place-items: center;
+            border-radius: 8px;
+            background: #ecfdf5;
+            color: var(--success);
+            text-decoration: none;
+        }
+
+        .detail-list { display: grid; gap: 8px; min-width: 300px; }
+        .detail-row { display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: start; }
+        .detail-label { color: var(--muted); font-size: 12px; font-weight: 750; }
+        .date-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+        .date-tag { padding: 4px 7px; border-radius: 7px; background: var(--soft); color: #4b5563; font-size: 11px; font-weight: 750; }
+        .no-records { color: var(--muted); font-style: italic; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.62);
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.2s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+
+        .modal {
+            position: relative;
+            width: min(480px, 100%);
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            padding: 26px;
+            border-radius: 18px;
+            background: white;
+            box-shadow: var(--shadow-lg);
+            transform: scale(0.96) translateY(8px);
+            transition: 0.22s ease;
+        }
+        .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+        .modal h2 { margin: 0 35px 5px 0; font-size: 20px; }
+        .modal-subtitle { margin: 0 0 23px; color: var(--muted); font-size: 13px; }
+
+        .close-btn {
+            position: absolute;
+            top: 17px;
+            right: 17px;
+            width: 34px;
+            height: 34px;
+            border: 0;
+            border-radius: 9px;
+            background: var(--soft);
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 22px;
+            line-height: 1;
+        }
+        .close-btn:hover { background: #fef2f2; color: var(--danger); }
+
+        .form-group { margin-bottom: 19px; }
+        .form-label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 800; }
+        .select-box {
+            width: 100%;
+            height: 45px;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            background: white;
+        }
+        .select-box:focus { border-color: #818cf8; box-shadow: 0 0 0 3px #eef2ff; }
+
+        .status-options { display: grid; gap: 9px; }
+        .status-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: white;
+            color: var(--text);
+            cursor: pointer;
+            text-align: left;
+            font-weight: 700;
+            transition: 0.16s ease;
+        }
+        .status-option:hover { border-color: #a5b4fc; background: #f5f7ff; }
+        .status-option.selected { border-color: var(--primary); background: #eef2ff; box-shadow: inset 0 0 0 1px var(--primary); color: var(--primary); }
+        .status-option .icon { font-size: 20px; }
+
+        .submit-btn { width: 100%; min-height: 47px; margin-top: 4px; }
+
+        .toast-container {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 2000;
+            display: grid;
+            gap: 10px;
+            width: min(360px, calc(100% - 36px));
+        }
+        .toast {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 14px 15px;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--success);
+            border-radius: 12px;
+            background: white;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            transform: translateX(30px);
+            transition: 0.22s ease;
+            font-size: 13px;
+            font-weight: 650;
+        }
+        .toast.error { border-left-color: var(--danger); }
+        .toast.show { opacity: 1; transform: translateX(0); }
+
+        @media (max-width: 820px) {
+            .header-inner { min-height: 112px; }
+            .today-pill { display: none; }
+            .admin-toolbar { flex-direction: column; }
+            .search-box { width: 100%; max-width: none; flex-basis: auto; }
+            .admin-filter-panel { width: 100%; justify-items: start; }
+            .admin-date-tools { justify-content: flex-start; }
+            .filters { justify-content: flex-start; }
+        }
+
+        /* Giao diện tối ưu riêng cho điện thoại */
+        @media (max-width: 620px) {
             body {
-                margin: 0;
-                min-height: 100vh;
-                background:
-                    radial-gradient(circle at 8% 0%, rgba(99, 102, 241, 0.13), transparent 30rem),
-                    var(--background);
-                color: var(--text);
-                font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                padding-bottom: env(safe-area-inset-bottom);
+                background: var(--background);
             }
-            
-            button, input, select { font: inherit; }
-            button { -webkit-tap-highlight-color: transparent; }
-            
-            .app-header {
-                color: white;
-                background: linear-gradient(135deg, var(--primary), var(--secondary));
-                box-shadow: 0 8px 25px rgba(79, 70, 229, 0.2);
-            }
-            
+
+            .app-header { box-shadow: 0 5px 18px rgba(79, 70, 229, 0.18); }
             .header-inner {
-                width: min(1120px, calc(100% - 32px));
-                min-height: 126px;
-                margin: 0 auto;
-                padding: 26px 0;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 24px;
+                width: 100%;
+                min-height: auto;
+                padding: calc(15px + env(safe-area-inset-top)) 15px 15px;
             }
-            
-            .brand { display: flex; align-items: center; gap: 15px; }
-            
-            .brand-icon {
-                width: 52px;
-                height: 52px;
-                display: grid;
-                place-items: center;
-                flex: 0 0 auto;
-                border: 1px solid rgba(255, 255, 255, 0.28);
-                border-radius: 16px;
-                background: rgba(255, 255, 255, 0.15);
-                font-size: 27px;
-                backdrop-filter: blur(8px);
-            }
-            
-            .brand h1 { margin: 0 0 6px; font-size: clamp(20px, 3vw, 28px); line-height: 1.2; }
-            .brand p { margin: 0; color: rgba(255, 255, 255, 0.82); font-size: 14px; }
-            
-            .today-pill {
-                padding: 10px 14px;
-                border: 1px solid rgba(255, 255, 255, 0.3);
-                border-radius: 999px;
-                background: rgba(255, 255, 255, 0.14);
-                font-size: 13px;
-                font-weight: 700;
-                white-space: nowrap;
-            }
-            
+            .brand { gap: 11px; min-width: 0; }
+            .brand-icon { width: 42px; height: 42px; border-radius: 12px; font-size: 22px; }
+            .brand h1 { margin: 0; font-size: 18px; line-height: 1.25; }
+            .brand p, .today-pill { display: none; }
+
             .container {
-                width: min(1120px, calc(100% - 32px));
-                margin: 24px auto 48px;
+                width: 100%;
+                margin: 0;
+                padding: 11px 10px 30px;
             }
-            
+
             .tabs {
-                display: inline-flex;
-                gap: 6px;
-                padding: 6px;
-                margin-bottom: 18px;
-                border: 1px solid var(--border);
-                border-radius: 14px;
-                background: rgba(255, 255, 255, 0.85);
-                box-shadow: var(--shadow);
+                position: sticky;
+                top: calc(8px + env(safe-area-inset-top));
+                z-index: 30;
+                display: flex;
+                width: 100%;
+                margin: 0 0 11px;
+                padding: 5px;
+                border-radius: 13px;
+                background: rgba(255, 255, 255, 0.96);
+                backdrop-filter: blur(12px);
             }
-            
             .tab-btn {
-                min-width: 145px;
-                padding: 11px 18px;
-                border: 0;
-                border-radius: 10px;
-                background: transparent;
-                color: var(--muted);
-                cursor: pointer;
-                font-weight: 750;
-                transition: 0.2s ease;
-            }
-            
-            .tab-btn:hover { background: #eef2ff; color: var(--primary); }
-            .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 5px 15px rgba(79, 70, 229, 0.24); }
-            
-            .tab-panel { display: none; }
-            .tab-panel.active { display: block; animation: fade-in 0.22s ease; }
-            @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } }
-            
-            .card {
-                border: 1px solid rgba(229, 231, 235, 0.9);
-                border-radius: 18px;
-                background: var(--surface);
-                box-shadow: var(--shadow);
-            }
-            
-            .calendar-card { padding: 24px; }
-            
-            .calendar-header,
-            .section-header,
-            .admin-toolbar {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 16px;
-            }
-            
-            .calendar-header { margin-bottom: 20px; }
-            .calendar-title { margin: 0; font-size: 21px; text-transform: capitalize; }
-            
-            .calendar-nav { display: flex; gap: 8px; }
-            
-            .btn {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 7px;
-                min-height: 40px;
-                padding: 9px 14px;
-                border: 1px solid var(--border);
-                border-radius: 10px;
-                background: white;
-                color: var(--text);
-                cursor: pointer;
-                font-weight: 700;
-                transition: 0.18s ease;
-            }
-            
-            .btn:hover { border-color: #c7d2fe; background: #eef2ff; color: var(--primary); transform: translateY(-1px); }
-            .btn-primary { border-color: var(--primary); background: var(--primary); color: white; }
-            .btn-primary:hover { border-color: var(--primary-hover); background: var(--primary-hover); color: white; }
-            .btn-icon { width: 40px; padding: 0; font-size: 19px; }
-            
-            .weekdays,
-            .calendar-grid {
-                display: grid;
-                grid-template-columns: repeat(7, minmax(0, 1fr));
-                gap: 8px;
-            }
-            
-            .weekdays { margin-bottom: 8px; }
-            
-            .weekday {
-                padding: 8px 2px;
-                color: var(--muted);
-                font-size: 12px;
-                font-weight: 800;
-                text-align: center;
-                text-transform: uppercase;
-            }
-            
-            .day-cell {
-                position: relative;
+                flex: 1;
                 min-width: 0;
-                aspect-ratio: 1.32 / 1;
-                min-height: 58px;
-                border: 1px solid var(--border);
-                border-radius: 12px;
-                background: white;
-                color: var(--text);
-                cursor: pointer;
-                overflow: hidden;
-                transition: 0.17s ease;
-            }
-            
-            .day-cell:hover { z-index: 1; border-color: #a5b4fc; background: #f5f7ff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(79, 70, 229, 0.12); }
-            .day-cell.empty { border-color: transparent; background: transparent; cursor: default; box-shadow: none; }
-            .day-cell.today { border: 2px solid var(--primary); background: #eef2ff; }
-            .day-cell.selected { box-shadow: inset 0 0 0 2px #a78bfa; }
-            .day-number { position: absolute; top: 9px; left: 10px; font-size: 14px; font-weight: 800; }
-            .today .day-number { color: var(--primary); }
-            
-            .record-dots {
-                position: absolute;
-                left: 9px;
-                right: 9px;
-                bottom: 8px;
-                display: flex;
-                gap: 4px;
-            }
-            
-            .record-dot { width: 7px; height: 7px; border-radius: 99px; }
-            .record-dot.full-day-off { background: var(--danger); }
-            .record-dot.late-over { background: var(--warning); }
-            .record-dot.late-under { background: var(--info); }
-            
-            .legend {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 14px;
-                margin-top: 16px;
-                color: var(--muted);
-                font-size: 12px;
-                font-weight: 650;
-            }
-            .legend-item { display: inline-flex; align-items: center; gap: 6px; }
-            
-            .registration-card { margin-top: 18px; overflow: hidden; }
-            .section-header { padding: 19px 22px; border-bottom: 1px solid var(--border); }
-            .section-header h2 { margin: 0 0 4px; font-size: 17px; }
-            .section-header p { margin: 0; color: var(--muted); font-size: 13px; }
-            .count-badge { padding: 6px 10px; border-radius: 999px; background: #eef2ff; color: var(--primary); font-size: 12px; font-weight: 800; }
-            
-            .table-wrap { width: 100%; overflow-x: auto; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 14px 16px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
-            th { background: var(--soft); color: var(--muted); font-size: 11px; letter-spacing: 0.055em; text-transform: uppercase; }
-            td { font-size: 14px; }
-            tbody tr:last-child td { border-bottom: 0; }
-            tbody tr:hover { background: #fafafa; }
-            
-            .status-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 6px 10px;
-                border-radius: 999px;
-                font-size: 12px;
-                font-weight: 750;
-                white-space: nowrap;
-            }
-            .status-badge.full-day-off { background: #fef2f2; color: var(--danger); }
-            .status-badge.late-over { background: #fffbeb; color: var(--warning); }
-            .status-badge.late-under { background: #ecfeff; color: var(--info); }
-            
-            .empty-state { padding: 42px 20px !important; color: var(--muted); text-align: center; }
-            .empty-icon { display: block; margin-bottom: 8px; font-size: 28px; }
-            
-            .delete-btn {
-                padding: 7px 9px;
-                border: 1px solid #fecaca;
-                border-radius: 8px;
-                background: #fff;
-                color: var(--danger);
-                cursor: pointer;
-                font-weight: 700;
-            }
-            .delete-btn:hover { background: #fef2f2; }
-            
-            .admin-card { overflow: hidden; }
-            .admin-toolbar { padding: 20px 22px; border-bottom: 1px solid var(--border); align-items: flex-start; }
-            .search-box { position: relative; flex: 1 1 300px; max-width: 400px; }
-            .search-box span { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; }
-            .search-box input {
-                width: 100%;
-                height: 42px;
-                padding: 9px 14px 9px 40px;
-                border: 1px solid var(--border);
-                border-radius: 10px;
-                outline: none;
-                color: var(--text);
-                background: white;
-            }
-            .search-box input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px #eef2ff; }
-            
-            .filters { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
-            .filter-btn {
-                padding: 9px 12px;
-                border: 1px solid var(--border);
-                border-radius: 9px;
-                background: white;
-                color: var(--muted);
-                cursor: pointer;
-                font-size: 12px;
-                font-weight: 750;
-            }
-            .filter-btn:hover { border-color: #a5b4fc; color: var(--primary); }
-            .filter-btn.active { border-color: var(--primary); background: var(--primary); color: white; }
-            
-            .phone-wrap { display: flex; align-items: center; gap: 9px; }
-            .phone-number { color: var(--primary); font-weight: 750; white-space: nowrap; }
-            .call-link {
-                display: inline-grid;
-                width: 31px;
-                height: 31px;
-                place-items: center;
-                border-radius: 8px;
-                background: #ecfdf5;
-                color: var(--success);
-                text-decoration: none;
-            }
-            
-            .detail-list { display: grid; gap: 8px; min-width: 300px; }
-            .detail-row { display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: start; }
-            .detail-label { color: var(--muted); font-size: 12px; font-weight: 750; }
-            .date-tags { display: flex; flex-wrap: wrap; gap: 5px; }
-            .date-tag { padding: 4px 7px; border-radius: 7px; background: var(--soft); color: #4b5563; font-size: 11px; font-weight: 750; }
-            .no-records { color: var(--muted); font-style: italic; }
-            
-            .modal-overlay {
-                position: fixed;
-                inset: 0;
-                z-index: 1000;
-                display: grid;
-                place-items: center;
-                padding: 20px;
-                background: rgba(15, 23, 42, 0.62);
-                opacity: 0;
-                visibility: hidden;
-                transition: 0.2s ease;
-            }
-            .modal-overlay.active { opacity: 1; visibility: visible; }
-            
-            .modal {
-                position: relative;
-                width: min(480px, 100%);
-                max-height: calc(100vh - 32px);
-                overflow-y: auto;
-                padding: 26px;
-                border-radius: 18px;
-                background: white;
-                box-shadow: var(--shadow-lg);
-                transform: scale(0.96) translateY(8px);
-                transition: 0.22s ease;
-            }
-            .modal-overlay.active .modal { transform: scale(1) translateY(0); }
-            .modal h2 { margin: 0 35px 5px 0; font-size: 20px; }
-            .modal-subtitle { margin: 0 0 23px; color: var(--muted); font-size: 13px; }
-            
-            .close-btn {
-                position: absolute;
-                top: 17px;
-                right: 17px;
-                width: 34px;
-                height: 34px;
-                border: 0;
-                border-radius: 9px;
-                background: var(--soft);
-                color: var(--muted);
-                cursor: pointer;
-                font-size: 22px;
-                line-height: 1;
-            }
-            .close-btn:hover { background: #fef2f2; color: var(--danger); }
-            
-            .form-group { margin-bottom: 19px; }
-            .form-label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 800; }
-            .select-box {
-                width: 100%;
-                height: 45px;
-                padding: 9px 12px;
-                border: 1px solid var(--border);
-                border-radius: 10px;
-                outline: none;
-                background: white;
-            }
-            .select-box:focus { border-color: #818cf8; box-shadow: 0 0 0 3px #eef2ff; }
-            
-            .status-options { display: grid; gap: 9px; }
-            .status-option {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                width: 100%;
-                padding: 13px 14px;
-                border: 1px solid var(--border);
-                border-radius: 11px;
-                background: white;
-                color: var(--text);
-                cursor: pointer;
-                text-align: left;
-                font-weight: 700;
-                transition: 0.16s ease;
-            }
-            .status-option:hover { border-color: #a5b4fc; background: #f5f7ff; }
-            .status-option.selected { border-color: var(--primary); background: #eef2ff; box-shadow: inset 0 0 0 1px var(--primary); color: var(--primary); }
-            .status-option .icon { font-size: 20px; }
-            
-            .submit-btn { width: 100%; min-height: 47px; margin-top: 4px; }
-            
-            .toast-container {
-                position: fixed;
-                top: 18px;
-                right: 18px;
-                z-index: 2000;
-                display: grid;
-                gap: 10px;
-                width: min(360px, calc(100% - 36px));
-            }
-            .toast {
-                display: flex;
-                align-items: flex-start;
-                gap: 10px;
-                padding: 14px 15px;
-                border: 1px solid var(--border);
-                border-left: 4px solid var(--success);
-                border-radius: 12px;
-                background: white;
-                box-shadow: var(--shadow-lg);
-                opacity: 0;
-                transform: translateX(30px);
-                transition: 0.22s ease;
+                min-height: 43px;
+                padding: 9px 8px;
                 font-size: 13px;
-                font-weight: 650;
             }
-            .toast.error { border-left-color: var(--danger); }
-            .toast.show { opacity: 1; transform: translateX(0); }
-            
-            @media (max-width: 820px) {
-                .header-inner { min-height: 112px; }
-                .today-pill { display: none; }
-                .admin-toolbar { flex-direction: column; }
-                .search-box { width: 100%; max-width: none; flex-basis: auto; }
-                .filters { justify-content: flex-start; }
-            }
-            
-            /* Giao diện tối ưu riêng cho điện thoại */
-            @media (max-width: 620px) {
-                body {
-                    padding-bottom: env(safe-area-inset-bottom);
-                    background: var(--background);
-                }
-            
-                .app-header { box-shadow: 0 5px 18px rgba(79, 70, 229, 0.18); }
-                .header-inner {
-                    width: 100%;
-                    min-height: auto;
-                    padding: calc(15px + env(safe-area-inset-top)) 15px 15px;
-                }
-                .brand { gap: 11px; min-width: 0; }
-                .brand-icon { width: 42px; height: 42px; border-radius: 12px; font-size: 22px; }
-                .brand h1 { margin: 0; font-size: 18px; line-height: 1.25; }
-                .brand p, .today-pill { display: none; }
-            
-                .container {
-                    width: 100%;
-                    margin: 0;
-                    padding: 11px 10px 30px;
-                }
-            
-                .tabs {
-                    position: sticky;
-                    top: calc(8px + env(safe-area-inset-top));
-                    z-index: 30;
-                    display: flex;
-                    width: 100%;
-                    margin: 0 0 11px;
-                    padding: 5px;
-                    border-radius: 13px;
-                    background: rgba(255, 255, 255, 0.96);
-                    backdrop-filter: blur(12px);
-                }
-                .tab-btn {
-                    flex: 1;
-                    min-width: 0;
-                    min-height: 43px;
-                    padding: 9px 8px;
-                    font-size: 13px;
-                }
-            
-                .card { border-radius: 16px; box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06); }
-                .calendar-card { padding: 14px 10px 13px; }
-                .calendar-header {
-                    flex-direction: column;
-                    align-items: stretch;
-                    gap: 11px;
-                    margin-bottom: 13px;
-                }
-                .calendar-title { font-size: 18px; text-align: center; }
-                .calendar-nav {
-                    display: grid;
-                    grid-template-columns: 44px minmax(0, 1fr) 44px;
-                    width: 100%;
-                    gap: 7px;
-                }
-                .calendar-nav .btn {
-                    width: 100%;
-                    min-width: 0;
-                    min-height: 44px;
-                    padding: 8px;
-                    margin: 0;
-                }
-                .btn-today { order: initial; }
-            
-                .weekdays, .calendar-grid { gap: 3px; }
-                .weekdays { margin-bottom: 4px; }
-                .weekday { padding: 6px 0; font-size: 10px; }
-                .day-cell {
-                    width: 100%;
-                    min-height: 39px;
-                    aspect-ratio: 1 / 1;
-                    border-radius: 8px;
-                }
-                .day-cell:hover { transform: none; box-shadow: none; }
-                .day-number { top: 6px; left: 7px; font-size: 12px; }
-                .record-dots { left: 6px; right: 5px; bottom: 5px; gap: 2px; }
-                .record-dot { width: 5px; height: 5px; }
-            
-                .legend {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 7px 10px;
-                    margin-top: 12px;
-                    font-size: 10px;
-                }
-                .legend-item { gap: 5px; }
-            
-                .registration-card { margin-top: 11px; background: #f8fafc; }
-                .section-header {
-                    padding: 14px;
-                    gap: 8px;
-                    background: white;
-                }
-                .section-header h2 { font-size: 15px; }
-                .section-header p { max-width: 210px; font-size: 11px; }
-                .count-badge { flex: 0 0 auto; padding: 5px 8px; font-size: 10px; }
-            
-                /* Bảng đăng ký chuyển thành thẻ dọc để không phải cuộn ngang */
-                .registration-card .table-wrap { overflow: visible; padding: 10px; }
-                .registration-card table,
-                .registration-card tbody { display: block; width: 100%; }
-                .registration-card thead { display: none; }
-                .registration-card tbody tr {
-                    display: grid;
-                    grid-template-columns: minmax(0, 1fr) auto;
-                    gap: 5px 10px;
-                    width: 100%;
-                    margin-bottom: 9px;
-                    padding: 13px;
-                    border: 1px solid var(--border);
-                    border-radius: 12px;
-                    background: white;
-                }
-                .registration-card tbody tr:last-child { margin-bottom: 0; }
-                .registration-card tbody td {
-                    display: block;
-                    padding: 0;
-                    border: 0;
-                }
-                .registration-card tbody td:nth-child(1) { display: none; }
-                .registration-card tbody td:nth-child(2) {
-                    grid-column: 1;
-                    color: var(--text);
-                    font-size: 14px;
-                    font-weight: 800;
-                }
-                .registration-card tbody td:nth-child(3) {
-                    grid-column: 1;
-                    color: var(--muted);
-                    font-size: 11px;
-                }
-                .registration-card tbody td:nth-child(4) { grid-column: 1; margin-top: 3px; }
-                .registration-card tbody td:nth-child(5) {
-                    grid-column: 2;
-                    grid-row: 1 / span 3;
-                    align-self: center;
-                }
-                .registration-card tbody td.empty-state {
-                    display: block;
-                    grid-column: 1 / -1;
-                    padding: 25px 10px !important;
-                }
-                .status-badge { padding: 6px 8px; font-size: 10px; white-space: normal; }
-                .delete-btn { min-width: 48px; min-height: 40px; }
-            
-                /* Thanh tìm kiếm và bộ lọc có thể vuốt ngang bằng ngón tay */
-                .admin-toolbar { padding: 13px 12px 9px; gap: 10px; }
-                .search-box input { height: 46px; font-size: 14px; }
-                .filters {
-                    width: 100%;
-                    flex-wrap: nowrap;
-                    justify-content: flex-start;
-                    gap: 7px;
-                    padding: 1px 0 5px;
-                    overflow-x: auto;
-                    overscroll-behavior-inline: contain;
-                    scrollbar-width: none;
-                    -webkit-overflow-scrolling: touch;
-                }
-                .filters::-webkit-scrollbar { display: none; }
-                .filter-btn {
-                    flex: 0 0 auto;
-                    min-height: 42px;
-                    padding: 9px 13px;
-                    font-size: 12px;
-                }
-            
-                /* Bảng Admin cũng hiển thị dạng thẻ trên điện thoại */
-                .admin-card { background: #f8fafc; }
-                .admin-card .table-wrap { overflow: visible; padding: 10px; }
-                .admin-card table,
-                .admin-card tbody { display: block; width: 100%; }
-                .admin-card thead { display: none; }
-                .admin-card tbody tr {
-                    display: block;
-                    width: 100%;
-                    margin-bottom: 10px;
-                    padding: 14px;
-                    border: 1px solid var(--border);
-                    border-radius: 13px;
-                    background: white;
-                }
-                .admin-card tbody tr:last-child { margin-bottom: 0; }
-                .admin-card tbody td { display: block; padding: 0; border: 0; }
-                .admin-card tbody td:nth-child(1) { display: none; }
-                .admin-card tbody td:nth-child(2) { margin-bottom: 8px; font-size: 15px; font-weight: 850; }
-                .admin-card tbody td:nth-child(3) { margin-bottom: 12px; }
-                .admin-card tbody td:nth-child(4) {
-                    padding-top: 11px;
-                    border-top: 1px solid var(--border);
-                }
-                .admin-card tbody td.empty-state { display: block; padding: 25px 10px !important; }
-                .phone-wrap { justify-content: space-between; }
-                .call-link { width: 42px; height: 42px; font-size: 18px; }
-                .detail-list { min-width: 0; gap: 11px; }
-                .detail-row { grid-template-columns: 1fr; gap: 6px; }
-                .detail-label { font-size: 11px; }
-                .date-tag { padding: 5px 7px; }
-            
-                /* Modal dạng bottom sheet, dễ thao tác bằng một tay */
-                .modal-overlay {
-                    align-items: end;
-                    padding: 0;
-                }
-                .modal {
-                    width: 100%;
-                    max-height: 92dvh;
-                    padding: 23px 16px calc(16px + env(safe-area-inset-bottom));
-                    border-radius: 21px 21px 0 0;
-                    transform: translateY(100%);
-                }
-                .modal-overlay.active .modal { transform: translateY(0); }
-                .modal h2 { font-size: 19px; }
-                .modal-subtitle { margin-bottom: 19px; }
-                .close-btn { top: 14px; right: 14px; width: 40px; height: 40px; }
-                .select-box { height: 49px; font-size: 16px; }
-                .status-option { min-height: 56px; padding: 12px; }
-                .submit-btn { min-height: 51px; font-size: 15px; }
-            
-                .toast-container {
-                    top: auto;
-                    right: 10px;
-                    bottom: calc(12px + env(safe-area-inset-bottom));
-                    width: calc(100% - 20px);
-                }
-                .toast { padding: 13px; transform: translateY(24px); }
-                .toast.show { transform: translateY(0); }
-            }
-            
-            @media (max-width: 360px) {
-                .brand h1 { font-size: 16px; }
-                .calendar-card { padding-inline: 7px; }
-                .weekdays, .calendar-grid { gap: 2px; }
-                .day-cell { min-height: 37px; border-radius: 7px; }
-                .day-number { top: 5px; left: 6px; font-size: 11px; }
-                .legend { grid-template-columns: 1fr; }
-            }
-        </style>
-    </head>
 
-    <body>
-        <header class="app-header">
-            <div class="header-inner">
-                <div class="brand">
-                    <div class="brand-icon" aria-hidden="true">📅</div>
-                    <div>
-                        <h1>Hệ thống đăng ký lịch trợ giảng</h1>
-                        <p>Đăng ký và quản lý trạng thái làm việc tập trung</p>
-                    </div>
+            .card { border-radius: 16px; box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06); }
+            .calendar-card { padding: 14px 10px 13px; }
+            .calendar-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 11px;
+                margin-bottom: 13px;
+            }
+            .calendar-title { font-size: 18px; text-align: center; }
+            .calendar-nav {
+                display: grid;
+                grid-template-columns: 44px minmax(0, 1fr) 44px;
+                width: 100%;
+                gap: 7px;
+            }
+            .calendar-nav .btn {
+                width: 100%;
+                min-width: 0;
+                min-height: 44px;
+                padding: 8px;
+                margin: 0;
+            }
+            .btn-today { order: initial; font-size: 12px; }
+
+            .weekdays, .calendar-grid { gap: 3px; }
+            .weekdays { margin-bottom: 4px; }
+            .weekday { padding: 6px 0; font-size: 10px; }
+            .day-cell {
+                width: 100%;
+                min-height: 39px;
+                aspect-ratio: 1 / 1;
+                border-radius: 8px;
+            }
+            .day-cell:hover { transform: none; box-shadow: none; }
+            .day-number { top: 6px; left: 7px; font-size: 12px; }
+            .record-dots { left: 6px; right: 5px; bottom: 5px; gap: 2px; }
+            .record-dot { width: 5px; height: 5px; }
+
+            .legend {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 7px 10px;
+                margin-top: 12px;
+                font-size: 10px;
+            }
+            .legend-item { gap: 5px; }
+
+            .registration-card { margin-top: 11px; background: #f8fafc; }
+            .section-header {
+                padding: 14px;
+                gap: 8px;
+                background: white;
+            }
+            .section-header h2 { font-size: 15px; }
+            .section-header p { max-width: 210px; font-size: 11px; }
+            .count-badge { flex: 0 0 auto; padding: 5px 8px; font-size: 10px; }
+
+            /* Bảng đăng ký chuyển thành thẻ dọc để không phải cuộn ngang */
+            .registration-card .table-wrap { overflow: visible; padding: 10px; }
+            .registration-card table,
+            .registration-card tbody { display: block; width: 100%; }
+            .registration-card thead { display: none; }
+            .registration-card tbody tr {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                gap: 5px 10px;
+                width: 100%;
+                margin-bottom: 9px;
+                padding: 13px;
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                background: white;
+            }
+            .registration-card tbody tr:last-child { margin-bottom: 0; }
+            .registration-card tbody td {
+                display: block;
+                padding: 0;
+                border: 0;
+            }
+            .registration-card tbody td:nth-child(1) { display: none; }
+            .registration-card tbody td:nth-child(2) {
+                grid-column: 1;
+                color: var(--text);
+                font-size: 14px;
+                font-weight: 800;
+            }
+            .registration-card tbody td:nth-child(3) {
+                grid-column: 1;
+                color: var(--muted);
+                font-size: 11px;
+            }
+            .registration-card tbody td:nth-child(4) { grid-column: 1; margin-top: 3px; }
+            .registration-card tbody td:nth-child(5) {
+                grid-column: 2;
+                grid-row: 1 / span 3;
+                align-self: center;
+            }
+            .registration-card tbody td.empty-state {
+                display: block;
+                grid-column: 1 / -1;
+                padding: 25px 10px !important;
+            }
+            .status-badge { padding: 6px 8px; font-size: 10px; white-space: normal; }
+            .delete-btn { min-width: 48px; min-height: 40px; }
+
+            /* Thanh tìm kiếm và bộ lọc có thể vuốt ngang bằng ngón tay */
+            .admin-toolbar { padding: 13px 12px 9px; gap: 10px; }
+            .search-box input { height: 46px; font-size: 14px; }
+            .admin-filter-panel { width: 100%; gap: 8px; }
+            .admin-date-tools { width: 100%; flex-wrap: wrap; gap: 7px; }
+            .admin-date-control { width: 100%; min-height: 47px; padding-left: 12px; }
+            .admin-date-control input { min-width: 118px; height: 35px; margin-left: auto; }
+            .clear-date-btn { width: 100%; min-height: 42px; }
+            .filters {
+                width: 100%;
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                gap: 7px;
+                padding: 1px 0 5px;
+                overflow-x: auto;
+                overscroll-behavior-inline: contain;
+                scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+            }
+            .filters::-webkit-scrollbar { display: none; }
+            .filter-btn {
+                flex: 0 0 auto;
+                min-height: 42px;
+                padding: 9px 13px;
+                font-size: 12px;
+            }
+
+            /* Bảng Admin cũng hiển thị dạng thẻ trên điện thoại */
+            .admin-card { background: #f8fafc; }
+            .admin-card .table-wrap { overflow: visible; padding: 10px; }
+            .admin-card table,
+            .admin-card tbody { display: block; width: 100%; }
+            .admin-card thead { display: none; }
+            .admin-card tbody tr {
+                display: block;
+                width: 100%;
+                margin-bottom: 10px;
+                padding: 14px;
+                border: 1px solid var(--border);
+                border-radius: 13px;
+                background: white;
+            }
+            .admin-card tbody tr:last-child { margin-bottom: 0; }
+            .admin-card tbody td { display: block; padding: 0; border: 0; }
+            .admin-card tbody td:nth-child(1) { display: none; }
+            .admin-card tbody td:nth-child(2) { margin-bottom: 8px; font-size: 15px; font-weight: 850; }
+            .admin-card tbody td:nth-child(3) { margin-bottom: 12px; }
+            .admin-card tbody td:nth-child(4) {
+                padding-top: 11px;
+                border-top: 1px solid var(--border);
+            }
+            .admin-card tbody td.empty-state { display: block; padding: 25px 10px !important; }
+            .phone-wrap { justify-content: space-between; }
+            .call-link { width: 42px; height: 42px; font-size: 18px; }
+            .detail-list { min-width: 0; gap: 11px; }
+            .detail-row { grid-template-columns: 1fr; gap: 6px; }
+            .detail-label { font-size: 11px; }
+            .date-tag { padding: 5px 7px; }
+
+            /* Modal dạng bottom sheet, dễ thao tác bằng một tay */
+            .modal-overlay {
+                align-items: end;
+                padding: 0;
+            }
+            .modal {
+                width: 100%;
+                max-height: 92dvh;
+                padding: 23px 16px calc(16px + env(safe-area-inset-bottom));
+                border-radius: 21px 21px 0 0;
+                transform: translateY(100%);
+            }
+            .modal-overlay.active .modal { transform: translateY(0); }
+            .modal h2 { font-size: 19px; }
+            .modal-subtitle { margin-bottom: 19px; }
+            .close-btn { top: 14px; right: 14px; width: 40px; height: 40px; }
+            .select-box { height: 49px; font-size: 16px; }
+            .status-option { min-height: 56px; padding: 12px; }
+            .submit-btn { min-height: 51px; font-size: 15px; }
+
+            .toast-container {
+                top: auto;
+                right: 10px;
+                bottom: calc(12px + env(safe-area-inset-bottom));
+                width: calc(100% - 20px);
+            }
+            .toast { padding: 13px; transform: translateY(24px); }
+            .toast.show { transform: translateY(0); }
+        }
+
+        @media (max-width: 360px) {
+            .brand h1 { font-size: 16px; }
+            .calendar-card { padding-inline: 7px; }
+            .calendar-nav { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 5px; }
+            .admin-date-control { gap: 5px; padding-left: 9px; font-size: 11px; }
+            .admin-date-control input { min-width: 108px; padding-inline: 4px; font-size: 11px; }
+            .weekdays, .calendar-grid { gap: 2px; }
+            .day-cell { min-height: 37px; border-radius: 7px; }
+            .day-number { top: 5px; left: 6px; font-size: 11px; }
+            .legend { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-inner">
+            <div class="brand">
+                <div class="brand-icon" aria-hidden="true">📅</div>
+                <div>
+                    <h1>Hệ thống đăng ký lịch trợ giảng</h1>
+                    <p>Đăng ký và quản lý trạng thái làm việc tập trung</p>
                 </div>
-                <div class="today-pill" id="header-today"></div>
             </div>
-        </header>
+            <div class="today-pill" id="header-today"></div>
+        </div>
+    </header>
 
-        <div class="toast-container" id="toast-container" aria-live="polite"></div>
+    <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
-        <main class="container">
-            <nav class="tabs" aria-label="Khu vực chức năng">
-                <button class="tab-btn active" type="button" data-tab="assistant-panel" aria-selected="true">👤 Trợ giảng</button>
-                <button class="tab-btn" type="button" data-tab="admin-panel" aria-selected="false">⚙️ Admin</button>
-            </nav>
+    <main class="container">
+        <nav class="tabs" aria-label="Khu vực chức năng">
+            <button class="tab-btn active" type="button" data-tab="assistant-panel" aria-selected="true">👤 Trợ giảng</button>
+            <button class="tab-btn" type="button" data-tab="admin-panel" aria-selected="false">⚙️ Admin</button>
+        </nav>
 
-            <section class="tab-panel active" id="assistant-panel">
-                <div class="card calendar-card">
-                    <div class="calendar-header">
-                        <h2 class="calendar-title" id="calendar-title"></h2>
-                        <div class="calendar-nav">
-                            <button class="btn btn-icon" id="prev-month" type="button" aria-label="Tháng trước">←</button>
-                            <button class="btn btn-today" id="today-btn" type="button">Hôm nay</button>
-                            <button class="btn btn-icon" id="next-month" type="button" aria-label="Tháng sau">→</button>
-                        </div>
-                    </div>
-
-                    <div class="weekdays" aria-hidden="true">
-                        <div class="weekday">CN</div>
-                        <div class="weekday">T2</div>
-                        <div class="weekday">T3</div>
-                        <div class="weekday">T4</div>
-                        <div class="weekday">T5</div>
-                        <div class="weekday">T6</div>
-                        <div class="weekday">T7</div>
-                    </div>
-                    <div class="calendar-grid" id="calendar-grid"></div>
-
-                    <div class="legend" aria-label="Chú thích trạng thái">
-                        <span class="legend-item"><i class="record-dot full-day-off"></i>Nghỉ cả ngày</span>
-                        <span class="legend-item"><i class="record-dot late-over"></i>Muộn trên 15 phút</span>
-                        <span class="legend-item"><i class="record-dot late-under"></i>Muộn dưới 15 phút</span>
+        <section class="tab-panel active" id="assistant-panel">
+            <div class="card calendar-card">
+                <div class="calendar-header">
+                    <h2 class="calendar-title" id="calendar-title"></h2>
+                    <div class="calendar-nav">
+                        <button class="btn btn-icon" id="prev-month" type="button" aria-label="Tháng trước">←</button>
+                        <button class="btn btn-today" id="today-btn" type="button">Hôm nay</button>
+                        <button class="btn btn-icon" id="next-month" type="button" aria-label="Tháng sau">→</button>
                     </div>
                 </div>
 
-                <div class="card registration-card">
-                    <div class="section-header">
-                        <div>
-                            <h2>📋 Danh sách đăng ký</h2>
-                            <p id="selected-date-label"></p>
-                        </div>
-                        <span class="count-badge" id="registration-count">0 đăng ký</span>
-                    </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>STT</th>
-                                    <th>Tên trợ giảng</th>
-                                    <th>Ngày</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody id="registration-body"></tbody>
-                        </table>
-                    </div>
+                <div class="weekdays" aria-hidden="true">
+                    <div class="weekday">CN</div>
+                    <div class="weekday">T2</div>
+                    <div class="weekday">T3</div>
+                    <div class="weekday">T4</div>
+                    <div class="weekday">T5</div>
+                    <div class="weekday">T6</div>
+                    <div class="weekday">T7</div>
                 </div>
-            </section>
+                <div class="calendar-grid" id="calendar-grid"></div>
 
-            <section class="tab-panel" id="admin-panel">
-                <div class="card admin-card">
-                    <div class="admin-toolbar">
-                        <div class="search-box">
-                            <span aria-hidden="true">🔎</span>
-                            <input id="search-input" type="search" placeholder="Tìm theo tên hoặc số điện thoại…" autocomplete="off">
+                <div class="legend" aria-label="Chú thích trạng thái">
+                    <span class="legend-item"><i class="record-dot full-day-off"></i>Nghỉ cả ngày</span>
+                    <span class="legend-item"><i class="record-dot late-over"></i>Muộn trên 15 phút</span>
+                    <span class="legend-item"><i class="record-dot late-under"></i>Muộn dưới 15 phút</span>
+                </div>
+            </div>
+
+            <div class="card registration-card">
+                <div class="section-header">
+                    <div>
+                        <h2>📋 Danh sách đăng ký</h2>
+                        <p id="selected-date-label"></p>
+                    </div>
+                    <span class="count-badge" id="registration-count">0 đăng ký</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên trợ giảng</th>
+                                <th>Ngày</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registration-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="tab-panel" id="admin-panel">
+            <div class="card admin-card">
+                <div class="admin-toolbar">
+                    <div class="search-box">
+                        <span aria-hidden="true">🔎</span>
+                        <input id="search-input" type="search" placeholder="Tìm theo tên hoặc số điện thoại…" autocomplete="off">
+                    </div>
+                    <div class="admin-filter-panel">
+                        <div class="admin-date-tools">
+                            <label class="admin-date-control" for="admin-date-picker">
+                                <span aria-hidden="true">📅</span>
+                                <span>Chọn ngày cần xem</span>
+                                <input id="admin-date-picker" type="date" aria-label="Chọn ngày cần xem trong Admin">
+                            </label>
+                            <button class="clear-date-btn" id="clear-admin-date" type="button" hidden>Xóa lọc ngày</button>
                         </div>
                         <div class="filters" aria-label="Lọc trợ giảng">
                             <button class="filter-btn active" type="button" data-filter="all">Tất cả</button>
@@ -774,541 +838,584 @@
                             <button class="filter-btn" type="button" data-filter="today">Hôm nay</button>
                         </div>
                     </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>STT</th>
-                                    <th>Tên trợ giảng</th>
-                                    <th>Số điện thoại</th>
-                                    <th>Chi tiết đăng ký</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-body"></tbody>
-                        </table>
-                    </div>
                 </div>
-            </section>
-        </main>
-
-        <div class="modal-overlay" id="registration-modal" aria-hidden="true">
-            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-                <button class="close-btn" id="close-modal" type="button" aria-label="Đóng">×</button>
-                <h2 id="modal-title">Đăng ký lịch</h2>
-                <p class="modal-subtitle" id="modal-date"></p>
-
-                <div class="form-group">
-                    <label class="form-label" for="assistant-select">Chọn trợ giảng</label>
-                    <select class="select-box" id="assistant-select">
-                        <option value="">— Chọn trợ giảng —</option>
-                    </select>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên trợ giảng</th>
+                                <th>Số điện thoại</th>
+                                <th>Chi tiết đăng ký</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-body"></tbody>
+                    </table>
                 </div>
-
-                <div class="form-group">
-                    <span class="form-label">Chọn trạng thái</span>
-                    <div class="status-options" id="status-options">
-                        <button class="status-option" type="button" data-status="full-day-off">
-                            <span class="icon">🚫</span><span>Nghỉ cả ngày</span>
-                        </button>
-                        <button class="status-option" type="button" data-status="late-over">
-                            <span class="icon">⏰</span><span>Đến muộn trên 15 phút</span>
-                        </button>
-                        <button class="status-option" type="button" data-status="late-under">
-                            <span class="icon">⏱️</span><span>Đến muộn dưới 15 phút</span>
-                        </button>
-                    </div>
-                </div>
-
-                <button class="btn btn-primary submit-btn" id="submit-registration" type="button">Gửi đăng ký</button>
             </div>
-        </div>
+        </section>
+    </main>
 
-        <script>
-            'use strict';
-            
-            const ASSISTANTS = [
-                { id: 1, name: 'Nguyễn Văn A', phone: '0987654321' },
-                { id: 2, name: 'Trần Thị B', phone: '0912345678' },
-                { id: 3, name: 'Lê Văn C', phone: '0945678912' },
-                { id: 4, name: 'Phạm Thị D', phone: '0978912345' },
-                { id: 5, name: 'Đặng Văn E', phone: '0934567890' }
-            ];
-            
-            const STATUS = {
-                'full-day-off': { label: 'Nghỉ cả ngày', icon: '🚫' },
-                'late-over': { label: 'Đến muộn >15p', icon: '⏰' },
-                'late-under': { label: 'Đến muộn <15p', icon: '⏱️' }
-            };
-            
-            const STORAGE_KEY = 'troGiangRecords';
-            let storageAvailable = true;
-            let records = loadRecords();
-            let viewDate = new Date();
-            let selectedDateKey = toDateKey(new Date());
-            let selectedStatus = '';
-            let activeFilter = 'all';
-            
-            const elements = {
-                tabButtons: document.querySelectorAll('.tab-btn'),
-                tabPanels: document.querySelectorAll('.tab-panel'),
-                headerToday: document.getElementById('header-today'),
-                calendarTitle: document.getElementById('calendar-title'),
-                calendarGrid: document.getElementById('calendar-grid'),
-                prevMonth: document.getElementById('prev-month'),
-                nextMonth: document.getElementById('next-month'),
-                todayButton: document.getElementById('today-btn'),
-                selectedDateLabel: document.getElementById('selected-date-label'),
-                registrationCount: document.getElementById('registration-count'),
-                registrationBody: document.getElementById('registration-body'),
-                adminBody: document.getElementById('admin-body'),
-                searchInput: document.getElementById('search-input'),
-                filterButtons: document.querySelectorAll('.filter-btn'),
-                modal: document.getElementById('registration-modal'),
-                closeModal: document.getElementById('close-modal'),
-                modalDate: document.getElementById('modal-date'),
-                assistantSelect: document.getElementById('assistant-select'),
-                statusOptions: document.querySelectorAll('.status-option'),
-                submitRegistration: document.getElementById('submit-registration'),
-                toastContainer: document.getElementById('toast-container')
-            };
-            
-            function loadRecords() {
-                try {
-                    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                    if (!Array.isArray(parsed)) return [];
-                    return parsed.filter(record =>
-                        record &&
-                        /^\d{4}-\d{2}-\d{2}$/.test(record.date) &&
-                        STATUS[record.status] &&
-                        ASSISTANTS.some(item => item.id === Number(record.troGiangId))
-                    ).map(record => ({
-                        troGiangId: Number(record.troGiangId),
-                        date: record.date,
-                        status: record.status,
-                        timestamp: Number(record.timestamp) || Date.now()
-                    }));
-                } catch (error) {
-                    storageAvailable = false;
-                    return [];
-                }
+    <div class="modal-overlay" id="registration-modal" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <button class="close-btn" id="close-modal" type="button" aria-label="Đóng">×</button>
+            <h2 id="modal-title">Đăng ký lịch</h2>
+            <p class="modal-subtitle" id="modal-date"></p>
+
+            <div class="form-group">
+                <label class="form-label" for="assistant-select">Chọn trợ giảng</label>
+                <select class="select-box" id="assistant-select">
+                    <option value="">— Chọn trợ giảng —</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <span class="form-label">Chọn trạng thái</span>
+                <div class="status-options" id="status-options">
+                    <button class="status-option" type="button" data-status="full-day-off">
+                        <span class="icon">🚫</span><span>Nghỉ cả ngày</span>
+                    </button>
+                    <button class="status-option" type="button" data-status="late-over">
+                        <span class="icon">⏰</span><span>Đến muộn trên 15 phút</span>
+                    </button>
+                    <button class="status-option" type="button" data-status="late-under">
+                        <span class="icon">⏱️</span><span>Đến muộn dưới 15 phút</span>
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn btn-primary submit-btn" id="submit-registration" type="button">Gửi đăng ký</button>
+        </div>
+    </div>
+
+    <script>
+        'use strict';
+
+        const ASSISTANTS = [
+            { id: 1, name: 'Nguyễn Văn A', phone: '0987654321' },
+            { id: 2, name: 'Trần Thị B', phone: '0912345678' },
+            { id: 3, name: 'Lê Văn C', phone: '0945678912' },
+            { id: 4, name: 'Phạm Thị D', phone: '0978912345' },
+            { id: 5, name: 'Đặng Văn E', phone: '0934567890' }
+        ];
+
+        const STATUS = {
+            'full-day-off': { label: 'Nghỉ cả ngày', icon: '🚫' },
+            'late-over': { label: 'Đến muộn >15p', icon: '⏰' },
+            'late-under': { label: 'Đến muộn <15p', icon: '⏱️' }
+        };
+
+        const STORAGE_KEY = 'troGiangRecords';
+        let storageAvailable = true;
+        let records = loadRecords();
+        let viewDate = new Date();
+        let selectedDateKey = toDateKey(new Date());
+        let selectedStatus = '';
+        let activeFilter = 'all';
+        let adminSelectedDate = '';
+
+        const elements = {
+            tabButtons: document.querySelectorAll('.tab-btn'),
+            tabPanels: document.querySelectorAll('.tab-panel'),
+            headerToday: document.getElementById('header-today'),
+            calendarTitle: document.getElementById('calendar-title'),
+            calendarGrid: document.getElementById('calendar-grid'),
+            prevMonth: document.getElementById('prev-month'),
+            nextMonth: document.getElementById('next-month'),
+            todayButton: document.getElementById('today-btn'),
+            selectedDateLabel: document.getElementById('selected-date-label'),
+            registrationCount: document.getElementById('registration-count'),
+            registrationBody: document.getElementById('registration-body'),
+            adminBody: document.getElementById('admin-body'),
+            searchInput: document.getElementById('search-input'),
+            adminDatePicker: document.getElementById('admin-date-picker'),
+            clearAdminDate: document.getElementById('clear-admin-date'),
+            filterButtons: document.querySelectorAll('.filter-btn'),
+            modal: document.getElementById('registration-modal'),
+            closeModal: document.getElementById('close-modal'),
+            modalDate: document.getElementById('modal-date'),
+            assistantSelect: document.getElementById('assistant-select'),
+            statusOptions: document.querySelectorAll('.status-option'),
+            submitRegistration: document.getElementById('submit-registration'),
+            toastContainer: document.getElementById('toast-container')
+        };
+
+        function loadRecords() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                if (!Array.isArray(parsed)) return [];
+                return parsed.filter(record =>
+                    record &&
+                    /^\d{4}-\d{2}-\d{2}$/.test(record.date) &&
+                    STATUS[record.status] &&
+                    ASSISTANTS.some(item => item.id === Number(record.troGiangId))
+                ).map(record => ({
+                    troGiangId: Number(record.troGiangId),
+                    date: record.date,
+                    status: record.status,
+                    timestamp: Number(record.timestamp) || Date.now()
+                }));
+            } catch (error) {
+                storageAvailable = false;
+                return [];
             }
-            
-            function saveRecords() {
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-                    storageAvailable = true;
-                    return true;
-                } catch (error) {
-                    storageAvailable = false;
-                    return false;
-                }
+        }
+
+        function saveRecords() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+                storageAvailable = true;
+                return true;
+            } catch (error) {
+                storageAvailable = false;
+                return false;
             }
-            
-            function toDateKey(date) {
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
+        }
+
+        function toDateKey(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function fromDateKey(key) {
+            const [year, month, day] = key.split('-').map(Number);
+            return new Date(year, month - 1, day);
+        }
+
+        function formatShortDate(key) {
+            return new Intl.DateTimeFormat('vi-VN', {
+                day: '2-digit', month: '2-digit', year: 'numeric'
+            }).format(fromDateKey(key));
+        }
+
+        function formatLongDate(key) {
+            return new Intl.DateTimeFormat('vi-VN', {
+                weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
+            }).format(fromDateKey(key));
+        }
+
+        function capitalize(text) {
+            return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+        }
+
+        function normalizeText(text) {
+            return String(text).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+        }
+
+        function getAssistant(id) {
+            return ASSISTANTS.find(item => item.id === Number(id));
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${type === 'error' ? '❌' : '✅'}</span><span></span>`;
+            toast.lastElementChild.textContent = message;
+            elements.toastContainer.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.add('show'));
+            window.setTimeout(() => {
+                toast.classList.remove('show');
+                window.setTimeout(() => toast.remove(), 250);
+            }, 3000);
+        }
+
+        function populateAssistantSelect() {
+            ASSISTANTS.forEach(assistant => {
+                const option = document.createElement('option');
+                option.value = assistant.id;
+                option.textContent = assistant.name;
+                elements.assistantSelect.appendChild(option);
+            });
+        }
+
+        function renderCalendar() {
+            const year = viewDate.getFullYear();
+            const month = viewDate.getMonth();
+            const firstWeekday = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const todayKey = toDateKey(new Date());
+
+            elements.calendarTitle.textContent = capitalize(new Intl.DateTimeFormat('vi-VN', {
+                month: 'long', year: 'numeric'
+            }).format(new Date(year, month, 1)));
+            elements.calendarGrid.replaceChildren();
+
+            for (let index = 0; index < firstWeekday; index += 1) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-cell empty';
+                elements.calendarGrid.appendChild(emptyCell);
             }
-            
-            function fromDateKey(key) {
-                const [year, month, day] = key.split('-').map(Number);
-                return new Date(year, month - 1, day);
-            }
-            
-            function formatShortDate(key) {
-                return new Intl.DateTimeFormat('vi-VN', {
-                    day: '2-digit', month: '2-digit', year: 'numeric'
-                }).format(fromDateKey(key));
-            }
-            
-            function formatLongDate(key) {
-                return new Intl.DateTimeFormat('vi-VN', {
-                    weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
-                }).format(fromDateKey(key));
-            }
-            
-            function capitalize(text) {
-                return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
-            }
-            
-            function normalizeText(text) {
-                return String(text).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-            }
-            
-            function getAssistant(id) {
-                return ASSISTANTS.find(item => item.id === Number(id));
-            }
-            
-            function showToast(message, type = 'success') {
-                const toast = document.createElement('div');
-                toast.className = `toast ${type}`;
-                toast.innerHTML = `<span>${type === 'error' ? '❌' : '✅'}</span><span></span>`;
-                toast.lastElementChild.textContent = message;
-                elements.toastContainer.appendChild(toast);
-                requestAnimationFrame(() => toast.classList.add('show'));
-                window.setTimeout(() => {
-                    toast.classList.remove('show');
-                    window.setTimeout(() => toast.remove(), 250);
-                }, 3000);
-            }
-            
-            function populateAssistantSelect() {
-                ASSISTANTS.forEach(assistant => {
-                    const option = document.createElement('option');
-                    option.value = assistant.id;
-                    option.textContent = assistant.name;
-                    elements.assistantSelect.appendChild(option);
-                });
-            }
-            
-            function renderCalendar() {
-                const year = viewDate.getFullYear();
-                const month = viewDate.getMonth();
-                const firstWeekday = new Date(year, month, 1).getDay();
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
-                const todayKey = toDateKey(new Date());
-            
-                elements.calendarTitle.textContent = capitalize(new Intl.DateTimeFormat('vi-VN', {
-                    month: 'long', year: 'numeric'
-                }).format(new Date(year, month, 1)));
-                elements.calendarGrid.replaceChildren();
-            
-                for (let index = 0; index < firstWeekday; index += 1) {
-                    const emptyCell = document.createElement('div');
-                    emptyCell.className = 'day-cell empty';
-                    elements.calendarGrid.appendChild(emptyCell);
-                }
-            
-                for (let day = 1; day <= daysInMonth; day += 1) {
-                    const date = new Date(year, month, day);
-                    const key = toDateKey(date);
-                    const dayRecords = records.filter(record => record.date === key);
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.className = 'day-cell';
-                    button.setAttribute('aria-label', `${formatLongDate(key)}, ${dayRecords.length} đăng ký`);
-                    if (key === todayKey) button.classList.add('today');
-                    if (key === selectedDateKey) button.classList.add('selected');
-            
-                    const number = document.createElement('span');
-                    number.className = 'day-number';
-                    number.textContent = day;
-                    button.appendChild(number);
-            
-                    if (dayRecords.length) {
-                        const dots = document.createElement('span');
-                        dots.className = 'record-dots';
-                        [...new Set(dayRecords.map(record => record.status))].forEach(status => {
-                            const dot = document.createElement('i');
-                            dot.className = `record-dot ${status}`;
-                            dots.appendChild(dot);
-                        });
-                        button.appendChild(dots);
-                    }
-            
-                    button.addEventListener('click', () => {
-                        selectedDateKey = key;
-                        renderCalendar();
-                        renderRegistrationTable();
-                        openRegistrationModal(key);
+
+            for (let day = 1; day <= daysInMonth; day += 1) {
+                const date = new Date(year, month, day);
+                const key = toDateKey(date);
+                const dayRecords = records.filter(record => record.date === key);
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'day-cell';
+                button.setAttribute('aria-label', `${formatLongDate(key)}, ${dayRecords.length} đăng ký`);
+                if (key === todayKey) button.classList.add('today');
+                if (key === selectedDateKey) button.classList.add('selected');
+
+                const number = document.createElement('span');
+                number.className = 'day-number';
+                number.textContent = day;
+                button.appendChild(number);
+
+                if (dayRecords.length) {
+                    const dots = document.createElement('span');
+                    dots.className = 'record-dots';
+                    [...new Set(dayRecords.map(record => record.status))].forEach(status => {
+                        const dot = document.createElement('i');
+                        dot.className = `record-dot ${status}`;
+                        dots.appendChild(dot);
                     });
-                    elements.calendarGrid.appendChild(button);
+                    button.appendChild(dots);
                 }
-            
-                const usedCells = firstWeekday + daysInMonth;
-                const totalCells = usedCells <= 35 ? 35 : 42;
-                for (let index = usedCells; index < totalCells; index += 1) {
-                    const emptyCell = document.createElement('div');
-                    emptyCell.className = 'day-cell empty';
-                    elements.calendarGrid.appendChild(emptyCell);
-                }
-            }
-            
-            function renderRegistrationTable() {
-                const dayRecords = records
-                    .filter(record => record.date === selectedDateKey)
-                    .sort((a, b) => b.timestamp - a.timestamp);
-            
-                elements.selectedDateLabel.textContent = capitalize(formatLongDate(selectedDateKey));
-                elements.registrationCount.textContent = `${dayRecords.length} đăng ký`;
-                elements.registrationBody.replaceChildren();
-            
-                if (!dayRecords.length) {
-                    const row = document.createElement('tr');
-                    const cell = document.createElement('td');
-                    cell.colSpan = 5;
-                    cell.className = 'empty-state';
-                    cell.innerHTML = '<span class="empty-icon">🗓️</span>Chưa có đăng ký cho ngày này. Nhấn vào ngày trên lịch để tạo đăng ký.';
-                    row.appendChild(cell);
-                    elements.registrationBody.appendChild(row);
-                    return;
-                }
-            
-                dayRecords.forEach((record, index) => {
-                    const assistant = getAssistant(record.troGiangId);
-                    const row = document.createElement('tr');
-            
-                    const orderCell = document.createElement('td');
-                    orderCell.textContent = index + 1;
-            
-                    const nameCell = document.createElement('td');
-                    nameCell.textContent = assistant ? assistant.name : 'Không xác định';
-            
-                    const dateCell = document.createElement('td');
-                    dateCell.textContent = formatShortDate(record.date);
-            
-                    const statusCell = document.createElement('td');
-                    const badge = document.createElement('span');
-                    badge.className = `status-badge ${record.status}`;
-                    badge.textContent = `${STATUS[record.status].icon} ${STATUS[record.status].label}`;
-                    statusCell.appendChild(badge);
-            
-                    const actionCell = document.createElement('td');
-                    const deleteButton = document.createElement('button');
-                    deleteButton.type = 'button';
-                    deleteButton.className = 'delete-btn';
-                    deleteButton.textContent = 'Xóa';
-                    deleteButton.addEventListener('click', () => deleteRegistration(record));
-                    actionCell.appendChild(deleteButton);
-            
-                    row.append(orderCell, nameCell, dateCell, statusCell, actionCell);
-                    elements.registrationBody.appendChild(row);
-                });
-            }
-            
-            function deleteRegistration(recordToDelete) {
-                const assistant = getAssistant(recordToDelete.troGiangId);
-                const confirmed = window.confirm(`Xóa đăng ký của ${assistant ? assistant.name : 'trợ giảng này'} ngày ${formatShortDate(recordToDelete.date)}?`);
-                if (!confirmed) return;
-            
-                records = records.filter(record => !(
-                    record.troGiangId === recordToDelete.troGiangId &&
-                    record.date === recordToDelete.date
-                ));
-                saveRecords();
-                renderAllData();
-                showToast('Đã xóa đăng ký.');
-            }
-            
-            function renderAdminTable() {
-                const searchTerm = normalizeText(elements.searchInput.value);
-                const todayKey = toDateKey(new Date());
-            
-                const filtered = ASSISTANTS.map(assistant => ({
-                    ...assistant,
-                    records: records.filter(record => record.troGiangId === assistant.id)
-                })).filter(assistant => {
-                    const matchesSearch = normalizeText(`${assistant.name} ${assistant.phone}`).includes(searchTerm);
-                    if (!matchesSearch) return false;
-                    if (activeFilter === 'all') return true;
-                    if (activeFilter === 'today') return assistant.records.some(record => record.date === todayKey);
-                    return assistant.records.some(record => record.status === activeFilter);
-                });
-            
-                elements.adminBody.replaceChildren();
-                if (!filtered.length) {
-                    const row = document.createElement('tr');
-                    const cell = document.createElement('td');
-                    cell.colSpan = 4;
-                    cell.className = 'empty-state';
-                    cell.innerHTML = '<span class="empty-icon">🔍</span>Không có trợ giảng phù hợp với điều kiện tìm kiếm.';
-                    row.appendChild(cell);
-                    elements.adminBody.appendChild(row);
-                    return;
-                }
-            
-                filtered.forEach((assistant, index) => {
-                    const row = document.createElement('tr');
-            
-                    const orderCell = document.createElement('td');
-                    orderCell.textContent = index + 1;
-            
-                    const nameCell = document.createElement('td');
-                    nameCell.textContent = assistant.name;
-            
-                    const phoneCell = document.createElement('td');
-                    const phoneWrap = document.createElement('div');
-                    phoneWrap.className = 'phone-wrap';
-                    const phone = document.createElement('span');
-                    phone.className = 'phone-number';
-                    phone.textContent = assistant.phone;
-                    const callLink = document.createElement('a');
-                    callLink.className = 'call-link';
-                    callLink.href = `tel:${assistant.phone}`;
-                    callLink.title = `Gọi ${assistant.name}`;
-                    callLink.textContent = '☎';
-                    phoneWrap.append(phone, callLink);
-                    phoneCell.appendChild(phoneWrap);
-            
-                    const detailCell = document.createElement('td');
-                    if (!assistant.records.length) {
-                        const noRecords = document.createElement('span');
-                        noRecords.className = 'no-records';
-                        noRecords.textContent = 'Chưa có đăng ký';
-                        detailCell.appendChild(noRecords);
-                    } else {
-                        const list = document.createElement('div');
-                        list.className = 'detail-list';
-                        Object.keys(STATUS).forEach(status => {
-                            const statusRecords = assistant.records
-                                .filter(record => record.status === status)
-                                .sort((a, b) => b.date.localeCompare(a.date));
-                            if (!statusRecords.length) return;
-            
-                            const detailRow = document.createElement('div');
-                            detailRow.className = 'detail-row';
-                            const label = document.createElement('span');
-                            label.className = 'detail-label';
-                            label.textContent = STATUS[status].label;
-                            const tags = document.createElement('span');
-                            tags.className = 'date-tags';
-                            statusRecords.forEach(record => {
-                                const tag = document.createElement('span');
-                                tag.className = 'date-tag';
-                                tag.textContent = formatShortDate(record.date);
-                                tags.appendChild(tag);
-                            });
-                            detailRow.append(label, tags);
-                            list.appendChild(detailRow);
-                        });
-                        detailCell.appendChild(list);
-                    }
-            
-                    row.append(orderCell, nameCell, phoneCell, detailCell);
-                    elements.adminBody.appendChild(row);
-                });
-            }
-            
-            function openRegistrationModal(key) {
-                selectedDateKey = key;
-                selectedStatus = '';
-                elements.modalDate.textContent = capitalize(formatLongDate(key));
-                elements.assistantSelect.value = '';
-                elements.statusOptions.forEach(button => button.classList.remove('selected'));
-                elements.modal.classList.add('active');
-                elements.modal.setAttribute('aria-hidden', 'false');
-                window.setTimeout(() => elements.assistantSelect.focus(), 80);
-            }
-            
-            function closeRegistrationModal() {
-                elements.modal.classList.remove('active');
-                elements.modal.setAttribute('aria-hidden', 'true');
-                selectedStatus = '';
-            }
-            
-            function submitRegistration() {
-                const assistantId = Number(elements.assistantSelect.value);
-                if (!assistantId) {
-                    showToast('Vui lòng chọn trợ giảng.', 'error');
-                    elements.assistantSelect.focus();
-                    return;
-                }
-                if (!selectedStatus) {
-                    showToast('Vui lòng chọn trạng thái đăng ký.', 'error');
-                    return;
-                }
-            
-                const existingIndex = records.findIndex(record =>
-                    record.troGiangId === assistantId && record.date === selectedDateKey
-                );
-                const newRecord = {
-                    troGiangId: assistantId,
-                    date: selectedDateKey,
-                    status: selectedStatus,
-                    timestamp: Date.now()
-                };
-            
-                const isUpdate = existingIndex >= 0;
-                if (isUpdate) records[existingIndex] = newRecord;
-                else records.push(newRecord);
-            
-                const saved = saveRecords();
-                closeRegistrationModal();
-                renderAllData();
-                showToast(isUpdate ? 'Đã cập nhật đăng ký.' : 'Đăng ký thành công.');
-                if (!saved) showToast('Trình duyệt không cho phép lưu lâu dài; dữ liệu chỉ còn trong phiên này.', 'error');
-            }
-            
-            function renderAllData() {
-                renderCalendar();
-                renderRegistrationTable();
-                renderAdminTable();
-            }
-            
-            function bindEvents() {
-                elements.tabButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        const targetId = button.dataset.tab;
-                        elements.tabButtons.forEach(item => {
-                            const active = item === button;
-                            item.classList.toggle('active', active);
-                            item.setAttribute('aria-selected', String(active));
-                        });
-                        elements.tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === targetId));
-                        if (targetId === 'admin-panel') renderAdminTable();
-                    });
-                });
-            
-                elements.prevMonth.addEventListener('click', () => {
-                    viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1);
-                    renderCalendar();
-                });
-            
-                elements.nextMonth.addEventListener('click', () => {
-                    viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
-                    renderCalendar();
-                });
-            
-                elements.todayButton.addEventListener('click', () => {
-                    const today = new Date();
-                    viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
-                    selectedDateKey = toDateKey(today);
+
+                button.addEventListener('click', () => {
+                    selectedDateKey = key;
                     renderCalendar();
                     renderRegistrationTable();
+                    openRegistrationModal(key);
                 });
-            
-                elements.statusOptions.forEach(button => {
-                    button.addEventListener('click', () => {
-                        selectedStatus = button.dataset.status;
-                        elements.statusOptions.forEach(item => item.classList.toggle('selected', item === button));
-                    });
-                });
-            
-                elements.submitRegistration.addEventListener('click', submitRegistration);
-                elements.closeModal.addEventListener('click', closeRegistrationModal);
-                elements.modal.addEventListener('click', event => {
-                    if (event.target === elements.modal) closeRegistrationModal();
-                });
-                document.addEventListener('keydown', event => {
-                    if (event.key === 'Escape' && elements.modal.classList.contains('active')) closeRegistrationModal();
-                });
-            
-                elements.searchInput.addEventListener('input', renderAdminTable);
-                elements.filterButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        activeFilter = button.dataset.filter;
-                        elements.filterButtons.forEach(item => item.classList.toggle('active', item === button));
-                        renderAdminTable();
-                    });
-                });
+                elements.calendarGrid.appendChild(button);
             }
-            
-            function init() {
-                elements.headerToday.textContent = `Hôm nay · ${formatShortDate(toDateKey(new Date()))}`;
-                populateAssistantSelect();
-                bindEvents();
-                renderAllData();
-                if (!storageAvailable) {
-                    showToast('Không thể đọc bộ nhớ trình duyệt; ứng dụng đang dùng dữ liệu tạm thời.', 'error');
-                }
-            }
-            
-            init();
-        </script>
-        <script>
-            (function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f6888f28b609bc',t:'MTc4NzQ1MDUyOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
-        </script>
-    </body>
 
+            const usedCells = firstWeekday + daysInMonth;
+            const totalCells = usedCells <= 35 ? 35 : 42;
+            for (let index = usedCells; index < totalCells; index += 1) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-cell empty';
+                elements.calendarGrid.appendChild(emptyCell);
+            }
+        }
+
+        function renderRegistrationTable() {
+            const dayRecords = records
+                .filter(record => record.date === selectedDateKey)
+                .sort((a, b) => b.timestamp - a.timestamp);
+
+            elements.selectedDateLabel.textContent = capitalize(formatLongDate(selectedDateKey));
+            elements.registrationCount.textContent = `${dayRecords.length} đăng ký`;
+            elements.registrationBody.replaceChildren();
+
+            if (!dayRecords.length) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 5;
+                cell.className = 'empty-state';
+                cell.innerHTML = '<span class="empty-icon">🗓️</span>Chưa có đăng ký cho ngày này. Nhấn vào ngày trên lịch để tạo đăng ký.';
+                row.appendChild(cell);
+                elements.registrationBody.appendChild(row);
+                return;
+            }
+
+            dayRecords.forEach((record, index) => {
+                const assistant = getAssistant(record.troGiangId);
+                const row = document.createElement('tr');
+
+                const orderCell = document.createElement('td');
+                orderCell.textContent = index + 1;
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = assistant ? assistant.name : 'Không xác định';
+
+                const dateCell = document.createElement('td');
+                dateCell.textContent = formatShortDate(record.date);
+
+                const statusCell = document.createElement('td');
+                const badge = document.createElement('span');
+                badge.className = `status-badge ${record.status}`;
+                badge.textContent = `${STATUS[record.status].icon} ${STATUS[record.status].label}`;
+                statusCell.appendChild(badge);
+
+                const actionCell = document.createElement('td');
+                const deleteButton = document.createElement('button');
+                deleteButton.type = 'button';
+                deleteButton.className = 'delete-btn';
+                deleteButton.textContent = 'Xóa';
+                deleteButton.addEventListener('click', () => deleteRegistration(record));
+                actionCell.appendChild(deleteButton);
+
+                row.append(orderCell, nameCell, dateCell, statusCell, actionCell);
+                elements.registrationBody.appendChild(row);
+            });
+        }
+
+        function deleteRegistration(recordToDelete) {
+            const assistant = getAssistant(recordToDelete.troGiangId);
+            const confirmed = window.confirm(`Xóa đăng ký của ${assistant ? assistant.name : 'trợ giảng này'} ngày ${formatShortDate(recordToDelete.date)}?`);
+            if (!confirmed) return;
+
+            records = records.filter(record => !(
+                record.troGiangId === recordToDelete.troGiangId &&
+                record.date === recordToDelete.date
+            ));
+            saveRecords();
+            renderAllData();
+            showToast('Đã xóa đăng ký.');
+        }
+
+        function renderAdminTable() {
+            const searchTerm = normalizeText(elements.searchInput.value);
+            const todayKey = toDateKey(new Date());
+
+            const filtered = ASSISTANTS.map(assistant => {
+                const assistantRecords = records.filter(record => record.troGiangId === assistant.id);
+                let visibleRecords = assistantRecords;
+
+                // Khi chọn một ngày bất kỳ, Admin chỉ xem đăng ký đúng ngày đó.
+                if (adminSelectedDate) {
+                    visibleRecords = assistantRecords.filter(record => record.date === adminSelectedDate);
+                } else if (activeFilter === 'today') {
+                    visibleRecords = assistantRecords.filter(record => record.date === todayKey);
+                } else if (activeFilter !== 'all') {
+                    visibleRecords = assistantRecords.filter(record => record.status === activeFilter);
+                }
+
+                return { ...assistant, records: visibleRecords };
+            }).filter(assistant => {
+                const matchesSearch = normalizeText(`${assistant.name} ${assistant.phone}`).includes(searchTerm);
+                if (!matchesSearch) return false;
+                if (!adminSelectedDate && activeFilter === 'all') return true;
+                return assistant.records.length > 0;
+            });
+
+            elements.adminBody.replaceChildren();
+            if (!filtered.length) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 4;
+                cell.className = 'empty-state';
+                const message = adminSelectedDate
+                    ? `Không có trợ giảng đăng ký ngày ${formatShortDate(adminSelectedDate)}.`
+                    : 'Không có trợ giảng phù hợp với điều kiện tìm kiếm.';
+                cell.innerHTML = '<span class="empty-icon">🔍</span>';
+                cell.appendChild(document.createTextNode(message));
+                row.appendChild(cell);
+                elements.adminBody.appendChild(row);
+                return;
+            }
+
+            filtered.forEach((assistant, index) => {
+                const row = document.createElement('tr');
+
+                const orderCell = document.createElement('td');
+                orderCell.textContent = index + 1;
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = assistant.name;
+
+                const phoneCell = document.createElement('td');
+                const phoneWrap = document.createElement('div');
+                phoneWrap.className = 'phone-wrap';
+                const phone = document.createElement('span');
+                phone.className = 'phone-number';
+                phone.textContent = assistant.phone;
+                const callLink = document.createElement('a');
+                callLink.className = 'call-link';
+                callLink.href = `tel:${assistant.phone}`;
+                callLink.title = `Gọi ${assistant.name}`;
+                callLink.textContent = '☎';
+                phoneWrap.append(phone, callLink);
+                phoneCell.appendChild(phoneWrap);
+
+                const detailCell = document.createElement('td');
+                if (!assistant.records.length) {
+                    const noRecords = document.createElement('span');
+                    noRecords.className = 'no-records';
+                    noRecords.textContent = 'Chưa có đăng ký';
+                    detailCell.appendChild(noRecords);
+                } else {
+                    const list = document.createElement('div');
+                    list.className = 'detail-list';
+                    Object.keys(STATUS).forEach(status => {
+                        const statusRecords = assistant.records
+                            .filter(record => record.status === status)
+                            .sort((a, b) => b.date.localeCompare(a.date));
+                        if (!statusRecords.length) return;
+
+                        const detailRow = document.createElement('div');
+                        detailRow.className = 'detail-row';
+                        const label = document.createElement('span');
+                        label.className = 'detail-label';
+                        label.textContent = STATUS[status].label;
+                        const tags = document.createElement('span');
+                        tags.className = 'date-tags';
+                        statusRecords.forEach(record => {
+                            const tag = document.createElement('span');
+                            tag.className = 'date-tag';
+                            tag.textContent = formatShortDate(record.date);
+                            tags.appendChild(tag);
+                        });
+                        detailRow.append(label, tags);
+                        list.appendChild(detailRow);
+                    });
+                    detailCell.appendChild(list);
+                }
+
+                row.append(orderCell, nameCell, phoneCell, detailCell);
+                elements.adminBody.appendChild(row);
+            });
+        }
+
+        function openRegistrationModal(key) {
+            selectedDateKey = key;
+            selectedStatus = '';
+            elements.modalDate.textContent = capitalize(formatLongDate(key));
+            elements.assistantSelect.value = '';
+            elements.statusOptions.forEach(button => button.classList.remove('selected'));
+            elements.modal.classList.add('active');
+            elements.modal.setAttribute('aria-hidden', 'false');
+            window.setTimeout(() => elements.assistantSelect.focus(), 80);
+        }
+
+        function closeRegistrationModal() {
+            elements.modal.classList.remove('active');
+            elements.modal.setAttribute('aria-hidden', 'true');
+            selectedStatus = '';
+        }
+
+        function submitRegistration() {
+            const assistantId = Number(elements.assistantSelect.value);
+            if (!assistantId) {
+                showToast('Vui lòng chọn trợ giảng.', 'error');
+                elements.assistantSelect.focus();
+                return;
+            }
+            if (!selectedStatus) {
+                showToast('Vui lòng chọn trạng thái đăng ký.', 'error');
+                return;
+            }
+
+            const existingIndex = records.findIndex(record =>
+                record.troGiangId === assistantId && record.date === selectedDateKey
+            );
+            const newRecord = {
+                troGiangId: assistantId,
+                date: selectedDateKey,
+                status: selectedStatus,
+                timestamp: Date.now()
+            };
+
+            const isUpdate = existingIndex >= 0;
+            if (isUpdate) records[existingIndex] = newRecord;
+            else records.push(newRecord);
+
+            const saved = saveRecords();
+            closeRegistrationModal();
+            renderAllData();
+            showToast(isUpdate ? 'Đã cập nhật đăng ký.' : 'Đăng ký thành công.');
+            if (!saved) showToast('Trình duyệt không cho phép lưu lâu dài; dữ liệu chỉ còn trong phiên này.', 'error');
+        }
+
+        function renderAllData() {
+            renderCalendar();
+            renderRegistrationTable();
+            renderAdminTable();
+        }
+
+        function bindEvents() {
+            elements.tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetId = button.dataset.tab;
+                    elements.tabButtons.forEach(item => {
+                        const active = item === button;
+                        item.classList.toggle('active', active);
+                        item.setAttribute('aria-selected', String(active));
+                    });
+                    elements.tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === targetId));
+                    if (targetId === 'admin-panel') renderAdminTable();
+                });
+            });
+
+            elements.prevMonth.addEventListener('click', () => {
+                viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1);
+                renderCalendar();
+            });
+
+            elements.nextMonth.addEventListener('click', () => {
+                viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
+                renderCalendar();
+            });
+
+            elements.todayButton.addEventListener('click', () => {
+                const today = new Date();
+                viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                selectedDateKey = toDateKey(today);
+                renderCalendar();
+                renderRegistrationTable();
+            });
+
+            elements.statusOptions.forEach(button => {
+                button.addEventListener('click', () => {
+                    selectedStatus = button.dataset.status;
+                    elements.statusOptions.forEach(item => item.classList.toggle('selected', item === button));
+                });
+            });
+
+            elements.submitRegistration.addEventListener('click', submitRegistration);
+            elements.closeModal.addEventListener('click', closeRegistrationModal);
+            elements.modal.addEventListener('click', event => {
+                if (event.target === elements.modal) closeRegistrationModal();
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && elements.modal.classList.contains('active')) closeRegistrationModal();
+            });
+
+            elements.searchInput.addEventListener('input', renderAdminTable);
+
+            // Bộ chọn ngày chỉ nằm trong Admin và lọc đúng các đăng ký của ngày được chọn.
+            elements.adminDatePicker.addEventListener('change', () => {
+                adminSelectedDate = elements.adminDatePicker.value;
+                elements.clearAdminDate.hidden = !adminSelectedDate;
+
+                if (adminSelectedDate) {
+                    activeFilter = 'date';
+                    elements.filterButtons.forEach(item => item.classList.remove('active'));
+                } else {
+                    activeFilter = 'all';
+                    elements.filterButtons.forEach(item => item.classList.toggle('active', item.dataset.filter === 'all'));
+                }
+                renderAdminTable();
+            });
+
+            elements.clearAdminDate.addEventListener('click', () => {
+                adminSelectedDate = '';
+                activeFilter = 'all';
+                elements.adminDatePicker.value = '';
+                elements.clearAdminDate.hidden = true;
+                elements.filterButtons.forEach(item => item.classList.toggle('active', item.dataset.filter === 'all'));
+                renderAdminTable();
+            });
+
+            elements.filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Chọn bộ lọc trạng thái sẽ thoát chế độ xem theo ngày tùy chọn.
+                    adminSelectedDate = '';
+                    elements.adminDatePicker.value = '';
+                    elements.clearAdminDate.hidden = true;
+                    activeFilter = button.dataset.filter;
+                    elements.filterButtons.forEach(item => item.classList.toggle('active', item === button));
+                    renderAdminTable();
+                });
+            });
+        }
+
+        function init() {
+            elements.headerToday.textContent = `Hôm nay · ${formatShortDate(toDateKey(new Date()))}`;
+            populateAssistantSelect();
+            bindEvents();
+            renderAllData();
+            if (!storageAvailable) {
+                showToast('Không thể đọc bộ nhớ trình duyệt; ứng dụng đang dùng dữ liệu tạm thời.', 'error');
+            }
+        }
+
+        init();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f6968f69c7b23e',t:'MTc4NzQ1MTEwMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
