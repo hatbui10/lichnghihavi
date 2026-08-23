@@ -1201,6 +1201,167 @@
             .admin-card .phone-wrap { justify-content: space-between; }
             .admin-card .detail-row { grid-template-columns: 92px minmax(0, 1fr); }
         }
+
+        /* Bộ chọn ngày phát sáng trong Admin */
+        .admin-date-control {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            border: 1px solid transparent;
+            background:
+                linear-gradient(135deg, rgba(25, 31, 60, 0.98), rgba(13, 20, 39, 0.98)) padding-box,
+                linear-gradient(120deg, #6366f1, #22d3ee, #f0abfc, #fbbf24, #6366f1) border-box;
+            background-size: 100% 100%, 300% 300%;
+            background-position: center, 0% 50%;
+            box-shadow:
+                0 0 0 1px rgba(129, 140, 248, 0.10),
+                0 0 14px rgba(99, 102, 241, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            animation: date-border-shimmer 4.5s linear infinite;
+        }
+        .admin-date-control::after {
+            content: '';
+            position: absolute;
+            z-index: 0;
+            top: -90%;
+            bottom: -90%;
+            left: -35%;
+            width: 24%;
+            transform: rotate(18deg);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent);
+            filter: blur(1px);
+            pointer-events: none;
+            animation: date-light-sweep 4.5s ease-in-out infinite;
+        }
+        .admin-date-control > span,
+        .admin-date-control > input {
+            position: relative;
+            z-index: 1;
+        }
+        .admin-date-control > span { white-space: nowrap; text-shadow: 0 0 8px rgba(199, 210, 254, 0.35); }
+        .admin-date-control input {
+            border: 1px solid rgba(129, 140, 248, 0.30);
+            background: linear-gradient(145deg, #0b1220, #111a2e);
+            color: #f8fafc;
+            box-shadow:
+                inset 0 1px 4px rgba(0, 0, 0, 0.42),
+                0 0 8px rgba(34, 211, 238, 0.10);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .admin-date-control input:hover {
+            border-color: rgba(103, 232, 249, 0.58);
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.42), 0 0 10px rgba(34, 211, 238, 0.22);
+        }
+        .admin-date-control input:focus {
+            border-color: #a5b4fc;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25), 0 0 14px rgba(34, 211, 238, 0.26);
+        }
+        .admin-date-control input::-webkit-calendar-picker-indicator {
+            padding: 4px;
+            border-radius: 6px;
+            background-color: rgba(129, 140, 248, 0.14);
+            filter: invert(88%) sepia(15%) saturate(736%) hue-rotate(193deg) brightness(105%);
+            cursor: pointer;
+        }
+        .admin-date-control:focus-within {
+            border-color: transparent;
+            box-shadow:
+                0 0 0 1px rgba(165, 180, 252, 0.42),
+                0 0 20px rgba(99, 102, 241, 0.42),
+                0 0 9px rgba(34, 211, 238, 0.22);
+        }
+
+        @keyframes date-border-shimmer {
+            0% { background-position: center, 0% 50%; }
+            50% { background-position: center, 150% 50%; }
+            100% { background-position: center, 300% 50%; }
+        }
+        @keyframes date-light-sweep {
+            0%, 28% { left: -35%; opacity: 0; }
+            38% { opacity: 0.72; }
+            58% { left: 120%; opacity: 0; }
+            100% { left: 120%; opacity: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .admin-date-control,
+            .admin-date-control::after { animation: none; }
+        }
+
+        /* Bản riêng cho điện thoại: tránh input date của hệ điều hành bị đen */
+        @media (max-width: 620px) {
+            .admin-date-tools { display: block; }
+            .admin-date-control {
+                display: grid;
+                grid-template-columns: auto minmax(0, 1fr);
+                align-items: center;
+                width: 100%;
+                min-width: 0;
+                min-height: 0;
+                padding: 8px;
+                gap: 5px 7px;
+                border-radius: 12px;
+            }
+            .admin-date-control > span:first-child {
+                grid-column: 1;
+                font-size: 14px;
+            }
+            .admin-date-control > span:nth-child(2) {
+                grid-column: 2;
+                overflow: hidden;
+                font-size: 11px;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            .admin-date-control input[type="date"] {
+                grid-column: 1 / -1;
+                display: block;
+                width: 100%;
+                min-width: 0;
+                height: 40px;
+                margin: 0;
+                padding: 8px 10px;
+                border: 1px solid rgba(165, 180, 252, 0.72) !important;
+                border-radius: 9px;
+                background: linear-gradient(135deg, #3730a3, #1e3a8a 52%, #155e75) !important;
+                background-color: #312e81 !important;
+                color: #ffffff !important;
+                -webkit-text-fill-color: #ffffff !important;
+                color-scheme: dark;
+                opacity: 1;
+                font-size: 13px;
+                font-weight: 800;
+                line-height: 1;
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+                    0 0 12px rgba(99, 102, 241, 0.34);
+            }
+            .admin-date-control input[type="date"]::-webkit-datetime-edit,
+            .admin-date-control input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+            .admin-date-control input[type="date"]::-webkit-datetime-edit-text,
+            .admin-date-control input[type="date"]::-webkit-datetime-edit-day-field,
+            .admin-date-control input[type="date"]::-webkit-datetime-edit-month-field,
+            .admin-date-control input[type="date"]::-webkit-datetime-edit-year-field {
+                color: #ffffff !important;
+                -webkit-text-fill-color: #ffffff !important;
+                opacity: 1;
+            }
+            .admin-date-control input[type="date"]::-webkit-calendar-picker-indicator {
+                width: 20px;
+                height: 20px;
+                padding: 4px;
+                border-radius: 7px;
+                background-color: rgba(255, 255, 255, 0.18);
+                filter: invert(1) brightness(1.45);
+                opacity: 1;
+            }
+            .admin-date-control input[type="date"]:focus {
+                border-color: #67e8f9 !important;
+                background: linear-gradient(135deg, #4338ca, #1d4ed8 52%, #0e7490) !important;
+                box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.22), 0 0 18px rgba(99, 102, 241, 0.52);
+            }
+            .clear-date-btn { margin-top: 6px; }
+        }
     </style>
     </head>
 
@@ -2029,6 +2190,6 @@
             
         </script>
 
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f71fd2982b03db',t:'MTc4NzQ1NjcyNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f727f6193b1086',t:'MTc4NzQ1NzA1OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
