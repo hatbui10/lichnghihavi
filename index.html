@@ -2291,12 +2291,6 @@
                 <h2 id="modal-title">Đăng ký lịch</h2>
                 <p class="modal-subtitle" id="modal-date"></p>
 
-                <div class="form-group">
-                    <label class="form-label" for="assistant-select">Chọn trợ giảng</label>
-                    <select class="select-box" id="assistant-select">
-                        <option value="">— Chọn trợ giảng —</option>
-                    </select>
-                </div>
 
                 <div class="form-group">
                     <span class="form-label">Chọn trạng thái</span>
@@ -2501,7 +2495,6 @@
                 modal: document.getElementById('registration-modal'),
                 closeModal: document.getElementById('close-modal'),
                 modalDate: document.getElementById('modal-date'),
-                assistantSelect: document.getElementById('assistant-select'),
                 statusOptions: document.querySelectorAll('.status-option'),
                 submitRegistration: document.getElementById('submit-registration'),
                 toastContainer: document.getElementById('toast-container'),
@@ -2743,7 +2736,7 @@
                     const option = document.createElement('option');
                     option.value = assistant.id;
                     option.textContent = assistant.name;
-                    elements.assistantSelect.appendChild(option);
+                    // Trợ giảng được lấy từ tài khoản Google, không cần dropdown.
             
                     const attendanceOption = document.createElement('option');
                     attendanceOption.value = assistant.id;
@@ -3035,8 +3028,13 @@
                 const showLoginButton = !signedIn || !isAssistant;
                 const showLocationButton = signedIn && isAssistant && !hasLocationPermission;
                 const linkedAssistantId = signedIn && isAssistant ? getBoundAttendanceAssistantId() : 0;
-                // Ba nút thao tác chỉ hiện khi đã đăng nhập và tài khoản đã gắn với trợ giảng.
-                elements.assistantActions.hidden = !(signedIn && isAssistant && linkedAssistantId);
+                // Chỉ hiện ba nút thao tác sau khi đăng nhập và đã gắn tài khoản trợ giảng.
+                elements.assistantActions.hidden = !Boolean(signedIn && isAssistant && linkedAssistantId);
+                const actionsEnabled = Boolean(signedIn && isAssistant && linkedAssistantId);
+                [elements.requestOffButton, elements.requestLateButton, elements.attendanceActionButton].forEach(button => {
+                    button.disabled = !actionsEnabled;
+                    button.title = actionsEnabled ? '' : 'Đăng nhập Google và gắn tài khoản trợ giảng để sử dụng';
+                });
             
                 // Trình tự bắt buộc: bấm Trợ giảng → Đăng nhập → Gắn tài khoản → Cấp quyền vị trí → Điểm danh.
                 elements.secureAuthCard.hidden = !showLoginButton;
@@ -3914,11 +3912,10 @@
                 selectedDateKey = key;
                 selectedStatus = '';
                 elements.modalDate.textContent = capitalize(formatLongDate(key));
-                elements.assistantSelect.value = '';
                 elements.statusOptions.forEach(button => button.classList.remove('selected'));
                 elements.modal.classList.add('active');
                 elements.modal.setAttribute('aria-hidden', 'false');
-                window.setTimeout(() => elements.assistantSelect.focus(), 80);
+                window.setTimeout(() => elements.submitRegistration.focus(), 80);
             }
             
             function closeRegistrationModal() {
@@ -3931,11 +3928,10 @@
             
             
             async function submitRegistration() {
-                const assistantId = Number(elements.assistantSelect.value);
+                const assistantId = getBoundAttendanceAssistantId();
             
                 if (!assistantId) {
-                    showToast('Vui lòng chọn trợ giảng.', 'error');
-                    elements.assistantSelect.focus();
+                    showToast('Tài khoản Google chưa được gắn với trợ giảng.', 'error');
                     return;
                 }
             
@@ -4066,7 +4062,6 @@
                     elements.clearAdminDate.hidden = true;
                     elements.filterButtons.forEach(item => item.classList.toggle('active', item.dataset.filter === 'all'));
                     elements.attendanceAssistantSelect.value = '';
-                    elements.assistantSelect.value = '';
                     resetScannedQr('Đăng nhập Google là có thể điểm danh, không cần quét QR.');
                     renderAllData();
                     showToast(`Đã reset hệ thống về mặc định. Mật khẩu test hiện tại: ${RESET_SYSTEM_PASSWORD}`);
@@ -4094,9 +4089,7 @@
                 }
                 const assistantId = getBoundAttendanceAssistantId();
                 elements.assistantActions.hidden = !assistantId;
-                if (!assistantId) {
-                    showToast('Tài khoản Google chưa được gắn với trợ giảng.', 'error');
-                }
+                if (!assistantId) showToast('Tài khoản Google chưa được gắn với trợ giảng.', 'error');
             }
 
             function openQuickRegistration(status) {
@@ -4294,6 +4287,6 @@
         </script>
 
        
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a333016ebbd885af',t:'MTc4ODA4NDYyNQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3330ce7dbaa6e64',t:'MTc4ODA4NTA5NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
