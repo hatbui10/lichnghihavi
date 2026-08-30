@@ -118,7 +118,7 @@
             
             .home-actions { display:flex; gap:14px; justify-content:center; width:fit-content; max-width:100%; margin:0 auto 18px; padding:14px; border:1px solid #475569; border-radius:18px; background:rgba(15,23,42,.72); box-shadow:0 8px 24px rgba(0,0,0,.25); }
             .assistant-actions { padding:14px; border:1px solid #475569; border-radius:18px; background:rgba(15,23,42,.72); box-shadow:0 8px 24px rgba(0,0,0,.25); }
-            .tabs[hidden], #assistant-attendance-bar[hidden] { display:none !important; }
+            .tabs[hidden], #assistant-attendance-bar[hidden], #assistant-location-bar { display:none !important; }
             /* Chỉ sử dụng nút Điểm danh mới trong nhóm chức năng Trợ giảng. */
             #assistant-attendance-bar { display:none !important; }
             .home-action-btn, .assistant-action-btn { border:1px solid #6366f1; border-radius:14px; padding:14px 22px; background:linear-gradient(135deg,#3730a3,#7c3aed); color:white; cursor:pointer; font-weight:800; box-shadow:0 8px 20px rgba(79,70,229,.25); }
@@ -2317,7 +2317,6 @@
                     </div>
                 </div>
 
-                <button class="btn btn-primary submit-btn" id="submit-registration" type="button">Gửi đăng ký</button>
             </div>
         </div>
 
@@ -2506,7 +2505,6 @@
                 closeModal: document.getElementById('close-modal'),
                 modalDate: document.getElementById('modal-date'),
                 statusOptions: document.querySelectorAll('.status-option'),
-                submitRegistration: document.getElementById('submit-registration'),
                 toastContainer: document.getElementById('toast-container'),
                 assistantHomeButton: document.getElementById('assistant-home-btn'),
                 adminHomeButton: document.getElementById('admin-home-btn'),
@@ -3065,10 +3063,11 @@
                 const signedInEmail = currentAuthUser?.email || profile?.email || '';
                 const displayName = profile?.displayName || currentAuthUser?.displayName || 'Tài khoản Google';
                 const hasLocationPermission = assistantSessionLocation.status === 'granted';
-                const showAssistantControls = signedIn && isAssistant && hasLocationPermission;
-                const showLoginButton = !signedIn || !isAssistant;
-                const showLocationButton = signedIn && isAssistant && !hasLocationPermission;
                 const linkedAssistantId = signedIn && isAssistant ? getBoundAttendanceAssistantId() : 0;
+                const showAssistantControls = signedIn && isAssistant && linkedAssistantId;
+                const showLoginButton = !signedIn || !isAssistant;
+                // Không chặn khu vực đăng ký bằng yêu cầu vị trí; chỉ kiểm tra vị trí khi điểm danh.
+                const showLocationButton = false;
                 // Chỉ hiện ba nút thao tác sau khi đăng nhập và đã gắn tài khoản trợ giảng.
                 elements.assistantActions.hidden = !Boolean(signedIn && isAssistant && linkedAssistantId);
                 const actionsEnabled = Boolean(signedIn && isAssistant && linkedAssistantId);
@@ -3943,7 +3942,6 @@
                 elements.statusOptions.forEach(button => button.classList.remove('selected'));
                 elements.modal.classList.add('active');
                 elements.modal.setAttribute('aria-hidden', 'false');
-                window.setTimeout(() => elements.submitRegistration.focus(), 80);
             }
             
             function closeRegistrationModal() {
@@ -4181,6 +4179,8 @@
                     button.addEventListener('click', () => {
                         selectedStatus = button.dataset.status;
                         elements.statusOptions.forEach(item => item.classList.toggle('selected', item === button));
+                        // Chọn trạng thái là gửi đăng ký ngay, không cần nút xác nhận riêng.
+                        void submitRegistration();
                     });
                 });
             
@@ -4222,7 +4222,6 @@
                     if (event.target === elements.attendanceModal) closeAttendanceModal();
                 });
             
-                elements.submitRegistration.addEventListener('click', submitRegistration);
                 elements.closeModal.addEventListener('click', closeRegistrationModal);
                 elements.modal.addEventListener('click', event => {
                     if (event.target === elements.modal) closeRegistrationModal();
@@ -4319,6 +4318,6 @@
         </script>
 
        
-    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3331d36f8da20e7',t:'MTc4ODA4NTc2Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3332723ed27b42b',t:'MTc4ODA4NjE3MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
