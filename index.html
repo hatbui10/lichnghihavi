@@ -116,6 +116,19 @@
                 margin: 24px auto 48px;
             }
             
+            .home-actions { display:flex; gap:14px; justify-content:center; width:fit-content; max-width:100%; margin:0 auto 18px; padding:14px; border:1px solid #475569; border-radius:18px; background:rgba(15,23,42,.72); box-shadow:0 8px 24px rgba(0,0,0,.25); }
+            .assistant-actions { padding:14px; border:1px solid #475569; border-radius:18px; background:rgba(15,23,42,.72); box-shadow:0 8px 24px rgba(0,0,0,.25); }
+            .tabs[hidden], #assistant-attendance-bar[hidden] { display:none !important; }
+            /* Chỉ sử dụng nút Điểm danh mới trong nhóm chức năng Trợ giảng. */
+            #assistant-attendance-bar { display:none !important; }
+            .home-action-btn, .assistant-action-btn { border:1px solid #6366f1; border-radius:14px; padding:14px 22px; background:linear-gradient(135deg,#3730a3,#7c3aed); color:white; cursor:pointer; font-weight:800; box-shadow:0 8px 20px rgba(79,70,229,.25); }
+            .home-action-btn { min-width:180px; min-height:58px; font-size:16px; }
+            .home-action-btn:hover, .assistant-action-btn:hover { transform:translateY(-2px); filter:brightness(1.1); }
+            .assistant-actions { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:0 auto 14px; max-width:620px; }
+            .assistant-actions[hidden] { display:none !important; }
+            .assistant-action-btn { flex:1 1 180px; min-height:46px; padding:10px 14px; }
+            .attendance-action-btn { border-color:#059669; background:linear-gradient(135deg,#047857,#059669); }
+            @media (max-width:620px) { .home-actions { gap:8px; } .home-action-btn { min-width:0; flex:1; padding:12px 8px; font-size:14px; } .assistant-actions { gap:7px; } .assistant-action-btn { flex-basis:100%; } }
             .tabs {
                 display: flex;
                 justify-content: center;
@@ -2049,12 +2062,22 @@
         <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
         <main class="container">
-            <nav class="tabs" aria-label="Khu vực chức năng">
+            <div class="home-actions" aria-label="Chức năng chính">
+                <button class="home-action-btn assistant-home-btn" id="assistant-home-btn" type="button">👤 Trợ giảng</button>
+                <button class="home-action-btn admin-home-btn" id="admin-home-btn" type="button">⚙️ Admin</button>
+            </div>
+
+            <nav class="tabs" aria-label="Khu vực chức năng" hidden>
                 <button class="tab-btn active" type="button" data-tab="assistant-panel" aria-selected="true">👤 Trợ giảng</button>
                 <button class="tab-btn" type="button" data-tab="admin-panel" aria-selected="false">⚙️ Admin</button>
             </nav>
 
             <section class="tab-panel active" id="assistant-panel">
+                <div class="assistant-actions" id="assistant-actions" hidden>
+                    <button class="assistant-action-btn" id="request-off-btn" type="button">🚫 Đăng ký xin nghỉ</button>
+                    <button class="assistant-action-btn" id="request-late-btn" type="button">⏰ Đăng ký đi muộn</button>
+                    <button class="assistant-action-btn attendance-action-btn" id="attendance-action-btn" type="button">✅ Điểm danh</button>
+                </div>
                 <div class="assistant-login-only" id="secure-auth-card">
                     <strong id="auth-title">🔐 Đăng nhập Google cho trợ giảng</strong>
                     <small id="auth-detail">Email Google dùng để nhận diện tài khoản và điểm danh.</small>
@@ -2481,7 +2504,13 @@
                 assistantSelect: document.getElementById('assistant-select'),
                 statusOptions: document.querySelectorAll('.status-option'),
                 submitRegistration: document.getElementById('submit-registration'),
-                toastContainer: document.getElementById('toast-container')
+                toastContainer: document.getElementById('toast-container'),
+                assistantHomeButton: document.getElementById('assistant-home-btn'),
+                adminHomeButton: document.getElementById('admin-home-btn'),
+                assistantActions: document.getElementById('assistant-actions'),
+                requestOffButton: document.getElementById('request-off-btn'),
+                requestLateButton: document.getElementById('request-late-btn'),
+                attendanceActionButton: document.getElementById('attendance-action-btn')
             };
             
             function emailIsAdmin(email) {
@@ -3005,8 +3034,11 @@
                 const showAssistantControls = signedIn && isAssistant && hasLocationPermission;
                 const showLoginButton = !signedIn || !isAssistant;
                 const showLocationButton = signedIn && isAssistant && !hasLocationPermission;
+                const linkedAssistantId = signedIn && isAssistant ? getBoundAttendanceAssistantId() : 0;
+                // Ba nút thao tác chỉ hiện khi đã đăng nhập và tài khoản đã gắn với trợ giảng.
+                elements.assistantActions.hidden = !(signedIn && isAssistant && linkedAssistantId);
             
-                // Trình tự bắt buộc: bấm Trợ giảng → Đăng nhập → Cấp quyền vị trí → Điểm danh.
+                // Trình tự bắt buộc: bấm Trợ giảng → Đăng nhập → Gắn tài khoản → Cấp quyền vị trí → Điểm danh.
                 elements.secureAuthCard.hidden = !showLoginButton;
                 elements.assistantLocationBar.hidden = !showLocationButton;
                 elements.assistantCalendarCard.hidden = !showAssistantControls;
@@ -3311,10 +3343,23 @@
                 }
             
                 if (currentSecureProfile?.role === 'assistant') {
-                    const boundAssistantId = getBoundAttendanceAssistantId(user);
-                    saveAssistantLoginEmail(user.email, boundAssistantId);
+                    let boundAssistantId = getBoundAttendanceAssistantId(user);
+                    if (!boundAssistantId) {
+                        const choices = ASSISTANTS.map(item => `${item.id}. ${item.name}`).join('\n');
+                        const selectedId = Number(window.prompt(`Tài khoản ${user.email} chưa được gắn. Nhập số trợ giảng tương ứng:\n${choices}`, ''));
+                        if (getAssistant(selectedId)) {
+                            boundAssistantId = selectedId;
+                            saveAttendanceAssistantBinding(user.email, boundAssistantId);
+                            saveAssistantLoginEmail(user.email, boundAssistantId);
+                            showToast(`Đã gắn tài khoản Google với ${getAssistant(boundAssistantId).name}.`);
+                        } else {
+                            showToast('Chưa gắn tài khoản Google với trợ giảng nên các nút thao tác vẫn bị khóa.', 'error');
+                        }
+                    } else {
+                        saveAssistantLoginEmail(user.email, boundAssistantId);
+                        showToast(`Đã xác định ${getAssistant(boundAssistantId)?.name || 'trợ giảng'}. Hãy bấm nút cấp quyền vị trí.`);
+                    }
                     void syncAssistantLoginProfile(user, boundAssistantId);
-                    showToast(`Đã đăng nhập Google: ${user.email}. Hãy bấm nút cấp quyền vị trí.`);
                 }
             
                 updateAuthUi();
@@ -4040,7 +4085,38 @@
                 renderAdminTable();
             }
             
+            function openAssistantPortal() {
+                elements.assistantHomeButton.setAttribute('aria-expanded', 'true');
+                if (!currentAuthUser) {
+                    elements.assistantActions.hidden = true;
+                    openLoginModal('assistant');
+                    return;
+                }
+                const assistantId = getBoundAttendanceAssistantId();
+                elements.assistantActions.hidden = !assistantId;
+                if (!assistantId) {
+                    showToast('Tài khoản Google chưa được gắn với trợ giảng.', 'error');
+                }
+            }
+
+            function openQuickRegistration(status) {
+                if (!currentAuthUser) { openLoginModal('assistant'); return; }
+                selectedDateKey = toDateKey(new Date());
+                openRegistrationModal(selectedDateKey);
+                selectedStatus = status;
+                elements.statusOptions.forEach(button => button.classList.toggle('selected', button.dataset.status === status));
+            }
+
             function bindEvents() {
+                elements.assistantHomeButton.addEventListener('click', openAssistantPortal);
+                elements.adminHomeButton.addEventListener('click', () => {
+                    const adminTab = elements.adminTabButton;
+                    adminTab.click();
+                });
+                elements.requestOffButton.addEventListener('click', () => openQuickRegistration('full-day-off'));
+                elements.requestLateButton.addEventListener('click', () => openQuickRegistration('late-under'));
+                elements.attendanceActionButton.addEventListener('click', openAttendanceModal);
+
                 elements.tabButtons.forEach(button => {
                     button.addEventListener('click', () => {
                         const targetId = button.dataset.tab;
@@ -4053,8 +4129,7 @@
                         elements.tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === targetId));
                         updateLoginModalCopy(activePortal);
                         if (targetId === 'assistant-panel') {
-                            // Nút Trợ giảng luôn mở khung đăng nhập Google, không cần nút phụ.
-                            openLoginModal('assistant');
+                            openAssistantPortal();
                         }
                         if (targetId === 'admin-panel') renderAdminTable();
                     });
@@ -4219,6 +4294,6 @@
         </script>
 
        
-    </body>
+    <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a333016ebbd885af',t:'MTc4ODA4NDYyNQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
