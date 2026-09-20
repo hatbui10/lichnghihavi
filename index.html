@@ -821,6 +821,8 @@
             transform: translateY(-1px);
         }
 
+        .phone-inline-mobile { display: none; }
+        @media (max-width: 720px) { .phone-inline-mobile { display: inline-flex !important; } }
         .count-cell { text-align: center !important; vertical-align: middle !important; }
         .count-box {
             display: inline-flex; align-items: baseline; justify-content: center; gap: 4px;
@@ -1073,13 +1075,14 @@
             .admin-card thead { display: none; }
             .admin-card tbody tr {
                 display: grid;
-                grid-template-columns: minmax(0, 1fr) max-content;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
                 grid-template-areas:
-                    "adm-name adm-phone"
+                    "adm-head adm-head"
                     "adm-late adm-off";
-                gap: 4px 8px;
-                margin-bottom: 7px;
-                padding: 10px 11px;
+                gap: 8px 10px;
+                align-items: center;
+                margin-bottom: 9px;
+                padding: 12px;
                 border: 1px solid var(--border);
                 border-radius: 11px;
                 background: var(--soft);
@@ -1087,23 +1090,47 @@
             .admin-card tbody tr:hover { background: var(--soft); }
             .admin-card tbody td { display: block; padding: 0; border: 0; min-width: 0; }
             .admin-card tbody td:nth-child(1) { display: none; }
+            /* Dòng 1: tên + SĐT + nút gọi trên cùng một hàng */
             .admin-card tbody td:nth-child(2) {
-                grid-area: adm-name;
+                grid-area: adm-head;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                padding-bottom: 8px;
+                border-bottom: 1px dashed var(--border);
+                font-weight: 800;
+                font-size: 15px;
+            }
+            .admin-card tbody td:nth-child(2) .adm-name-text {
                 overflow: hidden;
                 white-space: nowrap;
                 text-overflow: ellipsis;
-                font-weight: 800;
-                font-size: 14px;
+                min-width: 0;
+                flex: 1;
             }
-            .admin-card tbody td:nth-child(3) { grid-area: adm-phone; }
+            .admin-card tbody td:nth-child(3) { display: none; }
+            .admin-card tbody td:nth-child(2) .phone-wrap { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; flex-shrink: 0; }
             .admin-card tbody td:nth-child(4),
             .admin-card tbody td:nth-child(5) {
-                margin-top: 4px;
-                padding-top: 7px;
-                border-top: 1px dashed var(--border);
+                margin-top: 0;
+                padding: 10px 6px;
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                background: rgba(255,255,255,0.03);
                 text-align: center;
-                display: flex; align-items: center; justify-content: center;
+                display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
             }
+            .admin-card tbody td.count-cell::before {
+                content: attr(data-label);
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.3px;
+                text-transform: uppercase;
+                color: var(--muted);
+            }
+            .admin-card tbody td.count-cell .count-box { width: 100%; min-width: 0; padding: 8px 6px; }
+            .admin-card tbody td.count-cell .count-number { font-size: 24px; }
             .admin-card tbody td:nth-child(4) { grid-area: adm-late; }
             .admin-card tbody td:nth-child(5) { grid-area: adm-off; }
             .admin-card tbody td.empty-state { display: block; padding: 22px 8px !important; }
@@ -2302,7 +2329,10 @@
                 orderCell.textContent = index + 1;
 
                 const nameCell = document.createElement('td');
-                nameCell.textContent = assistant.name;
+                const nameText = document.createElement('span');
+                nameText.className = 'adm-name-text';
+                nameText.textContent = assistant.name;
+                nameCell.appendChild(nameText);
 
                 const phoneCell = document.createElement('td');
                 const phoneWrap = document.createElement('span');
@@ -2322,6 +2352,10 @@
                     phoneWrap.appendChild(callLink);
                 }
                 phoneCell.appendChild(phoneWrap);
+                // Bản sao SĐT cho giao diện điện thoại (nằm cùng hàng với tên)
+                const phoneClone = phoneWrap.cloneNode(true);
+                phoneClone.classList.add('phone-inline-mobile');
+                nameCell.appendChild(phoneClone);
 
                 const lateRecords = assistant.records.filter(r => r.status === 'late-under' || r.status === 'late-over' || r.status === 'late-over-30');
                 const offRecords = assistant.records.filter(r => r.status === 'full-day-off');
@@ -2329,6 +2363,7 @@
                 const makeCountCell = (count, kind) => {
                     const cell = document.createElement('td');
                     cell.className = 'count-cell';
+                    cell.dataset.label = kind === 'late' ? 'Tổng đi muộn' : 'Tổng nghỉ hẳn';
                     const box = document.createElement('div');
                     box.className = `count-box ${kind}${count ? '' : ' zero'}`;
                     const num = document.createElement('span');
@@ -2602,6 +2637,6 @@
 
         init();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3e0d9523b1974f0',t:'MTc4OTkwNzUwNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3e0ef42df1404cb',t:'MTc4OTkwODQwMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
