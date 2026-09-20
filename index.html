@@ -1356,8 +1356,10 @@
         const db = getFirestore(app);
         const recordsCollection = collection(db, "troGiangRecords");
         const weeklyScheduleDocRef = doc(db, "troGiangSchedules", "weekly");
+        const assistantsDocRef = doc(db, "troGiangSchedules", "assistants");
         let unsubscribeRecords = null;
         let unsubscribeSchedule = null;
+        let unsubscribeAssistants = null;
 
         'use strict';
 
@@ -1417,6 +1419,47 @@
             } catch (error) {
                 console.warn('Không thể lưu assistantsData:', error);
             }
+        }
+
+        // Đẩy danh sách trợ giảng lên Firebase để mọi máy đều nhận được.
+        async function syncAssistantsToFirebase() {
+            try {
+                await setDoc(assistantsDocRef, { list: ASSISTANTS, updatedAt: Date.now() });
+            } catch (error) {
+                console.warn('Không thể đồng bộ danh sách trợ giảng lên Firebase:', error);
+                showToast('Đã lưu trên máy nhưng không đồng bộ được lên Firebase (kiểm tra Rules).', 'error');
+            }
+        }
+
+        function applyAssistantsFromCloud(list) {
+            if (!Array.isArray(list) || !list.length) return;
+            ASSISTANTS = list.map((item, index) => ({
+                id: Number(item.id) || index + 1,
+                name: String(item.name || '').trim() || `Trợ giảng ${index + 1}`,
+                year: String(item.year || ''),
+                phone: String(item.phone || ''),
+                shifts: cleanShifts(item.shifts)
+            }));
+            saveAssistantsData();
+            if (!getAssistant(selectedAssistantId)) {
+                selectedAssistantId = 0;
+                try { localStorage.removeItem('selectedAssistantId'); } catch (_) {}
+            }
+            updateAssistantPickerUi();
+            renderAssistantDirectory();
+            renderScheduleView();
+            renderAllData();
+        }
+
+        function subscribeToAssistantsFromFirebase() {
+            if (typeof unsubscribeAssistants === 'function') unsubscribeAssistants();
+            unsubscribeAssistants = onSnapshot(
+                assistantsDocRef,
+                snapshot => {
+                    if (snapshot.exists()) applyAssistantsFromCloud(snapshot.data().list);
+                },
+                error => console.warn('Không thể đồng bộ danh sách trợ giảng từ Firebase:', error)
+            );
         }
 
         // Trả về key ca hôm nay: T2..T7 → '1'..'6'; CN → ['7s','7'].
@@ -1955,6 +1998,7 @@
 
                 ASSISTANTS = imported;
                 saveAssistantsData();
+                await syncAssistantsToFirebase();
 
                 // Tự tạo lịch tuần từ ca làm việc trong Excel.
                 const schedule = {};
@@ -2515,12 +2559,14 @@
             bindEvents();
             subscribeToRecordsFromFirebase();
             subscribeToScheduleFromFirebase();
+            subscribeToAssistantsFromFirebase();
             renderAllData();
         }
 
         window.addEventListener('beforeunload', () => {
             if (typeof unsubscribeRecords === 'function') unsubscribeRecords();
             if (typeof unsubscribeSchedule === 'function') unsubscribeSchedule();
+            if (typeof unsubscribeAssistants === 'function') unsubscribeAssistants();
         });
 
         init();
