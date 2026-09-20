@@ -821,6 +821,16 @@
             transform: translateY(-1px);
         }
 
+        .count-cell { text-align: center !important; vertical-align: middle !important; }
+        .count-box {
+            display: inline-flex; align-items: baseline; justify-content: center; gap: 4px;
+            min-width: 84px; padding: 7px 14px; border-radius: 10px; font-weight: 800;
+        }
+        .count-box.late { background: #3d2c08; color: #fcd34d; }
+        .count-box.off { background: #45151f; color: #fca5a5; }
+        .count-box.zero { background: var(--soft); color: var(--muted); }
+        .count-number { font-size: 20px; line-height: 1; }
+        .count-unit { font-size: 11px; opacity: 0.85; }
         .detail-list { display: grid; gap: 6px; }
         .detail-row {
             display: grid;
@@ -1066,7 +1076,7 @@
                 grid-template-columns: minmax(0, 1fr) max-content;
                 grid-template-areas:
                     "adm-name adm-phone"
-                    "adm-detail adm-detail";
+                    "adm-late adm-off";
                 gap: 4px 8px;
                 margin-bottom: 7px;
                 padding: 10px 11px;
@@ -1086,12 +1096,16 @@
                 font-size: 14px;
             }
             .admin-card tbody td:nth-child(3) { grid-area: adm-phone; }
-            .admin-card tbody td:nth-child(4) {
-                grid-area: adm-detail;
+            .admin-card tbody td:nth-child(4),
+            .admin-card tbody td:nth-child(5) {
                 margin-top: 4px;
                 padding-top: 7px;
                 border-top: 1px dashed var(--border);
+                text-align: center;
+                display: flex; align-items: center; justify-content: center;
             }
+            .admin-card tbody td:nth-child(4) { grid-area: adm-late; }
+            .admin-card tbody td:nth-child(5) { grid-area: adm-off; }
             .admin-card tbody td.empty-state { display: block; padding: 22px 8px !important; }
             .phone-number { font-size: 12px; }
             .call-link { width: 30px; height: 30px; }
@@ -1182,6 +1196,7 @@
             <div class="schedule-header">
                 <h2>🗂️ Lịch trợ giảng trong tuần</h2>
                 <div class="schedule-header-actions">
+                    <button class="excel-btn" id="sync-refresh-btn" type="button" title="Xóa dữ liệu cũ trên máy này và kéo dữ liệu mới nhất từ Firebase về" style="background:linear-gradient(135deg,#0ea5e9,#2563eb);">🔄 Cập nhật dữ liệu</button>
                     <button class="excel-btn" id="excel-upload-btn" type="button" title="Tải file Excel lịch trợ giảng (.xlsx) để nhập tên, ca làm việc">📥 Tải Excel</button>
                     <input type="file" id="excel-file-input" accept=".xlsx,.xls" hidden>
                     <button class="schedule-btn" id="schedule-open-btn" type="button">📅 Xếp lịch</button>
@@ -1279,7 +1294,8 @@
                             <th>STT</th>
                             <th>Tên trợ giảng</th>
                             <th>Số điện thoại</th>
-                            <th>Chi tiết đăng ký</th>
+                            <th style="text-align:center;">Tổng đi muộn</th>
+                            <th style="text-align:center;">Tổng nghỉ hẳn</th>
                         </tr>
                     </thead>
                     <tbody id="admin-body"></tbody>
@@ -1332,6 +1348,7 @@
             getFirestore,
             collection,
             onSnapshot,
+            getDoc,
             addDoc,
             setDoc,
             updateDoc,
@@ -1449,6 +1466,38 @@
             renderAssistantDirectory();
             renderScheduleView();
             renderAllData();
+        }
+
+        // Nút "Cập nhật dữ liệu": xóa cache cũ trên máy, kéo bản mới nhất từ Firebase rồi tải lại trang.
+        async function forceRefreshFromFirebase() {
+            const btn = document.getElementById('sync-refresh-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Đang cập nhật...';
+            try {
+                const [assistantsSnap, scheduleSnap] = await Promise.all([
+                    getDoc(assistantsDocRef),
+                    getDoc(weeklyScheduleDocRef)
+                ]);
+                try { localStorage.removeItem('assistantsData'); } catch (_) {}
+                try { localStorage.removeItem('weeklySchedule'); } catch (_) {}
+                if (assistantsSnap.exists() && Array.isArray(assistantsSnap.data().list)) {
+                    localStorage.setItem('assistantsData', JSON.stringify(assistantsSnap.data().list));
+                }
+                if (scheduleSnap.exists()) {
+                    localStorage.setItem('weeklySchedule', JSON.stringify(scheduleSnap.data().days || {}));
+                }
+                showToast('Đã kéo dữ liệu mới nhất từ Firebase. Đang tải lại trang...');
+                setTimeout(() => {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('v', String(Date.now())); // bỏ qua cache trình duyệt
+                    window.location.replace(url.toString());
+                }, 600);
+            } catch (error) {
+                console.error('Không thể kéo dữ liệu từ Firebase:', error);
+                showToast('Không kéo được dữ liệu từ Firebase: ' + (error.message || 'lỗi mạng'), 'error');
+                btn.disabled = false;
+                btn.textContent = '🔄 Cập nhật dữ liệu';
+            }
         }
 
         function subscribeToAssistantsFromFirebase() {
@@ -2234,7 +2283,7 @@
             if (!filtered.length) {
                 const row = document.createElement('tr');
                 const cell = document.createElement('td');
-                cell.colSpan = 4;
+                cell.colSpan = 5;
                 cell.className = 'empty-state';
                 const message = adminSelectedDate
                     ? `Không có trợ giảng đăng ký ngày ${formatShortDate(adminSelectedDate)}.`
@@ -2274,48 +2323,29 @@
                 }
                 phoneCell.appendChild(phoneWrap);
 
-                const detailCell = document.createElement('td');
-                if (!assistant.records.length) {
-                    const noRecords = document.createElement('span');
-                    noRecords.className = 'no-records';
-                    noRecords.textContent = 'Chưa có đăng ký nào.';
-                    detailCell.appendChild(noRecords);
-                } else {
-                    const list = document.createElement('div');
-                    list.className = 'detail-list';
+                const lateRecords = assistant.records.filter(r => r.status === 'late-under' || r.status === 'late-over' || r.status === 'late-over-30');
+                const offRecords = assistant.records.filter(r => r.status === 'full-day-off');
 
-                    const byStatus = {};
-                    assistant.records.forEach(record => {
-                        if (!byStatus[record.status]) byStatus[record.status] = [];
-                        byStatus[record.status].push(record);
-                    });
+                const makeCountCell = (count, kind) => {
+                    const cell = document.createElement('td');
+                    cell.className = 'count-cell';
+                    const box = document.createElement('div');
+                    box.className = `count-box ${kind}${count ? '' : ' zero'}`;
+                    const num = document.createElement('span');
+                    num.className = 'count-number';
+                    num.textContent = String(count);
+                    const unit = document.createElement('span');
+                    unit.className = 'count-unit';
+                    unit.textContent = 'ngày';
+                    box.append(num, unit);
+                    cell.appendChild(box);
+                    return cell;
+                };
 
-                    Object.entries(byStatus).forEach(([status, statusRecords]) => {
-                        const detailRow = document.createElement('div');
-                        detailRow.className = 'detail-row';
+                const lateCell = makeCountCell(lateRecords.length, 'late');
+                const offCell = makeCountCell(offRecords.length, 'off');
 
-                        const label = document.createElement('span');
-                        label.className = 'detail-label';
-                        label.textContent = `${STATUS[status].icon} ${STATUS[status].label}`;
-
-                        const tags = document.createElement('span');
-                        tags.className = 'date-tags';
-                        statusRecords
-                            .sort((a, b) => a.date.localeCompare(b.date))
-                            .forEach(record => {
-                                const tag = document.createElement('span');
-                                tag.className = 'date-tag';
-                                tag.textContent = formatShortDate(record.date);
-                                tags.appendChild(tag);
-                            });
-
-                        detailRow.append(label, tags);
-                        list.appendChild(detailRow);
-                    });
-                    detailCell.appendChild(list);
-                }
-
-                row.append(orderCell, nameCell, phoneCell, detailCell);
+                row.append(orderCell, nameCell, phoneCell, lateCell, offCell);
                 elements.adminBody.appendChild(row);
             });
         }
@@ -2460,6 +2490,7 @@
 
             // Tải file Excel lịch trợ giảng.
             elements.excelUploadButton.addEventListener('click', () => elements.excelFileInput.click());
+            document.getElementById('sync-refresh-btn').addEventListener('click', forceRefreshFromFirebase);
             elements.excelFileInput.addEventListener('change', () => {
                 const file = elements.excelFileInput.files?.[0];
                 if (file) void importExcelFile(file);
@@ -2571,6 +2602,6 @@
 
         init();
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3e0d9523b1974f0',t:'MTc4OTkwNzUwNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
