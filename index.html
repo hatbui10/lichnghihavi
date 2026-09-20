@@ -821,8 +821,8 @@
             transform: translateY(-1px);
         }
 
+        /* ===== Khu vực quản lý: bảng (desktop) ===== */
         .phone-inline-mobile { display: none; }
-        @media (max-width: 720px) { .phone-inline-mobile { display: inline-flex !important; } }
         .count-cell { text-align: center !important; vertical-align: middle !important; }
         .count-box {
             display: inline-flex; align-items: baseline; justify-content: center; gap: 4px;
@@ -833,6 +833,63 @@
         .count-box.zero { background: var(--soft); color: var(--muted); }
         .count-number { font-size: 20px; line-height: 1; }
         .count-unit { font-size: 11px; opacity: 0.85; }
+
+        /* ===== Khu vực quản lý: thẻ (điện thoại) ===== */
+        @media (max-width: 720px) {
+            .admin-card .table-wrap { overflow: visible; }
+            .admin-card table, .admin-card tbody { display: block; width: 100%; }
+            .admin-card thead { display: none; }
+            .admin-card tbody tr {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                grid-template-areas:
+                    "adm-head adm-head"
+                    "adm-late adm-off";
+                gap: 8px 10px;
+                align-items: center;
+                margin-bottom: 9px;
+                padding: 12px;
+                border: 1px solid rgba(255,255,255,0.12);
+                border-radius: 12px;
+                background: #243456; /* nền thẻ sáng hơn */
+                box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            }
+            .admin-card tbody tr:hover { background: #2a3c62; }
+            .admin-card tbody td { display: block; padding: 0; border: 0; min-width: 0; }
+            .admin-card tbody td:first-child { display: none; }
+            .admin-card tbody td.adm-phone-cell { display: none; }
+            .admin-card tbody td.adm-name-cell {
+                grid-area: adm-head;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                padding-bottom: 8px;
+                border-bottom: 1px dashed rgba(255,255,255,0.18);
+                font-weight: 800;
+                font-size: 15px;
+            }
+            .adm-name-text { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+            .phone-inline-mobile { display: inline-flex !important; flex-shrink: 0; font-weight: 600; }
+            .admin-card tbody td.count-cell {
+                display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+                padding: 10px 6px;
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 10px;
+                background: rgba(255,255,255,0.05);
+            }
+            .admin-card tbody td.count-cell:nth-child(4) { grid-area: adm-late; }
+            .admin-card tbody td.count-cell:nth-child(5) { grid-area: adm-off; }
+            .admin-card tbody td.count-cell::before {
+                content: attr(data-label);
+                font-size: 11px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase;
+                color: #c7d2fe;
+            }
+            .admin-card tbody td.count-cell .count-box { width: 100%; min-width: 0; padding: 8px 6px; }
+            .admin-card tbody td.count-cell .count-number { font-size: 24px; }
+            .admin-card tbody td.count-cell .count-box.zero { background: rgba(255,255,255,0.08); color: #a5b4c8; }
+            .admin-card tbody td.empty-state { display: block; padding: 22px 8px !important; }
+        }
         .detail-list { display: grid; gap: 6px; }
         .detail-row {
             display: grid;
@@ -1070,70 +1127,6 @@
             .filters { gap: 5px; }
             .filter-btn { padding: 6px 10px; font-size: 11px; }
 
-            .admin-card .table-wrap { overflow: visible; }
-            .admin-card table, .admin-card tbody { display: block; width: 100%; }
-            .admin-card thead { display: none; }
-            .admin-card tbody tr {
-                display: grid;
-                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-                grid-template-areas:
-                    "adm-head adm-head"
-                    "adm-late adm-off";
-                gap: 8px 10px;
-                align-items: center;
-                margin-bottom: 9px;
-                padding: 12px;
-                border: 1px solid var(--border);
-                border-radius: 11px;
-                background: var(--soft);
-            }
-            .admin-card tbody tr:hover { background: var(--soft); }
-            .admin-card tbody td { display: block; padding: 0; border: 0; min-width: 0; }
-            .admin-card tbody td:nth-child(1) { display: none; }
-            /* Dòng 1: tên + SĐT + nút gọi trên cùng một hàng */
-            .admin-card tbody td:nth-child(2) {
-                grid-area: adm-head;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 10px;
-                padding-bottom: 8px;
-                border-bottom: 1px dashed var(--border);
-                font-weight: 800;
-                font-size: 15px;
-            }
-            .admin-card tbody td:nth-child(2) .adm-name-text {
-                overflow: hidden;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                min-width: 0;
-                flex: 1;
-            }
-            .admin-card tbody td:nth-child(3) { display: none; }
-            .admin-card tbody td:nth-child(2) .phone-wrap { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; flex-shrink: 0; }
-            .admin-card tbody td:nth-child(4),
-            .admin-card tbody td:nth-child(5) {
-                margin-top: 0;
-                padding: 10px 6px;
-                border: 1px solid var(--border);
-                border-radius: 10px;
-                background: rgba(255,255,255,0.03);
-                text-align: center;
-                display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-            }
-            .admin-card tbody td.count-cell::before {
-                content: attr(data-label);
-                font-size: 11px;
-                font-weight: 700;
-                letter-spacing: 0.3px;
-                text-transform: uppercase;
-                color: var(--muted);
-            }
-            .admin-card tbody td.count-cell .count-box { width: 100%; min-width: 0; padding: 8px 6px; }
-            .admin-card tbody td.count-cell .count-number { font-size: 24px; }
-            .admin-card tbody td:nth-child(4) { grid-area: adm-late; }
-            .admin-card tbody td:nth-child(5) { grid-area: adm-off; }
-            .admin-card tbody td.empty-state { display: block; padding: 22px 8px !important; }
             .phone-number { font-size: 12px; }
             .call-link { width: 30px; height: 30px; }
             .detail-row { grid-template-columns: 96px minmax(0, 1fr); gap: 5px; }
@@ -2322,19 +2315,7 @@
                 return;
             }
 
-            filtered.forEach((assistant, index) => {
-                const row = document.createElement('tr');
-
-                const orderCell = document.createElement('td');
-                orderCell.textContent = index + 1;
-
-                const nameCell = document.createElement('td');
-                const nameText = document.createElement('span');
-                nameText.className = 'adm-name-text';
-                nameText.textContent = assistant.name;
-                nameCell.appendChild(nameText);
-
-                const phoneCell = document.createElement('td');
+            const buildPhone = assistant => {
                 const phoneWrap = document.createElement('span');
                 phoneWrap.className = 'phone-wrap';
                 const phoneDigits = String(assistant.phone || '').replace(/\D/g, '');
@@ -2351,36 +2332,49 @@
                     callLink.setAttribute('aria-label', `Gọi ${assistant.name}`);
                     phoneWrap.appendChild(callLink);
                 }
-                phoneCell.appendChild(phoneWrap);
-                // Bản sao SĐT cho giao diện điện thoại (nằm cùng hàng với tên)
-                const phoneClone = phoneWrap.cloneNode(true);
-                phoneClone.classList.add('phone-inline-mobile');
-                nameCell.appendChild(phoneClone);
+                return phoneWrap;
+            };
 
-                const lateRecords = assistant.records.filter(r => r.status === 'late-under' || r.status === 'late-over' || r.status === 'late-over-30');
-                const offRecords = assistant.records.filter(r => r.status === 'full-day-off');
+            filtered.forEach((assistant, index) => {
+                const row = document.createElement('tr');
 
-                const makeCountCell = (count, kind) => {
+                const orderCell = document.createElement('td');
+                orderCell.textContent = index + 1;
+
+                // Ô tên: trên desktop chỉ hiện tên; trên điện thoại hiện tên + SĐT cùng hàng
+                const nameCell = document.createElement('td');
+                nameCell.className = 'adm-name-cell';
+                const nameText = document.createElement('span');
+                nameText.className = 'adm-name-text';
+                nameText.textContent = assistant.name;
+                nameText.title = assistant.name;
+                const phoneMobile = buildPhone(assistant);
+                phoneMobile.classList.add('phone-inline-mobile');
+                nameCell.append(nameText, phoneMobile);
+
+                const phoneCell = document.createElement('td');
+                phoneCell.className = 'adm-phone-cell';
+                phoneCell.appendChild(buildPhone(assistant));
+
+                const lateCount = assistant.records.filter(r => r.status === 'late-under' || r.status === 'late-over' || r.status === 'late-over-30').length;
+                const offCount = assistant.records.filter(r => r.status === 'full-day-off').length;
+
+                const makeCountCell = (count, kind, label) => {
                     const cell = document.createElement('td');
                     cell.className = 'count-cell';
-                    cell.dataset.label = kind === 'late' ? 'Tổng đi muộn' : 'Tổng nghỉ hẳn';
+                    cell.dataset.label = label;
                     const box = document.createElement('div');
                     box.className = `count-box ${kind}${count ? '' : ' zero'}`;
-                    const num = document.createElement('span');
-                    num.className = 'count-number';
-                    num.textContent = String(count);
-                    const unit = document.createElement('span');
-                    unit.className = 'count-unit';
-                    unit.textContent = 'ngày';
-                    box.append(num, unit);
+                    box.innerHTML = `<span class="count-number">${count}</span><span class="count-unit">ngày</span>`;
                     cell.appendChild(box);
                     return cell;
                 };
 
-                const lateCell = makeCountCell(lateRecords.length, 'late');
-                const offCell = makeCountCell(offRecords.length, 'off');
-
-                row.append(orderCell, nameCell, phoneCell, lateCell, offCell);
+                row.append(
+                    orderCell, nameCell, phoneCell,
+                    makeCountCell(lateCount, 'late', 'Tổng đi muộn'),
+                    makeCountCell(offCount, 'off', 'Tổng nghỉ hẳn')
+                );
                 elements.adminBody.appendChild(row);
             });
         }
@@ -2637,6 +2631,5 @@
 
         init();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3e0ef42df1404cb',t:'MTc4OTkwODQwMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
