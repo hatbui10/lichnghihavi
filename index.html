@@ -266,7 +266,7 @@
         }
         .quick-actions-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 8px;
         }
         .quick-action-btn {
@@ -308,6 +308,12 @@
             color: #fcd34d;
         }
         .quick-action-btn.late30:hover { box-shadow: 0 7px 16px rgba(245, 158, 11, 0.25); }
+        .quick-action-btn.late30plus {
+            border-color: rgba(244, 114, 182, 0.45);
+            background: linear-gradient(135deg, #3b1029, #4a1232);
+            color: #f9a8d4;
+        }
+        .quick-action-btn.late30plus:hover { box-shadow: 0 7px 16px rgba(244, 114, 182, 0.28); }
 
         /* ===== Xếp lịch tuần ===== */
         .schedule-header {
@@ -603,6 +609,7 @@
         .record-dot.full-day-off { background: var(--danger); }
         .record-dot.late-over { background: var(--warning); }
         .record-dot.late-under { background: var(--info); }
+        .record-dot.late-over-30 { background: #f472b6; }
 
         .legend {
             display: flex;
@@ -685,6 +692,7 @@
         .status-badge.full-day-off { background: #45151f; color: #fca5a5; }
         .status-badge.late-over { background: #3d2c08; color: #fcd34d; }
         .status-badge.late-under { background: #0e3342; color: #67e8f9; }
+        .status-badge.late-over-30 { background: #45102e; color: #f9a8d4; }
 
         .delete-btn {
             padding: 6px 12px;
@@ -939,16 +947,179 @@
         .toast.show { opacity: 1; transform: translateX(0); }
         .toast.error { border-color: #7f2b3a; background: #3b1220; color: #fca5a5; }
 
+        /* ===== Máy tính bảng / điện thoại ngang ===== */
+        @media (max-width: 900px) {
+            .quick-actions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .schedule-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+
+        /* ===== Điện thoại ===== */
         @media (max-width: 720px) {
-            .header-inner { flex-direction: column; align-items: flex-start; min-height: 0; gap: 12px; }
-            .card { padding: 15px; }
-            .detail-row { grid-template-columns: 110px minmax(0, 1fr); }
-            .day-cell { min-height: 50px; }
-            .calendar-header { flex-wrap: wrap; }
+            .header-inner {
+                flex-direction: column;
+                align-items: flex-start;
+                min-height: 0;
+                gap: 10px;
+                padding: 16px 0;
+            }
+            .brand { gap: 11px; }
+            .brand-icon { width: 44px; height: 44px; font-size: 22px; border-radius: 13px; }
+            .brand h1 { font-size: 18px; margin-bottom: 3px; }
+            .brand p { font-size: 12px; }
+            .today-pill { padding: 7px 12px; font-size: 12px; }
+
+            .container { margin: 14px auto 32px; gap: 12px; width: calc(100% - 20px); }
+            .card { padding: 13px; border-radius: 14px; }
+
+            /* Chọn trợ giảng */
+            .assistant-picker-toggle { min-height: 48px; padding: 10px 12px; font-size: 14px; }
+            .assistant-picker-current .picker-avatar { width: 30px; height: 30px; font-size: 14px; }
+            .assistant-picker-current .picker-label strong { font-size: 14px; }
+            .picker-shift { font-size: 11px; white-space: normal; }
+            .assistant-directory { padding: 10px; }
+            .assistant-directory-item { padding: 9px 10px; gap: 8px; }
+            .assistant-directory-name { font-size: 13px; }
+            .assistant-directory-shift { font-size: 10px; white-space: normal; }
+            .assistant-directory-choose { padding: 7px 11px; font-size: 11px; white-space: nowrap; }
+
+            /* 4 nút chọn nhanh: xếp 2 cột, dạng hàng ngang */
+            .quick-actions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+            .quick-action-btn {
+                flex-direction: row;
+                justify-content: flex-start;
+                min-height: 46px;
+                padding: 9px 11px;
+                font-size: 12px;
+                gap: 8px;
+            }
+            .quick-action-btn .icon { font-size: 17px; }
+
+            /* Lịch tuần: 2 cột cho dễ đọc */
+            .schedule-header { gap: 8px; }
+            .schedule-header h2 { font-size: 16px; }
+            .schedule-header-actions { width: 100%; }
+            .schedule-btn, .excel-btn { flex: 1 1 auto; justify-content: center; padding: 9px 10px; font-size: 12px; }
+            .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+            .schedule-day { min-height: 0; padding: 8px 6px; }
+            .schedule-person { font-size: 10px; }
+            .schedule-person-time { font-size: 9px; }
+
+            /* Lịch tháng */
+            .calendar-header { flex-wrap: wrap; gap: 8px; }
+            .calendar-title { font-size: 16px; }
+            .btn { padding: 7px 10px; font-size: 13px; }
+            .btn-icon { min-width: 36px; }
+            .weekdays, .calendar-grid { gap: 3px; }
+            .weekday { font-size: 10px; padding: 4px 0; }
+            .day-cell { min-height: 44px; padding: 5px 2px 4px; border-radius: 9px; gap: 2px; }
+            .day-number { font-size: 12px; }
+            .record-dot { width: 6px; height: 6px; }
+            .legend { gap: 6px 12px; margin-top: 10px; }
+            .legend-item { font-size: 11px; }
+
+            /* Bảng danh sách đăng ký: dạng thẻ, không tràn ngang */
+            .section-header { flex-wrap: wrap; gap: 8px; }
+            .section-header h2 { font-size: 16px; }
+            .count-badge { font-size: 11px; padding: 5px 10px; }
+
+            .registration-card .table-wrap { overflow: visible; }
+            .registration-card table, .registration-card tbody { display: block; width: 100%; }
+            .registration-card thead { display: none; }
+            .registration-card tbody tr {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) max-content;
+                grid-template-areas:
+                    "reg-name reg-action"
+                    "reg-date reg-action"
+                    "reg-status reg-status";
+                gap: 3px 8px;
+                margin-bottom: 7px;
+                padding: 10px 11px;
+                border: 1px solid var(--border);
+                border-radius: 11px;
+                background: var(--soft);
+            }
+            .registration-card tbody tr:hover { background: var(--soft); }
+            .registration-card tbody td { display: block; padding: 0; border: 0; }
+            .registration-card tbody td:nth-child(1) { display: none; }
+            .registration-card tbody td:nth-child(2) { grid-area: reg-name; font-weight: 800; font-size: 14px; }
+            .registration-card tbody td:nth-child(3) { grid-area: reg-date; }
+            .registration-card tbody td:nth-child(4) { grid-area: reg-status; margin-top: 3px; }
+            .registration-card tbody td:nth-child(5) { grid-area: reg-action; align-self: center; }
+            .registration-card tbody td.empty-state { display: block; padding: 22px 8px !important; }
+
+            /* Khu vực quản lý: dạng thẻ */
+            .admin-section-title { font-size: 16px; }
+            .admin-toolbar { padding: 9px; gap: 8px; }
+            .search-box { flex: 1 1 100%; padding: 8px 10px; }
+            .admin-date-control { width: 100%; font-size: 11px; }
+            .admin-date-control input { flex: 1; min-width: 0; font-size: 12px; }
+            .clear-date-btn { width: 100%; }
+            .filters { gap: 5px; }
+            .filter-btn { padding: 6px 10px; font-size: 11px; }
+
+            .admin-card .table-wrap { overflow: visible; }
+            .admin-card table, .admin-card tbody { display: block; width: 100%; }
+            .admin-card thead { display: none; }
+            .admin-card tbody tr {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) max-content;
+                grid-template-areas:
+                    "adm-name adm-phone"
+                    "adm-detail adm-detail";
+                gap: 4px 8px;
+                margin-bottom: 7px;
+                padding: 10px 11px;
+                border: 1px solid var(--border);
+                border-radius: 11px;
+                background: var(--soft);
+            }
+            .admin-card tbody tr:hover { background: var(--soft); }
+            .admin-card tbody td { display: block; padding: 0; border: 0; min-width: 0; }
+            .admin-card tbody td:nth-child(1) { display: none; }
+            .admin-card tbody td:nth-child(2) {
+                grid-area: adm-name;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                font-weight: 800;
+                font-size: 14px;
+            }
+            .admin-card tbody td:nth-child(3) { grid-area: adm-phone; }
+            .admin-card tbody td:nth-child(4) {
+                grid-area: adm-detail;
+                margin-top: 4px;
+                padding-top: 7px;
+                border-top: 1px dashed var(--border);
+            }
+            .admin-card tbody td.empty-state { display: block; padding: 22px 8px !important; }
+            .phone-number { font-size: 12px; }
+            .call-link { width: 30px; height: 30px; }
+            .detail-row { grid-template-columns: 96px minmax(0, 1fr); gap: 5px; }
+            .detail-label { font-size: 10px; white-space: normal; }
+            .date-tag { font-size: 10px; padding: 3px 6px; }
+
+            /* Modal */
+            .modal { padding: 18px 15px; border-radius: 15px; }
+            .modal h2 { font-size: 17px; }
+            .status-option { padding: 12px; font-size: 13px; }
+            .schedule-modal { width: 100%; }
+            .schedule-editor-day { padding: 9px 10px; }
+            .schedule-check { padding: 6px 9px; font-size: 11px; }
+            .schedule-save-btn { min-height: 44px; font-size: 13px; }
+
+            .toast-container { top: 10px; right: 10px; left: 10px; }
+            .toast { max-width: none; font-size: 12px; }
+        }
+
+        /* ===== Điện thoại nhỏ ===== */
+        @media (max-width: 380px) {
+            .brand h1 { font-size: 16px; }
             .quick-actions-grid { grid-template-columns: 1fr; }
-            .quick-action-btn { flex-direction: row; min-height: 50px; justify-content: flex-start; padding: 10px 14px; }
-            .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .schedule-day { min-height: 0; }
+            .quick-action-btn { min-height: 44px; }
+            .schedule-grid { grid-template-columns: 1fr; }
+            .day-cell { min-height: 40px; }
+            .detail-row { grid-template-columns: 1fr; gap: 2px; }
         }
     </style>
 </head>
@@ -988,7 +1159,7 @@
                 <div id="assistant-directory-list"></div>
             </div>
             <div class="assistant-actions" id="assistant-actions" hidden>
-                <p class="quick-actions-label">Chọn nhanh cho hôm nay</p>
+                <p class="quick-actions-label" id="quick-actions-label">Chọn nhanh cho hôm nay</p>
                 <div class="quick-actions-grid">
                     <button class="quick-action-btn off" type="button" data-quick-status="full-day-off">
                         <span class="icon">🚫</span><span>Nghỉ hôm nay</span>
@@ -998,6 +1169,9 @@
                     </button>
                     <button class="quick-action-btn late30" type="button" data-quick-status="late-over">
                         <span class="icon">⏰</span><span>Đến muộn 30p</span>
+                    </button>
+                    <button class="quick-action-btn late30plus" type="button" data-quick-status="late-over-30">
+                        <span class="icon">🕐</span><span>Muộn trên 30p</span>
                     </button>
                 </div>
             </div>
@@ -1040,8 +1214,9 @@
 
             <div class="legend" aria-label="Chú thích trạng thái">
                 <span class="legend-item"><i class="record-dot full-day-off"></i>Nghỉ cả ngày</span>
-                <span class="legend-item"><i class="record-dot late-over"></i>Muộn trên 15 phút</span>
-                <span class="legend-item"><i class="record-dot late-under"></i>Muộn dưới 15 phút</span>
+                <span class="legend-item"><i class="record-dot late-under"></i>Muộn 15 phút</span>
+                <span class="legend-item"><i class="record-dot late-over"></i>Muộn 30 phút</span>
+                <span class="legend-item"><i class="record-dot late-over-30"></i>Muộn trên 30 phút</span>
             </div>
         </section>
 
@@ -1090,8 +1265,9 @@
                     <div class="filters" aria-label="Lọc trợ giảng">
                         <button class="filter-btn active" type="button" data-filter="all">Tất cả</button>
                         <button class="filter-btn" type="button" data-filter="full-day-off">Nghỉ</button>
-                        <button class="filter-btn" type="button" data-filter="late-over">Muộn &gt;15p</button>
-                        <button class="filter-btn" type="button" data-filter="late-under">Muộn &lt;15p</button>
+                        <button class="filter-btn" type="button" data-filter="late-under">Muộn 15p</button>
+                        <button class="filter-btn" type="button" data-filter="late-over">Muộn 30p</button>
+                        <button class="filter-btn" type="button" data-filter="late-over-30">Muộn &gt;30p</button>
                         <button class="filter-btn" type="button" data-filter="today">Hôm nay</button>
                     </div>
                 </div>
@@ -1130,6 +1306,9 @@
                     </button>
                     <button class="status-option" type="button" data-status="late-over">
                         <span class="icon">⏰</span><span>Đến muộn 30 phút</span>
+                    </button>
+                    <button class="status-option" type="button" data-status="late-over-30">
+                        <span class="icon">🕐</span><span>Đến muộn trên 30 phút</span>
                     </button>
                 </div>
             </div>
@@ -1259,8 +1438,9 @@
 
         const STATUS = {
             'full-day-off': { label: 'Nghỉ cả ngày', icon: '🚫' },
+            'late-under': { label: 'Đến muộn 15p', icon: '⏱️' },
             'late-over': { label: 'Đến muộn 30p', icon: '⏰' },
-            'late-under': { label: 'Đến muộn 15p', icon: '⏱️' }
+            'late-over-30': { label: 'Muộn trên 30p', icon: '🕐' }
         };
         const RESET_SYSTEM_PASSWORD = 'tuanhavi';
 
@@ -1310,6 +1490,7 @@
             assistantActions: document.getElementById('assistant-actions'),
             assistantPickerShift: document.getElementById('assistant-picker-shift'),
             quickActionButtons: document.querySelectorAll('.quick-action-btn'),
+            quickActionsLabel: document.getElementById('quick-actions-label'),
             excelUploadButton: document.getElementById('excel-upload-btn'),
             excelFileInput: document.getElementById('excel-file-input'),
             scheduleOpenButton: document.getElementById('schedule-open-btn'),
@@ -1808,17 +1989,25 @@
         }
 
         // ==============================
-        // Đăng ký nhanh cho hôm nay (3 nút sau khi chọn trợ giảng)
+        // Đăng ký nhanh (3 nút sau khi chọn trợ giảng)
+        // Áp dụng cho ngày đang chọn trên lịch — bấm ngày nào thì đăng ký ngày đó.
         // ==============================
-        async function quickRegisterToday(status) {
+        function updateQuickActionsLabel() {
+            if (!elements.quickActionsLabel) return;
+            const todayKey = toDateKey(new Date());
+            elements.quickActionsLabel.textContent = selectedDateKey === todayKey
+                ? `Chọn nhanh cho hôm nay (${formatShortDate(todayKey)})`
+                : `Chọn nhanh cho ${capitalize(formatLongDate(selectedDateKey))}`;
+        }
+
+        async function quickRegisterSelected(status) {
             const assistant = getAssistant(selectedAssistantId);
             if (!assistant) {
                 showToast('Hãy chọn trợ giảng trước.', 'error');
                 toggleAssistantDirectory(true);
                 return;
             }
-            const todayKey = toDateKey(new Date());
-            selectedDateKey = todayKey;
+            // Dùng đúng ngày đang chọn trên lịch (mặc định là hôm nay).
             selectedStatus = status;
             await submitRegistration();
             selectedStatus = '';
@@ -1873,9 +2062,11 @@
                 }
 
                 button.addEventListener('click', () => {
+                    // Bấm ngày nào thì xin nghỉ / đến muộn áp dụng cho ngày đó.
                     selectedDateKey = key;
                     renderCalendar();
                     renderRegistrationTable();
+                    updateQuickActionsLabel();
                     openRegistrationModal(key);
                 });
                 elements.calendarGrid.appendChild(button);
@@ -2137,7 +2328,7 @@
                     if (index !== -1) {
                         records[index] = { ...newRecord, firebaseId: existingRecord.firebaseId };
                     }
-                    showToast('Đã cập nhật đăng ký.');
+                    showToast(`Đã cập nhật: ${STATUS[newRecord.status].label} ngày ${formatShortDate(selectedDateKey)}.`);
                 } else {
                     const docRef = await addDoc(recordsCollection, newRecord);
                     const realtimeIndex = records.findIndex(record => record.firebaseId === docRef.id);
@@ -2146,7 +2337,7 @@
                     } else {
                         records[realtimeIndex] = { ...newRecord, firebaseId: docRef.id };
                     }
-                    showToast('Đăng ký thành công.');
+                    showToast(`Đã đăng ký: ${STATUS[newRecord.status].label} ngày ${formatShortDate(selectedDateKey)}.`);
                 }
 
                 closeRegistrationModal();
@@ -2189,6 +2380,7 @@
                 adminSelectedDate = '';
                 viewDate = new Date();
                 selectedDateKey = toDateKey(new Date());
+                updateQuickActionsLabel();
                 elements.searchInput.value = '';
                 elements.adminDatePicker.value = '';
                 elements.clearAdminDate.hidden = true;
@@ -2219,7 +2411,7 @@
 
             // 3 nút chọn nhanh cho hôm nay: nghỉ / muộn 15p / muộn 30p.
             elements.quickActionButtons.forEach(button => {
-                button.addEventListener('click', () => void quickRegisterToday(button.dataset.quickStatus));
+                button.addEventListener('click', () => void quickRegisterSelected(button.dataset.quickStatus));
             });
 
             // Tải file Excel lịch trợ giảng.
@@ -2254,6 +2446,7 @@
                 selectedDateKey = toDateKey(today);
                 renderCalendar();
                 renderRegistrationTable();
+                updateQuickActionsLabel();
             });
 
             elements.statusOptions.forEach(button => {
@@ -2316,6 +2509,7 @@
         function init() {
             elements.headerToday.textContent = `Hôm nay · ${formatShortDate(toDateKey(new Date()))}`;
             updateAssistantPickerUi();
+            updateQuickActionsLabel();
             weeklySchedule = readLocalSchedule();
             renderScheduleView();
             bindEvents();
